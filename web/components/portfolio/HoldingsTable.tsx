@@ -1,0 +1,215 @@
+"use client";
+
+import Link from "next/link";
+import { useMemo, type ReactNode } from "react";
+import { useAccount } from "wagmi";
+import { WalletButton } from "@/components/layout/WalletButton";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
+import { glowButtonClassName } from "@/components/ui/GlowButton";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { categoryDisplay } from "@/lib/categories";
+import { formatShares, formatUsdc } from "@/lib/format";
+import { usePortfolio } from "@/lib/hooks/usePortfolio";
+import type { Holding } from "@/lib/mappers";
+
+const tableHeaders = ["ASSET", "SHARES", "MARKET VALUE", "AVG COST", "COST BASIS", "ACTIONS"];
+
+interface HoldingsTableViewProps {
+  connectAction?: ReactNode;
+  holdings: Holding[];
+  isConnected: boolean;
+  isLoading: boolean;
+}
+
+function labelClassName() {
+  return "font-mono text-[10px] uppercase tracking-[0.2em] text-muted";
+}
+
+function formatMaybeUsdc(value: bigint | null) {
+  return value === null ? "—" : `${formatUsdc(value)} USDC`;
+}
+
+function LoadingRows() {
+  return (
+    <>
+      {Array.from({ length: 4 }, (_, index) => (
+        <tr className="border-t border-border" key={index}>
+          <td className="py-5 pr-5">
+            <Skeleton className="h-6 w-56" tone="soft" />
+            <Skeleton className="mt-3 h-5 w-28" tone="soft" />
+          </td>
+          <td className="px-5 py-5">
+            <Skeleton className="h-6 w-24" tone="soft" />
+          </td>
+          <td className="px-5 py-5">
+            <Skeleton className="h-6 w-32" tone="soft" />
+          </td>
+          <td className="px-5 py-5">
+            <Skeleton className="h-6 w-24" tone="soft" />
+          </td>
+          <td className="px-5 py-5">
+            <Skeleton className="h-6 w-32" tone="soft" />
+          </td>
+          <td className="py-5 pl-5">
+            <Skeleton className="h-9 w-28" tone="soft" />
+          </td>
+        </tr>
+      ))}
+    </>
+  );
+}
+
+function DisconnectedState({ connectAction }: { connectAction?: ReactNode }) {
+  return (
+    <section className="border border-border bg-panel/80 p-8 text-center">
+      <p className={labelClassName()}>WALLET REQUIRED</p>
+      <h2 className="mt-4 text-2xl font-semibold text-text">连接钱包查看持仓</h2>
+      <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-text-dim">
+        持仓、成本与份额余额全部从链上读取；连接后即可查看当前地址的 RWA 资产。
+      </p>
+      <div className="mt-7 flex justify-center">{connectAction}</div>
+    </section>
+  );
+}
+
+function EmptyState() {
+  return (
+    <section className="border border-border bg-panel/80 p-8 text-center">
+      <p className={labelClassName()}>NO HOLDINGS</p>
+      <h2 className="mt-4 text-2xl font-semibold text-text">当前钱包暂无持仓</h2>
+      <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-text-dim">
+        完成一笔一级购买后，资产份额、市值和移动平均成本会在这里展示。
+      </p>
+      <Link className={glowButtonClassName({ className: "mt-7" })} href="/">
+        去市场看看
+      </Link>
+    </section>
+  );
+}
+
+function CategoryBadge({ category }: { category: string }) {
+  const display = categoryDisplay(category);
+
+  return (
+    <span
+      className="inline-flex border border-white/10 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-text"
+      style={{ background: display.gradient }}
+    >
+      {display.label}
+    </span>
+  );
+}
+
+function HoldingRow({ holding }: { holding: Holding }) {
+  return (
+    <tr className="border-t border-border align-middle transition-colors hover:bg-border/20">
+      <td className="min-w-72 py-5 pr-5">
+        <div className="flex flex-col gap-3">
+          <p className="text-base font-semibold text-text">{holding.asset.meta.nameZh}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <CategoryBadge category={holding.asset.category} />
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
+              #{holding.asset.tokenId.toString()}
+            </span>
+          </div>
+        </div>
+      </td>
+      <td className="px-5 py-5 font-mono text-sm tabular-nums text-text">{formatShares(holding.balance)}</td>
+      <td className="px-5 py-5 font-mono text-sm tabular-nums text-text">
+        {formatUsdc(holding.marketValue)} USDC
+      </td>
+      <td className="px-5 py-5 font-mono text-sm tabular-nums text-text-dim">
+        {formatMaybeUsdc(holding.avgCost)}
+      </td>
+      <td className="px-5 py-5 font-mono text-sm tabular-nums text-text-dim">
+        {formatMaybeUsdc(holding.costBasis)}
+      </td>
+      <td className="py-5 pl-5">
+        <button
+          className="h-9 border border-border bg-muted/20 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-muted"
+          disabled
+          title="M3 开放"
+          type="button"
+        >
+          挂单转售
+        </button>
+      </td>
+    </tr>
+  );
+}
+
+export function HoldingsTableView({
+  connectAction,
+  holdings,
+  isConnected,
+  isLoading,
+}: HoldingsTableViewProps) {
+  const totalMarketValue = useMemo(
+    () => holdings.reduce((total, holding) => total + holding.marketValue, 0n),
+    [holdings],
+  );
+  const totalMarketValueText = `${formatUsdc(totalMarketValue)} USDC`;
+
+  if (!isConnected) {
+    return <DisconnectedState connectAction={connectAction} />;
+  }
+
+  if (!isLoading && holdings.length === 0) {
+    return <EmptyState />;
+  }
+
+  return (
+    <section className="border border-border bg-panel/80">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[960px] border-collapse">
+          <thead>
+            <tr>
+              {tableHeaders.map((header, index) => (
+                <th
+                  className={[
+                    "border-b border-border py-4 text-left",
+                    index === 0 ? "pl-0 pr-5" : index === tableHeaders.length - 1 ? "pl-5 pr-0" : "px-5",
+                    labelClassName(),
+                  ].join(" ")}
+                  key={header}
+                  scope="col"
+                >
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>{isLoading ? <LoadingRows /> : holdings.map((holding) => <HoldingRow holding={holding} key={holding.asset.tokenId.toString()} />)}</tbody>
+          <tfoot>
+            <tr className="border-t border-border-glow">
+              <td className="py-5 pr-5" colSpan={2}>
+                <p className={labelClassName()}>TOTAL MARKET VALUE</p>
+              </td>
+              <td
+                aria-label={`总市值 ${totalMarketValueText}`}
+                className="px-5 py-5 font-mono text-xl font-semibold tabular-nums text-up"
+                colSpan={4}
+              >
+                <AnimatedNumber value={totalMarketValueText} />
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+export function HoldingsTable() {
+  const { isConnected } = useAccount();
+  const { holdings, isLoading } = usePortfolio();
+
+  return (
+    <HoldingsTableView
+      connectAction={<WalletButton />}
+      holdings={holdings}
+      isConnected={isConnected}
+      isLoading={isConnected ? isLoading : false}
+    />
+  );
+}

@@ -6,6 +6,7 @@ import { useAccount, useBalance, useConnect } from "wagmi";
 import { ARC_CHAIN_ID } from "@/lib/chain";
 import { formatShares, formatUsdc, shortAddress } from "@/lib/format";
 import { useBuyPrimary } from "@/lib/hooks/useBuyPrimary";
+import { useListings } from "@/lib/hooks/useListings";
 import { useNetworkGuard } from "@/lib/hooks/useNetworkGuard";
 import type { AssetView } from "@/lib/mappers";
 import { validatePurchase } from "@/lib/purchase";
@@ -53,6 +54,8 @@ export function BuyPanel({ asset }: { asset: AssetView }) {
   const lastRefreshKey = useRef<string | null>(null);
   const lastToastKey = useRef<string | null>(null);
   const offering = asset.offering;
+  const { listings } = useListings(asset.tokenId);
+  const bestAsk = listings[0] ?? null;
   const hasOffering = Boolean(offering && offering.active);
   const explorerUrl = process.env.NEXT_PUBLIC_ARC_EXPLORER_URL ?? "";
 
@@ -200,6 +203,18 @@ export function BuyPanel({ asset }: { asset: AssetView }) {
 
   return (
     <aside className="border border-border bg-panel p-5">
+      {bestAsk ? (
+        <div className="mb-5 border-b border-border pb-5">
+          <div className="flex items-center justify-between gap-4">
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">BEST ASK</p>
+            <p className="font-mono text-sm text-text">{formatUsdc(bestAsk.pricePerShare)} USDC</p>
+          </div>
+          <p className="mt-2 text-right font-mono text-[10px] uppercase tracking-[0.18em] text-text-dim">
+            {formatShares(bestAsk.remaining)} SHARES
+          </p>
+        </div>
+      ) : null}
+
       <div>
         <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">PRIMARY OFFERING</p>
         <p className="mt-4 font-mono text-4xl font-semibold leading-none text-text">

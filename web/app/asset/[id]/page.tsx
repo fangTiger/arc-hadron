@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AssetProfile } from "@/components/asset/AssetProfile";
 import { BuyPanel } from "@/components/asset/BuyPanel";
-import { ListingsPlaceholder } from "@/components/asset/ListingsPlaceholder";
+import { ListingsTable } from "@/components/asset/ListingsTable";
 import { glowButtonClassName } from "@/components/ui/GlowButton";
 import { Skeleton } from "@/components/ui/Skeleton";
 import type { TradeEvent } from "@/lib/events";
@@ -27,8 +27,8 @@ function AssetDetailSkeleton() {
     <main className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] lg:px-8">
       <div className="space-y-8">
         <Skeleton className="h-[560px]" />
-        <ListingsPlaceholder />
-        <ListingsPlaceholder message="Trade history lands in M4" title="TRADE HISTORY" />
+        <Skeleton className="h-[240px]" />
+        <Skeleton className="h-[240px]" tone="soft" />
       </div>
       <aside className="lg:sticky lg:top-24">
         <Skeleton className="h-[420px]" tone="soft" />
@@ -355,7 +355,7 @@ export function AssetDetailView({
         <AssetPriceHeader asset={asset} events={events} nowMs={nowMs} />
         <PriceChart asset={asset} events={events} />
         <AssetProfile asset={asset} />
-        <ListingsPlaceholder />
+        <ListingsTable tokenId={asset.tokenId} />
         <TradeHistoryTable
           asset={asset}
           events={events}

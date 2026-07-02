@@ -2,10 +2,10 @@
   "chainId": 5042002,
   "rpcUrl": "https://rpc.testnet.arc.network",
   "explorerUrl": "https://testnet.arcscan.app",
-  "deployBlock": 49769440,
+  "deployBlock": 49771985,
   "contracts": {
-    "HadronAssets": "0x735B2be6A5e20d15885351F0d14f1d02e87555FC",
-    "HadronMarket": "0x18f15aD92B3352532Da23a31999Ce273203d859c"
+    "HadronAssets": "0x4D82b6e528D3c2E1a3592e14863ec95EAeF4Ff85",
+    "HadronMarket": "0x962aba0A590981cf9c5B336aC34922c82f203165"
   },
   "config": {
     "feeBps": 50,
@@ -14,14 +14,33 @@
     "nativeDecimalsOnChain": 18,
     "note": "链上原生计价单位为 18 位小数 wei（冒烟交易实证）；显示层 1 USDC = 1e18 wei"
   },
+  "seedAssets": {
+    "1": { "name": "US T-BILL 2026-Q3", "category": "treasuries", "totalShares": 10000, "offering": { "id": 1, "pricePerShare": "100e18", "listed": 6000 } },
+    "2": { "name": "GOLD OUNCE VAULT #4", "category": "gold", "totalShares": 500, "offering": { "id": 2, "pricePerShare": "23.8e18", "listed": 300 } },
+    "3": { "name": "MARINA TOWER UNIT 12F", "category": "real-estate", "totalShares": 2000, "offering": { "id": 3, "pricePerShare": "55.5e18", "listed": 1200 } },
+    "4": { "name": "VERRA CARBON LOT-9", "category": "carbon", "totalShares": 8000, "offering": { "id": 4, "pricePerShare": "1.85e18", "listed": 4800 } }
+  },
   "smokeTest": {
     "date": "2026-07-02",
-    "conclusion": "原生 msg.value 结算成立；协议费 0.5% 分账精确（金库收到 10000000000000 wei = 0.002e18 × 50bps）",
+    "conclusion": "原生 msg.value 结算成立；buyPrimary(4,1) 付款 1.85e18，金库精确收到 9.25e15 wei（50bps），发行余量 4800→4799",
     "transactions": {
-      "createAsset": "0x3bc9c0a85554f51bab9c10cf7609c77f6b189f401cd73573fd421d4f7f63aff2",
-      "setApprovalForAll": "0x04b309c03f37cfd4c6c318424c025e904b178d8dd7e2d6c0e88187e4c1bbfc26",
-      "createPrimaryOffering": "0xa0ecf350f481a4f878880d3b5c529047c9aee6e5102cbc7ac3ed767edd725fe0",
-      "buyPrimary": "0x34ce4a6eff91e79ee756efd0b1476b990e0a8a02220399c9e9fdcdb3f2701d12"
+      "buyPrimary": "0x320fa3fa559739a91dc4298a2bc431682751039ae094d9785f0c1059c5d3bd06"
     }
-  }
+  },
+  "deprecatedDeployments": [
+    {
+      "reason": "审计修复前的首次部署（未拒绝 1155 直接转入；目录含冒烟测试脏数据）",
+      "deployBlock": 49769440,
+      "contracts": {
+        "HadronAssets": "0x735B2be6A5e20d15885351F0d14f1d02e87555FC",
+        "HadronMarket": "0x18f15aD92B3352532Da23a31999Ce273203d859c"
+      },
+      "smokeTransactions": {
+        "createAsset": "0x3bc9c0a85554f51bab9c10cf7609c77f6b189f401cd73573fd421d4f7f63aff2",
+        "setApprovalForAll": "0x04b309c03f37cfd4c6c318424c025e904b178d8dd7e2d6c0e88187e4c1bbfc26",
+        "createPrimaryOffering": "0xa0ecf350f481a4f878880d3b5c529047c9aee6e5102cbc7ac3ed767edd725fe0",
+        "buyPrimary": "0x34ce4a6eff91e79ee756efd0b1476b990e0a8a02220399c9e9fdcdb3f2701d12"
+      }
+    }
+  ]
 }

@@ -187,6 +187,8 @@ Gemini 不可用，设计阶段交叉验证由 **Codex（只读审查）+ Claude
 
 **采纳的 Codex 意见**：市场合约继承 `ERC1155Holder`；`setApprovalForAll` 授权前置（含前端引导与验收标准 7）；输入不变量显式入 spec；合约暴露计数器/getter/部署区块，状态读取不依赖 getLogs；结算默认冻结为原生 `msg.value`（arc-lepton 实证 `nativeCurrency = USDC, 6 decimals`）；`closePrimaryOffering`；`Ownable2Step` + 费率上限 + 无管理员后门；协议费向下取整记为已知行为；验收补充失败场景、数据层健壮性、挂单生命周期边界。
 
+**M1 实现期独立安全审计（2026-07-02，全新 Codex 会话）**：无严重/中等问题。已修复：市场合约拒绝非托管路径的 1155 直接转入（防误转锁仓）、构造器校验资产合约地址非零。接受为已知行为（demo 场景不构成风险）：一级发行库存与收益绑定当前 market owner（所有权不会转移）；treasury 为 late-bound（owner 本有设置权限）；极端定价溢出仅造成创建者自 DoS（可自行撤单/关闭）。修复后已重新部署并复验结算冒烟（见 `contracts/deployments/arc-testnet.json`）。
+
 **Claude 裁决（与 Codex 建议不同，理由记录）**：
 1. **push 直转 vs pull-payment**：Codex 建议 pull 记账提现更稳；裁决采用 push 直转——demo 以交互步数最少为优先，风险由精确付款、CEI、`nonReentrant`、恶意收款合约对抗测试覆盖。
 2. **Pausable**：Codex 指出测试策略与合约设计不一致；裁决**删除**"暂停边界"而非引入 `Pausable`（YAGNI，减少 owner 权限面）。

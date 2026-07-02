@@ -36,6 +36,12 @@ contract HadronMarketConfigTest is Test, ERC1155Holder {
         new HadronMarket(assets, address(0), 50);
     }
 
+    function test_Constructor_RevertWhen_ZeroAssets() public {
+        vm.expectRevert(HadronMarket.ZeroAddress.selector);
+
+        new HadronMarket(HadronAssets(address(0)), treasury, 50);
+    }
+
     function test_Constructor_RevertWhen_FeeTooHigh() public {
         vm.expectRevert(HadronMarket.FeeTooHigh.selector);
 
@@ -59,8 +65,31 @@ contract HadronMarketConfigTest is Test, ERC1155Holder {
 
         uint256 tokenId = assets.createAsset("US T-BILL 2026-Q3", "treasuries", 10_000, "ipfs://treasury");
 
+        vm.expectRevert(HadronMarket.DirectTransferNotAllowed.selector);
+        assets.safeTransferFrom(address(this), address(market), tokenId, 1, "");
+    }
+
+    function test_DirectTransfer_RevertWhen_NotSelfOperator() public {
+        uint256 tokenId = assets.createAsset("US T-BILL 2026-Q3", "treasuries", 10_000, "ipfs://treasury");
+
+        vm.expectRevert(HadronMarket.DirectTransferNotAllowed.selector);
         assets.safeTransferFrom(address(this), address(market), tokenId, 1, "");
 
-        assertEq(assets.balanceOf(address(market), tokenId), 1);
+        assertEq(assets.balanceOf(address(this), tokenId), 10_000);
+        assertEq(assets.balanceOf(address(market), tokenId), 0);
+    }
+
+    function test_DirectBatchTransfer_RevertWhen_NotSelfOperator() public {
+        uint256 tokenId = assets.createAsset("US T-BILL 2026-Q3", "treasuries", 10_000, "ipfs://treasury");
+        uint256[] memory tokenIds = new uint256[](1);
+        uint256[] memory amounts = new uint256[](1);
+        tokenIds[0] = tokenId;
+        amounts[0] = 1;
+
+        vm.expectRevert(HadronMarket.DirectTransferNotAllowed.selector);
+        assets.safeBatchTransferFrom(address(this), address(market), tokenIds, amounts, "");
+
+        assertEq(assets.balanceOf(address(this), tokenId), 10_000);
+        assertEq(assets.balanceOf(address(market), tokenId), 0);
     }
 }

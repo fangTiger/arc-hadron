@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -75,8 +76,12 @@ contract HadronMarket is ERC1155Holder, Ownable2Step, ReentrancyGuard {
     error WrongPayment();
     error NotSeller();
     error TransferFailed();
+    error DirectTransferNotAllowed();
 
     constructor(HadronAssets assets_, address treasury_, uint16 feeBps_) Ownable(msg.sender) {
+        if (address(assets_) == address(0)) {
+            revert ZeroAddress();
+        }
         if (treasury_ == address(0)) {
             revert ZeroAddress();
         }
@@ -88,6 +93,36 @@ contract HadronMarket is ERC1155Holder, Ownable2Step, ReentrancyGuard {
         deployBlock = block.number;
         treasury = treasury_;
         feeBps = feeBps_;
+    }
+
+    /// @notice 仅允许市场合约自身发起的单笔托管转入。
+    function onERC1155Received(
+        address operator,
+        address,
+        uint256,
+        uint256,
+        bytes memory
+    ) public view override returns (bytes4) {
+        if (operator != address(this)) {
+            revert DirectTransferNotAllowed();
+        }
+
+        return IERC1155Receiver.onERC1155Received.selector;
+    }
+
+    /// @notice 仅允许市场合约自身发起的批量托管转入。
+    function onERC1155BatchReceived(
+        address operator,
+        address,
+        uint256[] memory,
+        uint256[] memory,
+        bytes memory
+    ) public view override returns (bytes4) {
+        if (operator != address(this)) {
+            revert DirectTransferNotAllowed();
+        }
+
+        return IERC1155Receiver.onERC1155BatchReceived.selector;
     }
 
     function createPrimaryOffering(

@@ -266,6 +266,7 @@ contracts/
 ## Task 9: M1 收口——Codex 交叉检查与任务勾选
 
 - [ ] **Step 9.1** 调度 Codex（read-only）对 `contracts/src` 做安全专项复查（重入、CEI、权限、精度），修复发现的问题（修复亦走 TDD）
+- [x] **Step 9.1a** 已修复：禁止非市场自身发起的 ERC-1155 直接转入，并校验 `HadronMarket` 构造器 `assets_` 非零。
 - [ ] **Step 9.2** `forge test -vv` 全量输出留档（证据）；核对 asset-registry / primary-market / secondary-market 三个 spec 的每个 Scenario 均有对应 PASS 测试
 - [ ] **Step 9.3** 更新 `openspec/changes/add-hadron-rwa-exchange/tasks.md`：勾选 1.1–1.7；提交
 

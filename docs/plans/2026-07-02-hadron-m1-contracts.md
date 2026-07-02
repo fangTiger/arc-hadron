@@ -123,10 +123,10 @@ contracts/
 
 **Files:** Create `contracts/foundry.toml`、`contracts/remappings.txt`、目录骨架
 
-- [ ] **Step 1.1** 在仓库根执行 `forge init contracts --no-git`（若 forge 不存在，先 `curl -L https://foundry.paradigm.xyz | bash && foundryup`），删除示例文件（`src/Counter.sol`、`test/Counter.t.sol`、`script/Counter.s.sol`）
-- [ ] **Step 1.2** `cd contracts && forge install OpenZeppelin/openzeppelin-contracts --no-git`；写 `remappings.txt`：`@openzeppelin/=lib/openzeppelin-contracts/`
-- [ ] **Step 1.3** 配置 `foundry.toml`：`solc = "0.8.24"`、`optimizer = true`、`optimizer_runs = 200`
-- [ ] **Step 1.4** 验证：`cd contracts && forge build` → 期望 `Compiler run successful`；`forge test` → 期望 0 个测试通过（无失败）
+- [x] **Step 1.1** 在仓库根执行 `forge init contracts --no-git`（若 forge 不存在，先 `curl -L https://foundry.paradigm.xyz | bash && foundryup`），删除示例文件（`src/Counter.sol`、`test/Counter.t.sol`、`script/Counter.s.sol`）
+- [x] **Step 1.2** `cd contracts && forge install OpenZeppelin/openzeppelin-contracts --no-git`；写 `remappings.txt`：`@openzeppelin/=lib/openzeppelin-contracts/`
+- [x] **Step 1.3** 配置 `foundry.toml`：`solc = "0.8.24"`、`optimizer = true`、`optimizer_runs = 200`
+- [x] **Step 1.4** 验证：`cd contracts && forge build` → 期望 `Compiler run successful`；`forge test` → 期望 0 个测试通过（无失败）
 - [ ] **Step 1.5** 提交：`git add contracts && git commit -m "chore(contracts): 初始化 Foundry 工程与 OpenZeppelin 依赖"`（lib/ 若体积大改用 gitmodules 或在 .gitignore 保留，以 forge install 可重建为准）
 
 ## Task 2: HadronAssets（TDD，对应 asset-registry spec）

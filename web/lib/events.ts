@@ -8,7 +8,8 @@ export type TradeEventType =
   | "listed"
   | "cancelled"
   | "asset-issued"
-  | "offering-created";
+  | "offering-created"
+  | "offering-closed";
 
 export interface TradeEvent {
   type: TradeEventType;
@@ -50,6 +51,7 @@ const EVENT_NAME_TO_TYPE: Record<string, TradeEventType> = {
   AssetIssued: "asset-issued",
   Cancelled: "cancelled",
   Listed: "listed",
+  OfferingClosed: "offering-closed",
   OfferingCreated: "offering-created",
   PrimarySale: "primary-sale",
   Purchased: "purchased",
@@ -151,20 +153,28 @@ function compareLogOrder(a: Pick<TradeEvent, "blockNumber" | "logIndex">, b: Pic
 
 export function parseMarketLogs(logs: readonly RawMarketLog[]): TradeEvent[] {
   const listingTokenIds = new Map<bigint, bigint>();
+  const offeringTokenIds = new Map<bigint, bigint>();
   const decodedLogs = logs
     .map((log) => ({ decoded: decodeMarketLog(log), log }))
     .filter((entry): entry is { decoded: DecodedLog; log: RawMarketLog } => entry.decoded !== null);
 
   for (const { decoded } of decodedLogs) {
-    if (decoded.eventName !== "Listed") {
-      continue;
-    }
-
-    const listingId = toBigInt(decoded.args.listingId);
     const tokenId = toBigInt(decoded.args.tokenId);
 
-    if (listingId !== undefined && tokenId !== undefined) {
-      listingTokenIds.set(listingId, tokenId);
+    if (decoded.eventName === "Listed") {
+      const listingId = toBigInt(decoded.args.listingId);
+
+      if (listingId !== undefined && tokenId !== undefined) {
+        listingTokenIds.set(listingId, tokenId);
+      }
+    }
+
+    if (decoded.eventName === "OfferingCreated") {
+      const offeringId = toBigInt(decoded.args.offeringId);
+
+      if (offeringId !== undefined && tokenId !== undefined) {
+        offeringTokenIds.set(offeringId, tokenId);
+      }
     }
   }
 
@@ -187,7 +197,9 @@ export function parseMarketLogs(logs: readonly RawMarketLog[]): TradeEvent[] {
     const totalPaid = toBigInt(args.totalPaid);
     const pricePerShare = toBigInt(args.pricePerShare) ?? priceFromTotal(totalPaid, amount);
     const tokenId =
-      toBigInt(args.tokenId) ?? (listingId !== undefined ? listingTokenIds.get(listingId) : undefined);
+      toBigInt(args.tokenId) ??
+      (listingId !== undefined ? listingTokenIds.get(listingId) : undefined) ??
+      (offeringId !== undefined ? offeringTokenIds.get(offeringId) : undefined);
 
     if (tokenId === undefined) {
       continue;

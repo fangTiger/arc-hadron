@@ -1,12 +1,13 @@
 import { createAppKit, type CreateAppKit } from "@reown/appkit/react";
 import { defineChain, type AppKitNetwork } from "@reown/appkit/networks";
 import { arcTestnet } from "./chain";
-import { requirePublicEnv } from "./env";
+import { optionalPublicEnv } from "./env";
 
-export const appKitProjectId = requirePublicEnv(
+export const appKitProjectId = optionalPublicEnv(
   "NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID",
   process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,
 );
+export const isAppKitConfigured = appKitProjectId !== undefined;
 
 export const appKitArcNetwork = defineChain({
   ...arcTestnet,
@@ -42,6 +43,10 @@ export const appKitThemeVariables = {
 type AppKitAdapters = NonNullable<CreateAppKit["adapters"]>;
 
 export function createHadronAppKit(adapters: AppKitAdapters) {
+  if (!appKitProjectId) {
+    return null;
+  }
+
   return createAppKit({
     adapters,
     networks: appKitNetworks,

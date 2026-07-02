@@ -33,6 +33,9 @@ const assetIssuedAbi = parseAbiItem(
 const offeringCreatedAbi = parseAbiItem(
   "event OfferingCreated(uint256 indexed offeringId, uint256 indexed tokenId, uint256 pricePerShare, uint256 amount)",
 ) as AbiEvent;
+const offeringClosedAbi = parseAbiItem(
+  "event OfferingClosed(uint256 indexed offeringId, uint256 returnedAmount)",
+) as AbiEvent;
 
 const buyer = "0x1000000000000000000000000000000000000001";
 const seller = "0x2000000000000000000000000000000000000002";
@@ -145,6 +148,28 @@ describe("parseMarketLogs", () => {
       { amount: 12n, pricePerShare: 420n, tokenId: 3n, type: "listed" },
       { amount: 20n, pricePerShare: 400n, tokenId: 3n, type: "offering-created" },
     ]);
+  });
+
+  test("infers OfferingClosed tokenId from the matching OfferingCreated event", () => {
+    const parsed = parseMarketLogs([
+      rawLog({
+        abi: offeringCreatedAbi,
+        args: [8n, 3n, 400n, 20n],
+        logIndex: 0,
+      }),
+      rawLog({
+        abi: offeringClosedAbi,
+        args: [8n, 7n],
+        logIndex: 1,
+      }),
+    ]);
+
+    expect(parsed[1]).toMatchObject({
+      amount: 7n,
+      offeringId: 8n,
+      tokenId: 3n,
+      type: "offering-closed",
+    });
   });
 
   test("parses AssetIssued logs and treats total shares as the event amount", () => {

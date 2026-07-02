@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAccount, useBalance, useConnect } from "wagmi";
 import { ARC_CHAIN_ID } from "@/lib/chain";
 import { formatShares, formatUsdc, shortAddress } from "@/lib/format";
@@ -29,13 +30,27 @@ function SecondaryButton({
   );
 }
 
+interface RefreshPurchaseReadsInput {
+  invalidateQueries: () => Promise<unknown>;
+  refetchBalance: () => Promise<unknown>;
+}
+
+export async function refreshPurchaseReads({
+  invalidateQueries,
+  refetchBalance,
+}: RefreshPurchaseReadsInput) {
+  await Promise.all([refetchBalance(), invalidateQueries()]);
+}
+
 export function BuyPanel({ asset }: { asset: AssetView }) {
   const [amountInput, setAmountInput] = useState("1");
   const { address, isConnected } = useAccount();
   const { connect, connectors, isPending: isConnectPending } = useConnect();
   const { isCorrectChain, switchToArc } = useNetworkGuard();
   const { buy, errorText, reset, status, txHash } = useBuyPrimary();
+  const queryClient = useQueryClient();
   const { pushError, pushSuccess } = useToast();
+  const lastRefreshKey = useRef<string | null>(null);
   const lastToastKey = useRef<string | null>(null);
   const offering = asset.offering;
   const hasOffering = Boolean(offering && offering.active);
@@ -53,6 +68,7 @@ export function BuyPanel({ asset }: { asset: AssetView }) {
       enabled: Boolean(address),
     },
   });
+  const { refetch: refetchBalance } = balanceQuery;
 
   const balanceValue = balanceQuery.data?.value ?? 0n;
   const validation = useMemo(() => {
@@ -80,6 +96,14 @@ export function BuyPanel({ asset }: { asset: AssetView }) {
     if (status === "success" && txHash) {
       const key = `success:${txHash}`;
 
+      if (lastRefreshKey.current !== key) {
+        lastRefreshKey.current = key;
+        void refreshPurchaseReads({
+          invalidateQueries: () => queryClient.invalidateQueries(),
+          refetchBalance,
+        }).catch(() => undefined);
+      }
+
       if (lastToastKey.current !== key) {
         pushSuccess({ message: "Purchase successful", txHash });
         lastToastKey.current = key;
@@ -100,7 +124,7 @@ export function BuyPanel({ asset }: { asset: AssetView }) {
     }
 
     lastToastKey.current = null;
-  }, [errorText, pushError, pushSuccess, status, txHash]);
+  }, [errorText, pushError, pushSuccess, queryClient, refetchBalance, status, txHash]);
 
   function connectWallet() {
     if (!injectedConnector) {

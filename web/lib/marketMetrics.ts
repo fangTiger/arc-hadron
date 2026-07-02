@@ -138,6 +138,10 @@ export function eventSentence(event: TradeEvent, asset?: AssetView): string {
     return `OFFER${amount} ${ticker}${price}`;
   }
 
+  if (event.type === "offering-closed") {
+    return `CLOSE${amount} ${ticker}`;
+  }
+
   return `ISSUE${amount} ${ticker}`;
 }
 
@@ -150,7 +154,7 @@ export function eventToneClassName(type: TradeEvent["type"]): string {
     return "text-neon-dim";
   }
 
-  if (type === "cancelled") {
+  if (type === "cancelled" || type === "offering-closed") {
     return "text-muted";
   }
 

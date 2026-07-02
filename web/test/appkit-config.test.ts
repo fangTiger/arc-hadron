@@ -5,12 +5,14 @@ import {
   appKitNetworks,
   appKitProjectId,
   appKitThemeVariables,
+  isAppKitConfigured,
 } from "../lib/appkit";
 import { arcTestnet } from "../lib/chain";
 
 describe("Reown AppKit configuration", () => {
   test("uses the public WalletConnect project id from the environment", () => {
     expect(appKitProjectId).toBe("7830285d60949dff7c9f0e7fef9ad970");
+    expect(isAppKitConfigured).toBe(true);
   });
 
   test("defines Arc testnet as an explicit CAIP EVM network", () => {

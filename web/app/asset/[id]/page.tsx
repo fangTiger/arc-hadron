@@ -214,6 +214,7 @@ function eventTypeLabel(type: TradeEvent["type"]): string {
     "asset-issued": "ASSET ISSUED",
     cancelled: "CANCELLED",
     listed: "LISTED",
+    "offering-closed": "OFFERING CLOSED",
     "offering-created": "OFFERING CREATED",
     "primary-sale": "PRIMARY SALE",
     purchased: "PURCHASED",

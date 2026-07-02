@@ -1,4 +1,5 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
+import { refreshPurchaseReads } from "../components/asset/BuyPanel";
 import { deriveBuyPrimaryState } from "../lib/hooks/useBuyPrimary";
 import { GAS_BUFFER, mapWagmiError, validatePurchase } from "../lib/purchase";
 
@@ -153,5 +154,17 @@ describe("deriveBuyPrimaryState", () => {
         receiptStatus: "success",
       }),
     ).toEqual({ status: "error", errorText: "Signature cancelled" });
+  });
+});
+
+describe("refreshPurchaseReads", () => {
+  test("refetches the native balance and invalidates active cached chain reads after purchase success", async () => {
+    const refetchBalance = vi.fn().mockResolvedValue(undefined);
+    const invalidateQueries = vi.fn().mockResolvedValue(undefined);
+
+    await refreshPurchaseReads({ invalidateQueries, refetchBalance });
+
+    expect(refetchBalance).toHaveBeenCalledOnce();
+    expect(invalidateQueries).toHaveBeenCalledOnce();
   });
 });

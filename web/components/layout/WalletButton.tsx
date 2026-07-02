@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAppKit } from "@reown/appkit/react";
-import { useAccount, useDisconnect } from "wagmi";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { shortAddress } from "@/lib/format";
+import { isAppKitConfigured } from "@/lib/appkit";
+import { initializeHadronAppKit } from "@/lib/wagmi";
 import { GlowButton } from "@/components/ui/GlowButton";
 
 type OpenAppKitModal = () => Promise<unknown>;
@@ -99,7 +101,7 @@ export function WalletButtonView({
   );
 }
 
-export function WalletButton() {
+function WalletButtonWithAppKit() {
   const { open } = useAppKit();
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
@@ -150,4 +152,86 @@ export function WalletButton() {
       onToggleMenu={() => setIsOpen((value) => !value)}
     />
   );
+}
+
+function WalletButtonWithInjectedFallback() {
+  const { address, isConnected } = useAccount();
+  const { connect, connectors, isPending } = useConnect();
+  const { disconnect } = useDisconnect();
+  const [isOpen, setIsOpen] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const injectedConnector = useMemo(
+    () => connectors.find((connector) => connector.type === "injected" || connector.id === "injected"),
+    [connectors],
+  );
+
+  function connectWallet() {
+    setNotice(null);
+
+    if (!injectedConnector) {
+      setNotice("WalletConnect is not configured. Install MetaMask or a compatible injected wallet.");
+      return;
+    }
+
+    connect(
+      { connector: injectedConnector },
+      {
+        onError: () => setNotice("Injected wallet connection failed. Please retry."),
+      },
+    );
+  }
+
+  async function copyAddress() {
+    if (!address) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(address);
+      setNotice("Address copied.");
+    } catch {
+      setNotice("Copy failed. Copy the address manually.");
+    }
+  }
+
+  return (
+    <WalletButtonView
+      address={address}
+      isConnected={isConnected}
+      isOpen={isOpen}
+      isPending={isPending}
+      notice={notice}
+      onCopyAddress={copyAddress}
+      onDisconnect={() => {
+        disconnect();
+        setIsOpen(false);
+      }}
+      onOpenWallet={connectWallet}
+      onToggleMenu={() => setIsOpen((value) => !value)}
+    />
+  );
+}
+
+export function WalletButton() {
+  if (!isAppKitConfigured) {
+    return <WalletButtonWithInjectedFallback />;
+  }
+
+  if (typeof window === "undefined" || !initializeHadronAppKit()) {
+    return (
+      <WalletButtonView
+        address={undefined}
+        isConnected={false}
+        isOpen={false}
+        isPending={false}
+        notice={null}
+        onCopyAddress={() => undefined}
+        onDisconnect={() => undefined}
+        onOpenWallet={() => undefined}
+        onToggleMenu={() => undefined}
+      />
+    );
+  }
+
+  return <WalletButtonWithAppKit />;
 }

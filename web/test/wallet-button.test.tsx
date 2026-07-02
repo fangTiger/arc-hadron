@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test, vi } from "vitest";
-import { WalletButtonView, openWalletModal } from "../components/layout/WalletButton";
+import { WalletButton, WalletButtonView, openWalletModal } from "../components/layout/WalletButton";
 
 describe("WalletButton Reown integration", () => {
   test("opens the AppKit modal from the disconnected call to action", async () => {
@@ -30,5 +30,11 @@ describe("WalletButton Reown integration", () => {
 
     expect(html).toContain("CONNECT WALLET");
     expect(html).not.toContain("appkit-button");
+  });
+
+  test("server-renders without calling the AppKit hook before client initialization", () => {
+    const html = renderToStaticMarkup(<WalletButton />);
+
+    expect(html).toContain("CONNECT WALLET");
   });
 });

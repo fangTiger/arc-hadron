@@ -198,7 +198,7 @@ contracts/
 
 **Files:** Modify `contracts/src/HadronMarket.sol`；Create `contracts/test/HadronMarket.secondary.t.sol`
 
-- [ ] **Step 5.1（RED）** 测试用例（setUp：owner 发行资产并一级卖给 seller 100 份，seller 已授权 market）：
+- [x] **Step 5.1（RED）** 测试用例（setUp：owner 发行资产并一级卖给 seller 100 份，seller 已授权 market）：
 
 | 测试函数 | 断言 | Spec 场景 |
 |---|---|---|
@@ -214,9 +214,9 @@ contracts/
 | `test_Cancel_RevertWhen_FullyFilled` | 全量成交后 cancel revert `InactiveListing` | 全量成交后不可撤单 |
 | `test_ListingsByToken_ReturnsOnlyActive` | 混合活跃/取消/售罄挂单，仅返回活跃 id | 详情页枚举活跃挂单 |
 
-- [ ] **Step 5.2** `forge test --match-path test/HadronMarket.secondary.t.sol` → 期望 FAIL
-- [ ] **Step 5.3（GREEN）** 实现 `list / cancel / buy / getListing / listingsByToken`
-- [ ] **Step 5.4** `forge test -vv` 全量 → 期望全部 PASS（含前序回归）
+- [x] **Step 5.2** `forge test --match-path test/HadronMarket.secondary.t.sol` → 期望 FAIL
+- [x] **Step 5.3（GREEN）** 实现 `list / cancel / buy / getListing / listingsByToken`
+- [x] **Step 5.4** `forge test -vv` 全量 → 期望全部 PASS（含前序回归）
 - [ ] **Step 5.5** 提交：`git commit -m "feat(contracts): 二级挂单市场（挂单/部分成交/撤单，TDD）"`
 
 ## Task 6: 对抗性与 Fuzz 测试

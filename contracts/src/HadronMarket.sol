@@ -34,6 +34,7 @@ contract HadronMarket is ERC1155Holder, Ownable2Step, ReentrancyGuard {
     uint256 public listingCount;
 
     mapping(uint256 offeringId => Offering offering) private offerings;
+    mapping(uint256 listingId => Listing listing) private listings;
 
     event OfferingCreated(uint256 indexed offeringId, uint256 indexed tokenId, uint256 pricePerShare, uint256 amount);
     event OfferingClosed(uint256 indexed offeringId, uint256 returnedAmount);
@@ -163,31 +164,103 @@ contract HadronMarket is ERC1155Holder, Ownable2Step, ReentrancyGuard {
     }
 
     function list(uint256 tokenId, uint256 amount, uint256 pricePerShare) external nonReentrant returns (uint256) {
-        tokenId;
-        amount;
-        pricePerShare;
-        revert("NOT_IMPLEMENTED");
+        if (amount == 0) {
+            revert ZeroAmount();
+        }
+        if (pricePerShare == 0) {
+            revert ZeroPrice();
+        }
+
+        uint256 listingId = listingCount + 1;
+        listingCount = listingId;
+        listings[listingId] = Listing({
+            seller: msg.sender,
+            tokenId: tokenId,
+            pricePerShare: pricePerShare,
+            remaining: amount,
+            active: true
+        });
+
+        assets.safeTransferFrom(msg.sender, address(this), tokenId, amount, "");
+        emit Listed(listingId, tokenId, msg.sender, pricePerShare, amount);
+
+        return listingId;
     }
 
     function cancel(uint256 listingId) external nonReentrant {
-        listingId;
-        revert("NOT_IMPLEMENTED");
+        _requireExistingListing(listingId);
+
+        Listing storage listing = listings[listingId];
+        if (listing.seller != msg.sender) {
+            revert NotSeller();
+        }
+        if (!listing.active) {
+            revert InactiveListing();
+        }
+
+        uint256 returnedAmount = listing.remaining;
+        listing.active = false;
+        listing.remaining = 0;
+
+        assets.safeTransferFrom(address(this), listing.seller, listing.tokenId, returnedAmount, "");
+        emit Cancelled(listingId, returnedAmount);
     }
 
     function buy(uint256 listingId, uint256 amount) external payable nonReentrant {
-        listingId;
-        amount;
-        revert("NOT_IMPLEMENTED");
+        Listing storage listing = _requireActiveListing(listingId);
+        if (amount == 0) {
+            revert ZeroAmount();
+        }
+        if (amount > listing.remaining) {
+            revert ExceedsRemaining();
+        }
+
+        uint256 totalPaid = listing.pricePerShare * amount;
+        if (msg.value != totalPaid) {
+            revert WrongPayment();
+        }
+
+        listing.remaining -= amount;
+        if (listing.remaining == 0) {
+            listing.active = false;
+        }
+
+        uint256 fee = totalPaid * feeBps / 10_000;
+        uint256 sellerProceeds = totalPaid - fee;
+        address seller = listing.seller;
+
+        emit Purchased(listingId, listing.tokenId, msg.sender, seller, amount, totalPaid, fee);
+        assets.safeTransferFrom(address(this), msg.sender, listing.tokenId, amount, "");
+        _sendValue(seller, sellerProceeds);
+        _sendValue(treasury, fee);
     }
 
     function getListing(uint256 listingId) external view returns (Listing memory) {
-        listingId;
-        revert("NOT_IMPLEMENTED");
+        _requireExistingListing(listingId);
+
+        return listings[listingId];
     }
 
     function listingsByToken(uint256 tokenId) external view returns (uint256[] memory) {
-        tokenId;
-        revert("NOT_IMPLEMENTED");
+        uint256 activeCount;
+        for (uint256 listingId = 1; listingId <= listingCount; listingId++) {
+            Listing storage listing = listings[listingId];
+            if (listing.active && listing.remaining > 0 && listing.tokenId == tokenId) {
+                activeCount++;
+            }
+        }
+
+        uint256[] memory activeListingIds = new uint256[](activeCount);
+        uint256 writeIndex;
+        for (uint256 listingId = 1; listingId <= listingCount; listingId++) {
+            Listing storage listing = listings[listingId];
+            if (listing.active && listing.remaining > 0 && listing.tokenId == tokenId) {
+                activeListingIds[writeIndex] = listingId;
+                writeIndex++;
+            }
+        }
+
+        return activeListingIds;
     }
 
     function setTreasury(address newTreasury) external onlyOwner {
@@ -214,6 +287,23 @@ contract HadronMarket is ERC1155Holder, Ownable2Step, ReentrancyGuard {
         }
 
         return offering;
+    }
+
+    function _requireExistingListing(uint256 listingId) private view {
+        if (listingId == 0 || listingId > listingCount) {
+            revert InactiveListing();
+        }
+    }
+
+    function _requireActiveListing(uint256 listingId) private view returns (Listing storage) {
+        _requireExistingListing(listingId);
+
+        Listing storage listing = listings[listingId];
+        if (!listing.active) {
+            revert InactiveListing();
+        }
+
+        return listing;
     }
 
     function _sendValue(address recipient, uint256 amount) private {

@@ -1,22 +1,15 @@
-import { createConfig, http } from "wagmi";
-import { injected, walletConnect } from "wagmi/connectors";
+import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
+import { http } from "wagmi";
+import { appKitNetworks, appKitProjectId } from "./appkit";
 import { arcTestnet, ARC_RPC_URL } from "./chain";
-import { optionalPublicEnv } from "./env";
 
-const walletConnectProjectId = optionalPublicEnv(
-  "NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID",
-  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,
-);
-
-const connectors = walletConnectProjectId
-  ? [injected(), walletConnect({ projectId: walletConnectProjectId })]
-  : [injected()];
-
-export const wagmiConfig = createConfig({
-  chains: [arcTestnet],
-  connectors,
+export const wagmiAdapter = new WagmiAdapter({
+  networks: appKitNetworks,
+  projectId: appKitProjectId,
   transports: {
     [arcTestnet.id]: http(ARC_RPC_URL),
   },
   ssr: true,
 });
+
+export const wagmiConfig = wagmiAdapter.wagmiConfig;

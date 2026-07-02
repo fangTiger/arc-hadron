@@ -1,55 +1,53 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { useState } from "react";
+import { useAppKit } from "@reown/appkit/react";
+import { useAccount, useDisconnect } from "wagmi";
 import { shortAddress } from "@/lib/format";
 import { GlowButton } from "@/components/ui/GlowButton";
 
-export function WalletButton() {
-  const { address, isConnected } = useAccount();
-  const { connect, connectors, isPending } = useConnect();
-  const { disconnect } = useDisconnect();
-  const [isOpen, setIsOpen] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
+type OpenAppKitModal = () => Promise<unknown>;
 
-  const injectedConnector = useMemo(
-    () => connectors.find((connector) => connector.type === "injected" || connector.id === "injected"),
-    [connectors],
-  );
+export async function openWalletModal(
+  open: OpenAppKitModal,
+  setNotice: (notice: string | null) => void,
+) {
+  setNotice(null);
 
-  function connectWallet() {
-    setNotice(null);
-
-    if (!injectedConnector) {
-      setNotice("Install MetaMask or a compatible injected wallet.");
-      return;
-    }
-
-    connect(
-      { connector: injectedConnector },
-      {
-        onError: () => setNotice("Install MetaMask or unlock your wallet."),
-      },
-    );
+  try {
+    await open();
+  } catch {
+    setNotice("Wallet modal failed to open. Please retry.");
   }
+}
 
-  async function copyAddress() {
-    if (!address) {
-      return;
-    }
+interface WalletButtonViewProps {
+  address?: string;
+  isConnected: boolean;
+  isOpen: boolean;
+  isPending: boolean;
+  notice: string | null;
+  onCopyAddress: () => void;
+  onDisconnect: () => void;
+  onOpenWallet: () => void;
+  onToggleMenu: () => void;
+}
 
-    try {
-      await navigator.clipboard.writeText(address);
-      setNotice("Address copied.");
-    } catch {
-      setNotice("Copy failed. Copy the address manually.");
-    }
-  }
-
+export function WalletButtonView({
+  address,
+  isConnected,
+  isOpen,
+  isPending,
+  notice,
+  onCopyAddress,
+  onDisconnect,
+  onOpenWallet,
+  onToggleMenu,
+}: WalletButtonViewProps) {
   if (!isConnected || !address) {
     return (
       <div className="relative flex flex-col items-end gap-1">
-        <GlowButton disabled={isPending} onClick={connectWallet} size="sm">
+        <GlowButton disabled={isPending} onClick={onOpenWallet} size="sm">
           {isPending ? "CONNECTING" : "CONNECT WALLET"}
         </GlowButton>
         {notice ? (
@@ -67,7 +65,7 @@ export function WalletButton() {
         aria-expanded={isOpen}
         aria-haspopup="menu"
         className="h-8 border border-border-glow bg-panel/80 px-3 font-mono text-[11px] text-neon-dim transition-colors hover:border-neon"
-        onClick={() => setIsOpen((value) => !value)}
+        onClick={onToggleMenu}
         type="button"
       >
         {shortAddress(address)}
@@ -80,7 +78,7 @@ export function WalletButton() {
         >
           <button
             className="block w-full px-3 py-2 text-left text-text-dim transition-colors hover:bg-border/40 hover:text-text"
-            onClick={copyAddress}
+            onClick={onCopyAddress}
             role="menuitem"
             type="button"
           >
@@ -88,10 +86,7 @@ export function WalletButton() {
           </button>
           <button
             className="block w-full px-3 py-2 text-left text-down transition-colors hover:bg-border/40"
-            onClick={() => {
-              disconnect();
-              setIsOpen(false);
-            }}
+            onClick={onDisconnect}
             role="menuitem"
             type="button"
           >
@@ -101,5 +96,58 @@ export function WalletButton() {
         </div>
       ) : null}
     </div>
+  );
+}
+
+export function WalletButton() {
+  const { open } = useAppKit();
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
+  const [isOpen, setIsOpen] = useState(false);
+  const [isOpening, setIsOpening] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  async function connectWallet() {
+    if (isOpening) {
+      return;
+    }
+
+    setIsOpening(true);
+
+    try {
+      await openWalletModal(() => open(), setNotice);
+    } finally {
+      setIsOpening(false);
+    }
+  }
+
+  async function copyAddress() {
+    if (!address) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(address);
+      setNotice("Address copied.");
+    } catch {
+      setNotice("Copy failed. Copy the address manually.");
+    }
+  }
+
+  return (
+    <WalletButtonView
+      address={address}
+      isConnected={isConnected}
+      isOpen={isOpen}
+      isPending={isOpening}
+      notice={notice}
+      onCopyAddress={copyAddress}
+      onDisconnect={() => {
+        disconnect();
+        setIsOpen(false);
+      }}
+      onOpenWallet={connectWallet}
+      onToggleMenu={() => setIsOpen((value) => !value)}
+    />
   );
 }

@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+:root {
+  /* A+ 主题 token：深空黑底、单一霓虹青、暗金收益色。 */
+  --bg: #05070d;
+  --panel: #0a0e16;
+  --panel-glow: #0d1b2b;
+  --border: #1c2333;
+  --border-glow: #16324a;
+  --neon: #22d3ee;
+  --neon-dim: #67e8f9;
+  --gold: #e9c46a;
+  --text: #eaf6ff;
+  --text-dim: #9ca3af;
+  --muted: #6b7280;
+  --up: #34d399;
+  --down: #f87171;
+  --category-treasuries: #155e75;
+  --category-gold: #7c5c1e;
+  --category-real-estate: #1d2733;
+  --category-carbon: #1e4d3a;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-panel-glow: var(--panel-glow);
+  --color-border: var(--border);
+  --color-border-glow: var(--border-glow);
+  --color-neon: var(--neon);
+  --color-neon-dim: var(--neon-dim);
+  --color-gold: var(--gold);
+  --color-text: var(--text);
+  --color-text-dim: var(--text-dim);
+  --color-muted: var(--muted);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --color-category-treasuries: var(--category-treasuries);
+  --color-category-gold: var(--category-gold);
+  --color-category-real-estate: var(--category-real-estate);
+  --color-category-carbon: var(--category-carbon);
+}
+
+* {
+  box-sizing: border-box;
+  scrollbar-color: var(--border-glow) var(--bg);
+  scrollbar-width: thin;
+}
+
+html {
+  min-height: 100%;
+  background: var(--bg);
+  color-scheme: dark;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  text-rendering: geometricprecision;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--neon) 32%, transparent);
+  color: var(--text);
+}
+
+::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-glow);
+  border: 2px solid var(--bg);
+  border-radius: 999px;
+}

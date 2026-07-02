@@ -254,7 +254,7 @@ contracts/
 
 **Files:** Create `contracts/script/Seed.s.sol`
 
-- [ ] **Step 8.1** 编写 `Seed.s.sol`：创建 4 类资产并各建一级发行（**价格单位：18 位小数 wei，1 USDC = 1e18，冒烟实证口径**）：
+- [x] **Step 8.1** 编写 `Seed.s.sol`：创建 4 类资产并各建一级发行（**价格单位：18 位小数 wei，1 USDC = 1e18，冒烟实证口径**）：
   - `US T-BILL 2026-Q3`（treasuries，10,000 份，100e18/份）
   - `GOLD OUNCE VAULT #4`（gold，500 份，23.8e18/份）
   - `MARINA TOWER UNIT 12F`（real-estate，2,000 份，55.5e18/份）

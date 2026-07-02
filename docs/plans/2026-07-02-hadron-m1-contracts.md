@@ -174,7 +174,7 @@ contracts/
 
 **Files:** Modify `contracts/src/HadronMarket.sol`；Create `contracts/test/HadronMarket.primary.t.sol`
 
-- [ ] **Step 4.1（RED）** 测试用例（setUp：部署两合约，owner 创建资产 1000 份并 `setApprovalForAll(market, true)`）：
+- [x] **Step 4.1（RED）** 测试用例（setUp：部署两合约，owner 创建资产 1000 份并 `setApprovalForAll(market, true)`）：
 
 | 测试函数 | 断言 | Spec 场景 |
 |---|---|---|
@@ -189,9 +189,9 @@ contracts/
 | `test_CloseOffering_ReturnsRemaining_BlocksBuy` | 剩余退回 owner、`OfferingClosed` 事件、再购买 revert `InactiveOffering` | 关闭发行并退回库存 |
 | `test_GetOffering_EnumerableViaCount` | `offeringCount` + `getOffering` 枚举与实际一致 | 前端枚举全部发行 |
 
-- [ ] **Step 4.2** `forge test --match-path test/HadronMarket.primary.t.sol` → 期望 FAIL
-- [ ] **Step 4.3（GREEN）** 实现 `createPrimaryOffering / closePrimaryOffering / buyPrimary / getOffering`（遵循统一行为规则的校验顺序与 CEI）
-- [ ] **Step 4.4** `forge test --match-path test/HadronMarket.primary.t.sol -vv` → 期望 10 个 PASS；`forge test` 全量回归 PASS
+- [x] **Step 4.2** `forge test --match-path test/HadronMarket.primary.t.sol` → 期望 FAIL
+- [x] **Step 4.3（GREEN）** 实现 `createPrimaryOffering / closePrimaryOffering / buyPrimary / getOffering`（遵循统一行为规则的校验顺序与 CEI）
+- [x] **Step 4.4** `forge test --match-path test/HadronMarket.primary.t.sol -vv` → 期望 10 个 PASS；`forge test` 全量回归 PASS
 - [ ] **Step 4.5** 提交：`git commit -m "feat(contracts): 一级发行（创建/购买/关闭/协议费，TDD）"`
 
 ## Task 5: 二级市场（TDD，对应 secondary-market spec）

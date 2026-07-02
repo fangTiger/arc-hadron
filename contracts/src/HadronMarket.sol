@@ -33,6 +33,8 @@ contract HadronMarket is ERC1155Holder, Ownable2Step, ReentrancyGuard {
     uint256 public offeringCount;
     uint256 public listingCount;
 
+    mapping(uint256 offeringId => Offering offering) private offerings;
+
     event OfferingCreated(uint256 indexed offeringId, uint256 indexed tokenId, uint256 pricePerShare, uint256 amount);
     event OfferingClosed(uint256 indexed offeringId, uint256 returnedAmount);
     event PrimarySale(
@@ -92,26 +94,72 @@ contract HadronMarket is ERC1155Holder, Ownable2Step, ReentrancyGuard {
         uint256 pricePerShare,
         uint256 amount
     ) external onlyOwner returns (uint256) {
-        tokenId;
-        pricePerShare;
-        amount;
-        revert("NOT_IMPLEMENTED");
+        if (pricePerShare == 0) {
+            revert ZeroPrice();
+        }
+        if (amount == 0) {
+            revert ZeroAmount();
+        }
+
+        uint256 offeringId = offeringCount + 1;
+        offeringCount = offeringId;
+        offerings[offeringId] = Offering({
+            tokenId: tokenId,
+            pricePerShare: pricePerShare,
+            remaining: amount,
+            active: true
+        });
+
+        assets.safeTransferFrom(owner(), address(this), tokenId, amount, "");
+        emit OfferingCreated(offeringId, tokenId, pricePerShare, amount);
+
+        return offeringId;
     }
 
     function closePrimaryOffering(uint256 offeringId) external onlyOwner {
-        offeringId;
-        revert("NOT_IMPLEMENTED");
+        Offering storage offering = _requireActiveOffering(offeringId);
+        uint256 returnedAmount = offering.remaining;
+
+        offering.active = false;
+        offering.remaining = 0;
+
+        assets.safeTransferFrom(address(this), owner(), offering.tokenId, returnedAmount, "");
+        emit OfferingClosed(offeringId, returnedAmount);
     }
 
     function buyPrimary(uint256 offeringId, uint256 amount) external payable nonReentrant {
-        offeringId;
-        amount;
-        revert("NOT_IMPLEMENTED");
+        Offering storage offering = _requireActiveOffering(offeringId);
+        if (amount == 0) {
+            revert ZeroAmount();
+        }
+        if (amount > offering.remaining) {
+            revert ExceedsRemaining();
+        }
+
+        uint256 totalPaid = offering.pricePerShare * amount;
+        if (msg.value != totalPaid) {
+            revert WrongPayment();
+        }
+
+        offering.remaining -= amount;
+        if (offering.remaining == 0) {
+            offering.active = false;
+        }
+
+        uint256 fee = totalPaid * feeBps / 10_000;
+        uint256 sellerProceeds = totalPaid - fee;
+        address seller = owner();
+
+        emit PrimarySale(offeringId, offering.tokenId, msg.sender, amount, totalPaid, fee);
+        assets.safeTransferFrom(address(this), msg.sender, offering.tokenId, amount, "");
+        _sendValue(seller, sellerProceeds);
+        _sendValue(treasury, fee);
     }
 
     function getOffering(uint256 offeringId) external view returns (Offering memory) {
-        offeringId;
-        revert("NOT_IMPLEMENTED");
+        _requireExistingOffering(offeringId);
+
+        return offerings[offeringId];
     }
 
     function list(uint256 tokenId, uint256 amount, uint256 pricePerShare) external nonReentrant returns (uint256) {
@@ -149,5 +197,33 @@ contract HadronMarket is ERC1155Holder, Ownable2Step, ReentrancyGuard {
 
         treasury = newTreasury;
         emit TreasuryUpdated(newTreasury);
+    }
+
+    function _requireExistingOffering(uint256 offeringId) private view {
+        if (offeringId == 0 || offeringId > offeringCount) {
+            revert InactiveOffering();
+        }
+    }
+
+    function _requireActiveOffering(uint256 offeringId) private view returns (Offering storage) {
+        _requireExistingOffering(offeringId);
+
+        Offering storage offering = offerings[offeringId];
+        if (!offering.active) {
+            revert InactiveOffering();
+        }
+
+        return offering;
+    }
+
+    function _sendValue(address recipient, uint256 amount) private {
+        if (amount == 0) {
+            return;
+        }
+
+        (bool success,) = recipient.call{value: amount}("");
+        if (!success) {
+            revert TransferFailed();
+        }
     }
 }

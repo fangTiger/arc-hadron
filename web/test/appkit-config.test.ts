@@ -24,6 +24,13 @@ describe("Reown AppKit configuration", () => {
     expect(arc.rpcUrls.default.http).toEqual(["https://rpc.testnet.arc.network"]);
   });
 
+  test("defines the Arc multicall3 contract for aggregated wagmi reads", () => {
+    expect(arcTestnet.contracts?.multicall3).toEqual({
+      address: "0xcA11bde05977b3631167028862bE2a173976CA11",
+      blockCreated: 0,
+    });
+  });
+
   test("keeps the AppKit modal focused on wallet connection only", () => {
     expect(appKitMetadata).toEqual({
       name: "HADRON",

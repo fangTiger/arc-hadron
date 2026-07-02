@@ -11,7 +11,9 @@ import {
   buildPriceSeries,
   compute24h,
   dedupeEvents,
+  mergeTradeEvents,
   parseMarketLogs,
+  planLogChunks,
   type TradeEvent,
 } from "../lib/events";
 
@@ -217,6 +219,42 @@ describe("dedupeEvents", () => {
     const distinct = event({ amount: 3n, logIndex: 5, txHash: hash(88) });
 
     expect(dedupeEvents([first, duplicate, distinct])).toEqual([first, distinct]);
+  });
+});
+
+describe("planLogChunks", () => {
+  test("splits a range that divides evenly by chunk size", () => {
+    expect(planLogChunks(10n, 27n, 9n)).toEqual([
+      { from: 10n, to: 18n },
+      { from: 19n, to: 27n },
+    ]);
+  });
+
+  test("keeps a single-block range as one chunk", () => {
+    expect(planLogChunks(42n, 42n, 9_000n)).toEqual([{ from: 42n, to: 42n }]);
+  });
+
+  test("returns no chunks when fromBlock is after toBlock", () => {
+    expect(planLogChunks(43n, 42n, 9_000n)).toEqual([]);
+  });
+});
+
+describe("mergeTradeEvents", () => {
+  test("merges incremental events with cached events, keeps first duplicate, and sorts by log order", () => {
+    const cached = [
+      event({ blockNumber: 10n, logIndex: 1, txHash: hash(10), amount: 1n }),
+      event({ blockNumber: 12n, logIndex: 2, txHash: hash(12), amount: 2n }),
+    ];
+    const duplicate = event({ blockNumber: 12n, logIndex: 2, txHash: hash(12), amount: 99n });
+    const newer = event({ blockNumber: 13n, logIndex: 0, txHash: hash(13), amount: 3n });
+    const outOfOrder = event({ blockNumber: 11n, logIndex: 0, txHash: hash(11), amount: 4n });
+
+    expect(mergeTradeEvents(cached, [newer, duplicate, outOfOrder])).toEqual([
+      cached[0],
+      outOfOrder,
+      cached[1],
+      newer,
+    ]);
   });
 });
 

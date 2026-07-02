@@ -30,6 +30,11 @@ export interface PricePoint {
   price: bigint;
 }
 
+export interface LogChunk {
+  from: bigint;
+  to: bigint;
+}
+
 interface RawMarketLog {
   args?: Record<string, unknown>;
   blockNumber?: bigint | number | null;
@@ -151,6 +156,29 @@ function compareLogOrder(a: Pick<TradeEvent, "blockNumber" | "logIndex">, b: Pic
   return aBlock > bBlock ? 1 : -1;
 }
 
+export function planLogChunks(fromBlock: bigint, toBlock: bigint, chunkSize: bigint): LogChunk[] {
+  if (chunkSize <= 0n) {
+    throw new Error("Log chunk size must be greater than zero.");
+  }
+
+  if (fromBlock > toBlock) {
+    return [];
+  }
+
+  const chunks: LogChunk[] = [];
+  let from = fromBlock;
+
+  while (from <= toBlock) {
+    const to = from + chunkSize - 1n;
+    const boundedTo = to > toBlock ? toBlock : to;
+
+    chunks.push({ from, to: boundedTo });
+    from = boundedTo + 1n;
+  }
+
+  return chunks;
+}
+
 export function parseMarketLogs(logs: readonly RawMarketLog[]): TradeEvent[] {
   const listingTokenIds = new Map<bigint, bigint>();
   const offeringTokenIds = new Map<bigint, bigint>();
@@ -239,6 +267,13 @@ export function dedupeEvents(events: readonly TradeEvent[]): TradeEvent[] {
   }
 
   return result;
+}
+
+export function mergeTradeEvents(
+  existingEvents: readonly TradeEvent[],
+  incomingEvents: readonly TradeEvent[],
+): TradeEvent[] {
+  return dedupeEvents([...existingEvents, ...incomingEvents]).sort(compareLogOrder);
 }
 
 function tradePriceEvents(events: readonly TradeEvent[], tokenId: bigint): TradeEvent[] {

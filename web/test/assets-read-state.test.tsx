@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { AssetDetailView } from "../app/asset/[id]/page";
 import { remainingRatio } from "../components/market/AssetCard";
 import { AssetGridView } from "../components/market/AssetGrid";
@@ -9,7 +9,14 @@ import {
   assetReadErrorZh,
   readContractCount,
 } from "../lib/hooks/useAssets";
+import type { TradeEvent } from "../lib/events";
 import type { AssetView } from "../lib/mappers";
+
+const USDC = 10n ** 18n;
+
+vi.mock("../components/asset/BuyPanel", () => ({
+  BuyPanel: () => <aside>BUY PANEL</aside>,
+}));
 
 function assetView(overrides: Partial<AssetView> = {}): AssetView {
   return {
@@ -27,12 +34,27 @@ function assetView(overrides: Partial<AssetView> = {}): AssetView {
     offering: {
       active: true,
       id: 1n,
-      pricePerShare: 1n,
+      pricePerShare: 1n * USDC,
       remaining: 50n,
       tokenId: 1n,
     },
     tokenId: 1n,
     totalShares: 100n,
+    ...overrides,
+  };
+}
+
+function tradeEvent(overrides: Partial<TradeEvent> = {}): TradeEvent {
+  return {
+    amount: 2n,
+    blockNumber: 100n,
+    logIndex: 1,
+    pricePerShare: 2n * USDC,
+    timestamp: Date.UTC(2026, 6, 2, 10),
+    tokenId: 1n,
+    totalPaid: 4n * USDC,
+    txHash: "0x0000000000000000000000000000000000000000000000000000000000000002",
+    type: "primary-sale",
     ...overrides,
   };
 }
@@ -91,6 +113,25 @@ describe("on-chain asset read state", () => {
 
     expect(html).toContain("Asset not found");
     expect(html).not.toContain("REMAINING SHARES");
+  });
+
+  test("renders the redesigned asset price header and on-chain trade history", () => {
+    const html = renderToStaticMarkup(
+      <AssetDetailView
+        assets={[assetView()]}
+        events={[tradeEvent()]}
+        id="1"
+        isLoading={false}
+        nowMs={Date.UTC(2026, 6, 2, 12)}
+      />,
+    );
+
+    expect(html).toContain("2.00");
+    expect(html).toContain("24H");
+    expect(html).toContain("MARKET CAP");
+    expect(html).toContain("TRADE HISTORY");
+    expect(html).toContain("PRIMARY SALE");
+    expect(html).toContain("href=\"https://testnet.arcscan.app/tx/");
   });
 
   test("caps remaining ratio in bigint space before converting to number", () => {

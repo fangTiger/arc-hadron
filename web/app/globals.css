@@ -92,3 +92,24 @@ a {
     transform: translateX(100%);
   }
 }
+
+@keyframes hadron-live-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.hadron-live-track {
+  animation: hadron-live-marquee 34s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hadron-live-track {
+    animation: none;
+    transform: none;
+  }
+}

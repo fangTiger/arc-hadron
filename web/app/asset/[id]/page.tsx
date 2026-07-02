@@ -7,7 +7,19 @@ import { BuyPanel } from "@/components/asset/BuyPanel";
 import { ListingsPlaceholder } from "@/components/asset/ListingsPlaceholder";
 import { glowButtonClassName } from "@/components/ui/GlowButton";
 import { Skeleton } from "@/components/ui/Skeleton";
+import type { TradeEvent } from "@/lib/events";
+import { formatShares, formatUsdc, shortAddress } from "@/lib/format";
 import { useAssets } from "@/lib/hooks/useAssets";
+import { useMarketEvents } from "@/lib/hooks/useMarketEvents";
+import {
+  assetChange24h,
+  eventExplorerUrl,
+  formatApyBps,
+  latestPriceForAsset,
+  priceSeriesForAsset,
+  relativeTime,
+  tradeEventsForAsset,
+} from "@/lib/marketMetrics";
 import type { AssetView } from "@/lib/mappers";
 
 function AssetDetailSkeleton() {
@@ -58,16 +70,264 @@ function AssetReadErrorState({ message }: { message: string }) {
   );
 }
 
+function changeClassName(changePct: number): string {
+  if (changePct > 0) {
+    return "border-up/40 bg-up/10 text-up";
+  }
+
+  if (changePct < 0) {
+    return "border-down/40 bg-down/10 text-down";
+  }
+
+  return "border-border bg-bg/60 text-muted";
+}
+
+function AssetPriceHeader({
+  asset,
+  events,
+  nowMs,
+}: {
+  asset: AssetView;
+  events: TradeEvent[];
+  nowMs: number;
+}) {
+  const price = latestPriceForAsset(asset, events);
+  const change = assetChange24h(asset, events, nowMs);
+  const available = asset.offering?.remaining ?? 0n;
+  const marketCap = asset.totalShares * price;
+
+  return (
+    <section className="border border-border bg-panel p-5 sm:p-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-dim">
+            {asset.meta.ticker} / TOKEN #{asset.tokenId.toString()}
+          </p>
+          <h1 className="mt-3 text-2xl font-semibold text-text sm:text-3xl">
+            {asset.meta.displayName}
+          </h1>
+        </div>
+        <span
+          className={[
+            "w-fit border px-3 py-2 font-mono text-[10px] uppercase tracking-[0.16em]",
+            changeClassName(change.changePct),
+          ].join(" ")}
+        >
+          24H {change.changePct.toFixed(2)}%
+        </span>
+      </div>
+
+      <div className="mt-6 flex flex-wrap items-end gap-x-4 gap-y-2">
+        <p className="font-mono text-5xl font-semibold leading-none text-text sm:text-6xl">
+          {formatUsdc(price)}
+        </p>
+        <p className="pb-1 font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
+          USDC / SHARE
+        </p>
+      </div>
+
+      <dl className="mt-6 grid gap-3 border-t border-border pt-5 font-mono text-[10px] uppercase tracking-[0.16em] sm:grid-cols-4">
+        <div>
+          <dt className="text-muted">YIELD</dt>
+          <dd className="mt-2 text-sm text-gold">{formatApyBps(asset.meta.apyBps)}</dd>
+        </div>
+        <div>
+          <dt className="text-muted">AVAILABLE</dt>
+          <dd className="mt-2 text-sm text-text">{formatShares(available)}</dd>
+        </div>
+        <div>
+          <dt className="text-muted">MARKET CAP</dt>
+          <dd className="mt-2 text-sm text-text">{formatUsdc(marketCap, { compact: true })}</dd>
+        </div>
+        <div>
+          <dt className="text-muted">TOTAL SHARES</dt>
+          <dd className="mt-2 text-sm text-text">{formatShares(asset.totalShares)}</dd>
+        </div>
+      </dl>
+    </section>
+  );
+}
+
+function PriceChart({
+  asset,
+  events,
+}: {
+  asset: AssetView;
+  events: TradeEvent[];
+}) {
+  const series = priceSeriesForAsset(asset, events);
+  const trades = tradeEventsForAsset(events, asset.tokenId);
+  const prices = series.map((point) => Number(point.price));
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const span = max - min || 1;
+  const points = series
+    .map((point, index) => {
+      const x = series.length === 1 ? 0 : (index / (series.length - 1)) * 640;
+      const y = 140 - ((Number(point.price) - min) / span) * 120;
+
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(" ");
+  const latest = series.at(-1);
+  const latestY = latest ? 140 - ((Number(latest.price) - min) / span) * 120 : 80;
+  const first = series[0]?.price ?? 0n;
+  const last = latest?.price ?? first;
+  const stroke = last > first ? "var(--up)" : last < first ? "var(--down)" : "var(--muted)";
+
+  return (
+    <section className="border border-border bg-panel p-5 sm:p-6">
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="font-mono text-[11px] uppercase tracking-[0.2em] text-text">PRICE TREND</h2>
+        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
+          {trades.length} TRADES
+        </p>
+      </div>
+      <svg className="mt-5 h-40 w-full" preserveAspectRatio="none" viewBox="0 0 640 160">
+        <line
+          stroke="var(--border-glow)"
+          strokeDasharray="4 6"
+          strokeWidth="1"
+          x1="0"
+          x2="640"
+          y1={latestY}
+          y2={latestY}
+        />
+        <polyline
+          fill="none"
+          points={points}
+          stroke={stroke}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2.5"
+        />
+      </svg>
+      {trades.length < 2 ? (
+        <p className="mt-3 text-sm text-muted">Awaiting secondary trades for richer price history</p>
+      ) : null}
+    </section>
+  );
+}
+
+function eventTypeLabel(type: TradeEvent["type"]): string {
+  const labels: Record<TradeEvent["type"], string> = {
+    "asset-issued": "ASSET ISSUED",
+    cancelled: "CANCELLED",
+    listed: "LISTED",
+    "offering-created": "OFFERING CREATED",
+    "primary-sale": "PRIMARY SALE",
+    purchased: "PURCHASED",
+  };
+
+  return labels[type];
+}
+
+function TradeHistoryTable({
+  asset,
+  events,
+  isLoading,
+  nowMs,
+}: {
+  asset: AssetView;
+  events: TradeEvent[];
+  isLoading: boolean;
+  nowMs: number;
+}) {
+  const rows = events
+    .filter((event) => event.tokenId === asset.tokenId)
+    .sort((a, b) => {
+      if (a.blockNumber === b.blockNumber) {
+        return b.logIndex - a.logIndex;
+      }
+
+      return a.blockNumber > b.blockNumber ? -1 : 1;
+    });
+
+  return (
+    <section className="overflow-hidden border border-border bg-panel">
+      <div className="border-b border-border px-5 py-4 sm:px-6">
+        <h2 className="font-mono text-[11px] uppercase tracking-[0.2em] text-text">TRADE HISTORY</h2>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-[720px] w-full border-collapse">
+          <thead className="border-b border-border bg-bg/70">
+            <tr>
+              {["TIME", "TYPE", "QTY", "PRICE", "TX"].map((label) => (
+                <th
+                  className="px-5 py-3 text-left font-mono text-[10px] uppercase tracking-[0.16em] text-muted"
+                  key={label}
+                >
+                  {label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? (
+              <tr>
+                <td className="px-5 py-6" colSpan={5}>
+                  <Skeleton className="h-5 w-full max-w-lg" />
+                </td>
+              </tr>
+            ) : null}
+            {!isLoading && rows.length === 0 ? (
+              <tr>
+                <td className="px-5 py-8 text-sm text-muted" colSpan={5}>
+                  Trade history lands here after on-chain activity.
+                </td>
+              </tr>
+            ) : null}
+            {!isLoading
+              ? rows.map((event) => (
+                  <tr className="border-b border-border/80 last:border-b-0" key={`${event.txHash}:${event.logIndex}`}>
+                    <td className="px-5 py-4 font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
+                      {relativeTime(event.timestamp, nowMs)}
+                    </td>
+                    <td className="px-5 py-4 font-mono text-[11px] uppercase tracking-[0.12em] text-text">
+                      {eventTypeLabel(event.type)}
+                    </td>
+                    <td className="px-5 py-4 font-mono text-sm text-text-dim">
+                      {event.amount === undefined ? "—" : formatShares(event.amount)}
+                    </td>
+                    <td className="px-5 py-4 font-mono text-sm text-text">
+                      {event.pricePerShare === undefined ? "—" : formatUsdc(event.pricePerShare)}
+                    </td>
+                    <td className="px-5 py-4">
+                      <a
+                        className="font-mono text-[11px] uppercase tracking-[0.16em] text-neon-dim underline-offset-4 hover:text-neon hover:underline"
+                        href={eventExplorerUrl(event.txHash)}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        {shortAddress(event.txHash)}
+                      </a>
+                    </td>
+                  </tr>
+                ))
+              : null}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
 export function AssetDetailView({
   assets,
   errorZh,
+  events = [],
   id,
+  isEventsLoading = false,
   isLoading,
+  nowMs = 0,
 }: {
   assets: AssetView[];
   errorZh?: string;
+  events?: TradeEvent[];
   id: string;
+  isEventsLoading?: boolean;
   isLoading: boolean;
+  nowMs?: number;
 }) {
   const isNumericId = /^\d+$/.test(id);
   const asset = assets.find((item) => item.tokenId.toString() === id);
@@ -91,9 +351,16 @@ export function AssetDetailView({
   return (
     <main className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] lg:px-8">
       <div className="space-y-8">
+        <AssetPriceHeader asset={asset} events={events} nowMs={nowMs} />
+        <PriceChart asset={asset} events={events} />
         <AssetProfile asset={asset} />
         <ListingsPlaceholder />
-        <ListingsPlaceholder message="Trade history lands in M4" title="TRADE HISTORY" />
+        <TradeHistoryTable
+          asset={asset}
+          events={events}
+          isLoading={isEventsLoading}
+          nowMs={nowMs}
+        />
       </div>
 
       <div className="lg:sticky lg:top-24">
@@ -107,6 +374,17 @@ export default function AssetDetailPage() {
   const params = useParams();
   const id = typeof params.id === "string" ? params.id : "";
   const { assets, errorZh, isLoading } = useAssets();
+  const { events, isLoading: isEventsLoading, nowMs } = useMarketEvents();
 
-  return <AssetDetailView assets={assets} errorZh={errorZh} id={id} isLoading={isLoading} />;
+  return (
+    <AssetDetailView
+      assets={assets}
+      errorZh={errorZh}
+      events={events}
+      id={id}
+      isEventsLoading={isEventsLoading}
+      isLoading={isLoading}
+      nowMs={nowMs}
+    />
+  );
 }

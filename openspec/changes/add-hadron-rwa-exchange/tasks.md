@@ -15,7 +15,7 @@
 
 ## 2. M2 — 前端骨架与一级购买闭环
 
-- [ ] 2.1 初始化 `web/` Next.js 工程（Tailwind + A+ 主题 token、wagmi/viem/WalletConnect 从 arc-lepton 移植、地址/ABI 注入）
+- [x] 2.1 初始化 `web/` Next.js 工程（Tailwind + A+ 主题 token、wagmi/viem/WalletConnect 从 arc-lepton 移植、地址/ABI 注入）
 - [ ] 2.2 静态资产元数据（`web/content/assets/*.json` + 图片）与合约读取 hooks（`useAssets` 等，getter 优先）
 - [ ] 2.3 市场首页 v1（market-browsing spec 的目录部分：统计条/类别筛选/资产卡片/只读模式；动态流与迷你走势线留占位，由 M4 的 4.1/4.2 实装）
 - [ ] 2.4 资产详情页 v1 + 一级购买面板（trading-flow spec：连接钱包/网络守卫/状态反馈/失败场景）

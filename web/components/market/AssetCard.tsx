@@ -1,26 +1,8 @@
 import Link from "next/link";
+import { categoryDisplay } from "@/lib/categories";
 import { formatShares, formatUsdc } from "@/lib/format";
 import type { AssetView } from "@/lib/mappers";
 import { glowButtonClassName } from "@/components/ui/GlowButton";
-
-const categoryStyles: Record<string, { label: string; gradient: string }> = {
-  treasuries: {
-    label: "TREASURIES",
-    gradient: "radial-gradient(circle at 20% 20%, #22d3ee 0%, #155e75 42%, #07111a 100%)",
-  },
-  gold: {
-    label: "GOLD",
-    gradient: "radial-gradient(circle at 20% 20%, #e9c46a 0%, #7c5c1e 44%, #11100b 100%)",
-  },
-  "real-estate": {
-    label: "REAL ESTATE",
-    gradient: "radial-gradient(circle at 20% 20%, #4b647d 0%, #1d2733 46%, #080b10 100%)",
-  },
-  carbon: {
-    label: "CARBON",
-    gradient: "radial-gradient(circle at 20% 20%, #34d399 0%, #1e4d3a 44%, #07100c 100%)",
-  },
-};
 
 function apyText(apyBps: number | null) {
   if (apyBps === null) {
@@ -40,7 +22,7 @@ function remainingRatio(asset: AssetView) {
 }
 
 export function AssetCard({ asset, featured = false }: { asset: AssetView; featured?: boolean }) {
-  const style = categoryStyles[asset.category] ?? categoryStyles["real-estate"];
+  const style = categoryDisplay(asset.category);
   const offering = asset.offering;
   const apy = apyText(asset.meta.apyBps);
   const ratio = remainingRatio(asset);

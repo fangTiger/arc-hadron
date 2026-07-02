@@ -14,7 +14,23 @@ function formatApy(bps: number | null) {
 }
 
 export function StatsBar() {
-  const { avgApyBps, isLoading, tvl } = useMarketStats();
+  const { avgApyBps, errorZh, isLoading, tvl } = useMarketStats();
+
+  return <StatsBarView avgApyBps={avgApyBps} errorZh={errorZh} isLoading={isLoading} tvl={tvl} />;
+}
+
+export function StatsBarView({
+  avgApyBps,
+  errorZh,
+  isLoading,
+  tvl,
+}: {
+  avgApyBps: number | null;
+  errorZh?: string;
+  isLoading: boolean;
+  tvl: bigint;
+}) {
+  const failedText = "读取失败";
 
   return (
     <section className="grid border border-border bg-panel/80 md:grid-cols-3">
@@ -22,7 +38,11 @@ export function StatsBar() {
         <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-dim">
           TOTAL VALUE LOCKED
         </p>
-        {isLoading ? (
+        {errorZh ? (
+          <p className="mt-3 font-mono text-lg text-down" title={errorZh}>
+            {failedText}
+          </p>
+        ) : isLoading ? (
           <Skeleton className="mt-4 h-8 w-32" />
         ) : (
           <p className="mt-3 flex items-end gap-2 text-3xl font-semibold">
@@ -43,7 +63,11 @@ export function StatsBar() {
 
       <div className="p-5">
         <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-dim">AVG YIELD</p>
-        {isLoading ? (
+        {errorZh ? (
+          <p className="mt-3 font-mono text-lg text-down" title={errorZh}>
+            {failedText}
+          </p>
+        ) : isLoading ? (
           <Skeleton className="mt-4 h-8 w-28" />
         ) : (
           <p className="mt-3 font-mono text-3xl font-semibold text-gold">

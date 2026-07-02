@@ -16,6 +16,7 @@ import {
 import { metaBySlug } from "@/lib/metadata";
 
 const REFETCH_INTERVAL_MS = 8000;
+export const ASSETS_READ_ERROR_ZH = "链上资产读取失败，请稍后重试。";
 
 type RawAsset = readonly [string, string, bigint, string] & {
   name?: string;
@@ -31,8 +32,28 @@ type RawOffering = readonly [bigint, bigint, bigint, boolean] & {
   active?: boolean;
 };
 
-function toCount(value: unknown): number {
-  return typeof value === "bigint" ? Number(value) : 0;
+interface QueryErrorState {
+  isError: boolean;
+}
+
+export function readContractCount(value: unknown): number {
+  if (value === undefined || value === null) {
+    return 0;
+  }
+
+  if (typeof value !== "bigint") {
+    throw new Error("链上资产数量必须是 bigint。");
+  }
+
+  if (value < 0n || value > BigInt(Number.MAX_SAFE_INTEGER)) {
+    throw new Error("链上资产数量超出前端可处理范围。");
+  }
+
+  return Number(value);
+}
+
+export function assetReadErrorZh(queries: QueryErrorState[]): string | undefined {
+  return queries.some((query) => query.isError) ? ASSETS_READ_ERROR_ZH : undefined;
 }
 
 function normalizeAsset(tokenId: bigint, raw: unknown): ChainAsset {
@@ -59,7 +80,7 @@ function normalizeOffering(id: bigint, raw: unknown): ChainOffering {
   };
 }
 
-export function useAssets(): { assets: AssetView[]; isLoading: boolean } {
+export function useAssets(): { assets: AssetView[]; errorZh?: string; isLoading: boolean } {
   const assetCountQuery = useReadContract({
     address: HADRON_ASSETS_ADDRESS,
     abi: HADRON_ASSETS_ABI,
@@ -78,8 +99,8 @@ export function useAssets(): { assets: AssetView[]; isLoading: boolean } {
     },
   });
 
-  const assetCount = toCount(assetCountQuery.data);
-  const offeringCount = toCount(offeringCountQuery.data);
+  const assetCount = readContractCount(assetCountQuery.data);
+  const offeringCount = readContractCount(offeringCountQuery.data);
 
   const assetContracts = useMemo(
     () =>
@@ -131,24 +152,33 @@ export function useAssets(): { assets: AssetView[]; isLoading: boolean } {
 
     return joinAssetsWithOfferings(chainAssets, offerings, metaBySlug);
   }, [assetsQuery.data, offeringsQuery.data]);
+  const errorZh = assetReadErrorZh([
+    assetCountQuery,
+    offeringCountQuery,
+    assetsQuery,
+    offeringsQuery,
+  ]);
 
   return {
     assets,
+    errorZh,
     isLoading:
-      assetCountQuery.isLoading ||
-      offeringCountQuery.isLoading ||
-      assetsQuery.isLoading ||
-      offeringsQuery.isLoading,
+      !errorZh &&
+      (assetCountQuery.isLoading ||
+        offeringCountQuery.isLoading ||
+        assetsQuery.isLoading ||
+        offeringsQuery.isLoading),
   };
 }
 
 export function useMarketStats(): {
   tvl: bigint;
   avgApyBps: number | null;
+  errorZh?: string;
   isLoading: boolean;
 } {
-  const { assets, isLoading } = useAssets();
+  const { assets, errorZh, isLoading } = useAssets();
   const stats = useMemo(() => computeStats(assets), [assets]);
 
-  return { ...stats, isLoading };
+  return { ...stats, errorZh, isLoading };
 }

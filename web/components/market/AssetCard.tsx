@@ -12,13 +12,15 @@ function apyText(apyBps: number | null) {
   return `${(apyBps / 100).toFixed(2)}% APY`;
 }
 
-function remainingRatio(asset: AssetView) {
+export function remainingRatio(asset: AssetView) {
   if (!asset.offering || asset.totalShares === 0n) {
     return 0;
   }
 
   const basisPoints = (asset.offering.remaining * 10_000n) / asset.totalShares;
-  return Math.min(Number(basisPoints) / 100, 100);
+  const cappedBasisPoints = basisPoints > 10_000n ? 10_000n : basisPoints;
+
+  return Number(cappedBasisPoints) / 100;
 }
 
 export function AssetCard({ asset, featured = false }: { asset: AssetView; featured?: boolean }) {

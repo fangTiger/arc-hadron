@@ -16,6 +16,7 @@ const tableHeaders = ["ASSET", "SHARES", "MARKET VALUE", "AVG COST", "COST BASIS
 
 interface HoldingsTableViewProps {
   connectAction?: ReactNode;
+  errorZh?: string;
   holdings: Holding[];
   isConnected: boolean;
   isLoading: boolean;
@@ -87,6 +88,16 @@ function EmptyState() {
   );
 }
 
+function ErrorState({ message }: { message: string }) {
+  return (
+    <section className="border border-down/70 bg-down/10 p-8 text-center">
+      <p className={labelClassName()}>READ FAILED</p>
+      <h2 className="mt-4 text-2xl font-semibold text-text">持仓读取失败</h2>
+      <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-text-dim">{message}</p>
+    </section>
+  );
+}
+
 function CategoryBadge({ category }: { category: string }) {
   const display = categoryDisplay(category);
 
@@ -140,6 +151,7 @@ function HoldingRow({ holding }: { holding: Holding }) {
 
 export function HoldingsTableView({
   connectAction,
+  errorZh,
   holdings,
   isConnected,
   isLoading,
@@ -152,6 +164,10 @@ export function HoldingsTableView({
 
   if (!isConnected) {
     return <DisconnectedState connectAction={connectAction} />;
+  }
+
+  if (errorZh) {
+    return <ErrorState message={errorZh} />;
   }
 
   if (!isLoading && holdings.length === 0) {
@@ -202,11 +218,12 @@ export function HoldingsTableView({
 
 export function HoldingsTable() {
   const { isConnected } = useAccount();
-  const { holdings, isLoading } = usePortfolio();
+  const { errorZh, holdings, isLoading } = usePortfolio();
 
   return (
     <HoldingsTableView
       connectAction={<WalletButton />}
+      errorZh={errorZh}
       holdings={holdings}
       isConnected={isConnected}
       isLoading={isConnected ? isLoading : false}

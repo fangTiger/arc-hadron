@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useAssets } from "@/lib/hooks/useAssets";
+import type { AssetView } from "@/lib/mappers";
 import { AssetCard } from "./AssetCard";
 import { CategoryTabs, type MarketCategory } from "./CategoryTabs";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -23,7 +24,32 @@ function SkeletonCard() {
 
 export function AssetGrid() {
   const [category, setCategory] = useState<MarketCategory>("all");
-  const { assets, isLoading } = useAssets();
+  const { assets, errorZh, isLoading } = useAssets();
+
+  return (
+    <AssetGridView
+      assets={assets}
+      category={category}
+      errorZh={errorZh}
+      isLoading={isLoading}
+      onCategoryChange={setCategory}
+    />
+  );
+}
+
+export function AssetGridView({
+  assets,
+  category,
+  errorZh,
+  isLoading,
+  onCategoryChange,
+}: {
+  assets: AssetView[];
+  category: MarketCategory;
+  errorZh?: string;
+  isLoading: boolean;
+  onCategoryChange: (value: MarketCategory) => void;
+}) {
   const filteredAssets = useMemo(
     () => assets.filter((asset) => category === "all" || asset.category === category),
     [assets, category],
@@ -31,9 +57,13 @@ export function AssetGrid() {
 
   return (
     <section className="space-y-6">
-      <CategoryTabs onChange={setCategory} value={category} />
+      <CategoryTabs onChange={onCategoryChange} value={category} />
 
-      {isLoading ? (
+      {errorZh ? (
+        <div className="border border-down/70 bg-down/10 p-10 text-center text-sm text-down">
+          {errorZh}
+        </div>
+      ) : isLoading ? (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 4 }, (_, index) => (
             <SkeletonCard key={index} />

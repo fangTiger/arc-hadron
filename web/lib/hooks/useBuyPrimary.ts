@@ -1,11 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { HADRON_MARKET_ABI, HADRON_MARKET_ADDRESS } from "@/lib/contracts";
 import { mapWagmiError } from "@/lib/purchase";
 
 export type BuyPrimaryStatus = "idle" | "signing" | "pending" | "success" | "error";
+type LocalBuyPrimaryStatus = Exclude<BuyPrimaryStatus, "success">;
+
+interface BuyPrimaryLocalState {
+  status: LocalBuyPrimaryStatus;
+  txHash?: `0x${string}`;
+  errorZh?: string;
+}
+
+interface DeriveBuyPrimaryStateInput {
+  localStatus: BuyPrimaryStatus;
+  localErrorZh?: string;
+  receiptError?: unknown;
+  receiptStatus?: "success" | "reverted";
+}
 
 export interface UseBuyPrimaryResult {
   buy: (offeringId: bigint, amount: bigint, totalValue: bigint) => void;
@@ -15,65 +29,71 @@ export interface UseBuyPrimaryResult {
   reset: () => void;
 }
 
+export function deriveBuyPrimaryState({
+  localErrorZh,
+  localStatus,
+  receiptError,
+  receiptStatus,
+}: DeriveBuyPrimaryStateInput): { status: BuyPrimaryStatus; errorZh?: string } {
+  if (localStatus !== "pending") {
+    return { status: localStatus, errorZh: localErrorZh };
+  }
+
+  if (receiptError) {
+    return { status: "error", errorZh: mapWagmiError(receiptError) };
+  }
+
+  if (receiptStatus === "success") {
+    return { status: "success" };
+  }
+
+  if (receiptStatus === "reverted") {
+    return { status: "error", errorZh: "交易被链上回滚" };
+  }
+
+  return { status: "pending" };
+}
+
 export function useBuyPrimary(): UseBuyPrimaryResult {
-  const [status, setStatus] = useState<BuyPrimaryStatus>("idle");
-  const [txHash, setTxHash] = useState<`0x${string}`>();
-  const [errorZh, setErrorZh] = useState<string>();
+  const [localState, setLocalState] = useState<BuyPrimaryLocalState>({ status: "idle" });
   const busyRef = useRef(false);
   const { writeContract } = useWriteContract();
+  const txHash = localState.txHash;
 
   const receiptQuery = useWaitForTransactionReceipt({
     hash: txHash,
     query: {
-      enabled: Boolean(txHash && status === "pending"),
+      enabled: Boolean(txHash && localState.status === "pending"),
     },
   });
 
-  useEffect(() => {
-    if (status !== "pending") {
-      return;
-    }
-
-    if (receiptQuery.isError) {
-      setErrorZh(mapWagmiError(receiptQuery.error));
-      setStatus("error");
-      busyRef.current = false;
-      return;
-    }
-
-    if (!receiptQuery.data) {
-      return;
-    }
-
-    if (receiptQuery.data.status === "success") {
-      setStatus("success");
-      busyRef.current = false;
-      return;
-    }
-
-    setErrorZh("交易被链上回滚");
-    setStatus("error");
-    busyRef.current = false;
-  }, [receiptQuery.data, receiptQuery.error, receiptQuery.isError, status]);
+  const derivedState = useMemo(
+    () =>
+      deriveBuyPrimaryState({
+        localErrorZh: localState.errorZh,
+        localStatus: localState.status,
+        receiptError: receiptQuery.isError ? receiptQuery.error : undefined,
+        receiptStatus: receiptQuery.data?.status,
+      }),
+    [localState.errorZh, localState.status, receiptQuery.data?.status, receiptQuery.error, receiptQuery.isError],
+  );
+  const status = derivedState.status;
+  const errorZh = derivedState.errorZh;
 
   const reset = useCallback(() => {
-    setStatus("idle");
-    setTxHash(undefined);
-    setErrorZh(undefined);
+    setLocalState({ status: "idle" });
     busyRef.current = false;
   }, []);
 
   const buy = useCallback(
     (offeringId: bigint, amount: bigint, totalValue: bigint) => {
       // React 状态更新不是同步完成，ref 用来挡住同一帧内的重复点击。
-      if (busyRef.current || (status !== "idle" && status !== "error")) {
+      if ((busyRef.current && status === "idle") || (status !== "idle" && status !== "error")) {
         return;
       }
 
       busyRef.current = true;
-      setStatus("signing");
-      setTxHash(undefined);
-      setErrorZh(undefined);
+      setLocalState({ status: "signing" });
 
       writeContract(
         {
@@ -85,13 +105,11 @@ export function useBuyPrimary(): UseBuyPrimaryResult {
         },
         {
           onError: (err) => {
-            setErrorZh(mapWagmiError(err));
-            setStatus("error");
+            setLocalState({ status: "error", errorZh: mapWagmiError(err) });
             busyRef.current = false;
           },
           onSuccess: (hash) => {
-            setTxHash(hash);
-            setStatus("pending");
+            setLocalState({ status: "pending", txHash: hash });
           },
         },
       );

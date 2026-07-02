@@ -93,4 +93,18 @@ describe("HoldingsTableView", () => {
     expect(empty).toContain("去市场看看");
     expect(empty).toContain("href=\"/\"");
   });
+
+  test("读取失败时展示错误态而不是空持仓", () => {
+    const html = renderToStaticMarkup(
+      <HoldingsTableView
+        errorZh="持仓读取失败，请稍后重试。"
+        holdings={[]}
+        isConnected
+        isLoading={false}
+      />,
+    );
+
+    expect(html).toContain("持仓读取失败");
+    expect(html).not.toContain("当前钱包暂无持仓");
+  });
 });

@@ -14,11 +14,12 @@ import { useAssets } from "./useAssets";
 const PRIMARY_SALE_EVENT = parseAbiItem(
   "event PrimarySale(uint256 indexed offeringId, uint256 indexed tokenId, address indexed buyer, uint256 amount, uint256 totalPaid, uint256 fee)",
 );
+export const PORTFOLIO_READ_ERROR_ZH = "持仓读取失败，请稍后重试。";
 
-export function usePortfolio(): { holdings: Holding[]; isLoading: boolean } {
+export function usePortfolio(): { errorZh?: string; holdings: Holding[]; isLoading: boolean } {
   const { address, isConnected } = useAccount();
   const publicClient = usePublicClient();
-  const { assets, isLoading: isAssetsLoading } = useAssets();
+  const { assets, errorZh: assetsErrorZh, isLoading: isAssetsLoading } = useAssets();
   const tokenIds = useMemo(() => assets.map((asset) => asset.tokenId), [assets]);
 
   const balancesQuery = useReadContract({
@@ -77,9 +78,15 @@ export function usePortfolio(): { holdings: Holding[]; isLoading: boolean } {
 
     return toHoldings(assets, balances, buyEventsQuery.data ?? []);
   }, [address, assets, balancesQuery.data, buyEventsQuery.data, isConnected, tokenIds]);
+  const errorZh =
+    assetsErrorZh || balancesQuery.isError || buyEventsQuery.isError
+      ? PORTFOLIO_READ_ERROR_ZH
+      : undefined;
 
   return {
+    errorZh,
     holdings,
-    isLoading: isAssetsLoading || balancesQuery.isLoading || buyEventsQuery.isLoading,
+    isLoading:
+      !errorZh && (isAssetsLoading || balancesQuery.isLoading || buyEventsQuery.isLoading),
   };
 }

@@ -8,6 +8,7 @@ import { ListingsPlaceholder } from "@/components/asset/ListingsPlaceholder";
 import { glowButtonClassName } from "@/components/ui/GlowButton";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAssets } from "@/lib/hooks/useAssets";
+import type { AssetView } from "@/lib/mappers";
 
 function AssetDetailSkeleton() {
   return (
@@ -40,19 +41,45 @@ function EmptyAssetState() {
   );
 }
 
-export default function AssetDetailPage() {
-  const params = useParams();
-  const id = typeof params.id === "string" ? params.id : "";
-  const { assets, isLoading } = useAssets();
-  const asset = assets.find((item) => item.tokenId.toString() === id);
+function AssetReadErrorState({ message }: { message: string }) {
+  return (
+    <main className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-3xl items-center px-4 py-16 text-center sm:px-6">
+      <section className="w-full border border-down/70 bg-down/10 p-8">
+        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-down">CHAIN READ FAILED</p>
+        <h1 className="mt-4 text-2xl font-semibold text-text">资产读取失败</h1>
+        <p className="mt-3 text-sm leading-6 text-text-dim">{message}</p>
+        <Link className={glowButtonClassName({ className: "mt-8" })} href="/">
+          返回市场
+        </Link>
+      </section>
+    </main>
+  );
+}
+
+export function AssetDetailView({
+  assets,
+  errorZh,
+  id,
+  isLoading,
+}: {
+  assets: AssetView[];
+  errorZh?: string;
+  id: string;
+  isLoading: boolean;
+}) {
   const isNumericId = /^\d+$/.test(id);
+  const asset = assets.find((item) => item.tokenId.toString() === id);
 
   if (!isNumericId) {
     return <EmptyAssetState />;
   }
 
   if (!asset) {
-    if (isLoading || assets.length === 0) {
+    if (errorZh) {
+      return <AssetReadErrorState message={errorZh} />;
+    }
+
+    if (isLoading) {
       return <AssetDetailSkeleton />;
     }
 
@@ -72,4 +99,12 @@ export default function AssetDetailPage() {
       </div>
     </main>
   );
+}
+
+export default function AssetDetailPage() {
+  const params = useParams();
+  const id = typeof params.id === "string" ? params.id : "";
+  const { assets, errorZh, isLoading } = useAssets();
+
+  return <AssetDetailView assets={assets} errorZh={errorZh} id={id} isLoading={isLoading} />;
 }

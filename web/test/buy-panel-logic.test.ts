@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { deriveBuyPrimaryState } from "../lib/hooks/useBuyPrimary";
 import { GAS_BUFFER, mapWagmiError, validatePurchase } from "../lib/purchase";
 
 const USDC = 10n ** 18n;
@@ -113,5 +114,44 @@ describe("mapWagmiError", () => {
 
   test("未知错误返回通用失败提示", () => {
     expect(mapWagmiError(new Error("execution reverted"))).toBe("交易失败，请稍后重试");
+  });
+});
+
+describe("deriveBuyPrimaryState", () => {
+  test("pending 收到成功 receipt 时派生为 success", () => {
+    expect(
+      deriveBuyPrimaryState({
+        localStatus: "pending",
+        receiptStatus: "success",
+      }),
+    ).toEqual({ status: "success" });
+  });
+
+  test("pending 收到回滚 receipt 时派生为中文错误", () => {
+    expect(
+      deriveBuyPrimaryState({
+        localStatus: "pending",
+        receiptStatus: "reverted",
+      }),
+    ).toEqual({ status: "error", errorZh: "交易被链上回滚" });
+  });
+
+  test("pending 的 receipt 查询错误复用 wagmi 错误映射", () => {
+    expect(
+      deriveBuyPrimaryState({
+        localStatus: "pending",
+        receiptError: new Error("insufficient funds for gas * price + value"),
+      }),
+    ).toEqual({ status: "error", errorZh: "余额不足以支付交易" });
+  });
+
+  test("非 pending 本地状态不会被旧 receipt 覆盖", () => {
+    expect(
+      deriveBuyPrimaryState({
+        localErrorZh: "已取消签名",
+        localStatus: "error",
+        receiptStatus: "success",
+      }),
+    ).toEqual({ status: "error", errorZh: "已取消签名" });
   });
 });

@@ -16,7 +16,7 @@ import {
 import { metaBySlug } from "@/lib/metadata";
 
 const REFETCH_INTERVAL_MS = 8000;
-export const ASSETS_READ_ERROR_ZH = "链上资产读取失败，请稍后重试。";
+export const ASSETS_READ_ERROR_ZH = "Failed to load market data from Arc RPC.";
 
 type RawAsset = readonly [string, string, bigint, string] & {
   name?: string;
@@ -42,11 +42,11 @@ export function readContractCount(value: unknown): number {
   }
 
   if (typeof value !== "bigint") {
-    throw new Error("链上资产数量必须是 bigint。");
+    throw new Error("On-chain asset count must be a bigint.");
   }
 
   if (value < 0n || value > BigInt(Number.MAX_SAFE_INTEGER)) {
-    throw new Error("链上资产数量超出前端可处理范围。");
+    throw new Error("On-chain asset count exceeds the frontend safe range.");
   }
 
   return Number(value);

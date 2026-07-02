@@ -30,7 +30,7 @@ export function StatsBarView({
   isLoading: boolean;
   tvl: bigint;
 }) {
-  const failedText = "读取失败";
+  const failedText = "Read failed";
 
   return (
     <section className="grid border border-border bg-panel/80 md:grid-cols-3">
@@ -56,7 +56,7 @@ export function StatsBarView({
 
       <div className="border-b border-border p-5 md:border-b-0 md:border-r">
         <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-dim">24H VOLUME</p>
-        <p className="mt-3 font-mono text-3xl font-semibold text-muted" title="M4 接入链上事件后展示">
+        <p className="mt-3 font-mono text-3xl font-semibold text-muted" title="On-chain events land in M4">
           —
         </p>
       </div>

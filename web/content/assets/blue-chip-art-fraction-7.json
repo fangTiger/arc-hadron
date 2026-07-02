@@ -1,0 +1,22 @@
+{
+  "slug": "blue-chip-art-fraction-7",
+  "displayName": "Blue-Chip Art Fraction #7",
+  "ticker": "ART-7",
+  "description": "A demo collectible asset referencing a custodied blue-chip artwork fraction for display of non-yielding RWA inventory. Disclosures emphasize provenance, custody controls, and independent valuation cadence.",
+  "issuer": "Aster Art Custody Ltd.",
+  "apyBps": null,
+  "docs": [
+    {
+      "label": "Provenance memo",
+      "note": "Demo document, not a legal instrument. Summarizes illustrative provenance, custody, and authenticity assumptions."
+    },
+    {
+      "label": "Valuation note",
+      "note": "Demo document, not a legal instrument. Describes demo appraisal cadence and comparable-market assumptions."
+    },
+    {
+      "label": "Custody statement",
+      "note": "Demo document, not a legal instrument. Explains illustrative storage, insurance, and access controls."
+    }
+  ]
+}

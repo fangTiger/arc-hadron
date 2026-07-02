@@ -18,7 +18,7 @@ const jetBrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "HADRON — Real-World Asset Exchange on Arc",
-  description: "HADRON 是 Arc testnet 上的真实世界资产交易前端。",
+  description: "HADRON is a real-world asset exchange frontend on Arc testnet.",
 };
 
 export default function RootLayout({
@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="zh-CN"
+      lang="en"
       className={`${inter.variable} ${jetBrainsMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-bg text-text">

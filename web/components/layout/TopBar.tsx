@@ -20,7 +20,7 @@ function NetworkBadge() {
       <span>ARC TESTNET</span>
       {isConnected && !isCorrectChain ? (
         <button className="ml-1 text-down underline-offset-4 hover:underline" onClick={switchToArc} type="button">
-          切换网络
+          Switch network
         </button>
       ) : null}
     </div>

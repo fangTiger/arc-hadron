@@ -5,7 +5,7 @@ import { GAS_BUFFER, mapWagmiError, validatePurchase } from "../lib/purchase";
 const USDC = 10n ** 18n;
 
 describe("validatePurchase", () => {
-  test("合法整数数量返回购买数量与总价", () => {
+  test("returns amount and total value for a valid integer amount", () => {
     const result = validatePurchase({
       amountInput: "2",
       remaining: 10n,
@@ -20,7 +20,7 @@ describe("validatePurchase", () => {
     });
   });
 
-  test("余额刚好覆盖总价与 gas 缓冲时通过校验", () => {
+  test("accepts a balance that exactly covers total value and gas buffer", () => {
     const result = validatePurchase({
       amountInput: "1",
       remaining: 10n,
@@ -35,7 +35,7 @@ describe("validatePurchase", () => {
     });
   });
 
-  test("空输入返回有效数量提示", () => {
+  test("returns a valid amount error for blank input", () => {
     expect(
       validatePurchase({
         amountInput: "   ",
@@ -43,10 +43,10 @@ describe("validatePurchase", () => {
         balance: 100n * USDC,
         pricePerShare: USDC,
       }),
-    ).toEqual({ ok: false, errorZh: "请输入有效的购买数量" });
+    ).toEqual({ ok: false, errorText: "Enter a valid amount" });
   });
 
-  test("非整数输入返回有效数量提示", () => {
+  test("returns a valid amount error for non-integer input", () => {
     for (const amountInput of ["1.5", "abc", "-1"]) {
       expect(
         validatePurchase({
@@ -55,11 +55,11 @@ describe("validatePurchase", () => {
           balance: 100n * USDC,
           pricePerShare: USDC,
         }),
-      ).toEqual({ ok: false, errorZh: "请输入有效的购买数量" });
+      ).toEqual({ ok: false, errorText: "Enter a valid amount" });
     }
   });
 
-  test("0 数量返回有效数量提示", () => {
+  test("returns a valid amount error for zero input", () => {
     expect(
       validatePurchase({
         amountInput: "0",
@@ -67,10 +67,10 @@ describe("validatePurchase", () => {
         balance: 100n * USDC,
         pricePerShare: USDC,
       }),
-    ).toEqual({ ok: false, errorZh: "请输入有效的购买数量" });
+    ).toEqual({ ok: false, errorText: "Enter a valid amount" });
   });
 
-  test("购买数量超过发行余量时返回余量提示", () => {
+  test("returns an available supply error when amount exceeds remaining supply", () => {
     expect(
       validatePurchase({
         amountInput: "11",
@@ -78,10 +78,10 @@ describe("validatePurchase", () => {
         balance: 100n * USDC,
         pricePerShare: USDC,
       }),
-    ).toEqual({ ok: false, errorZh: "超出发行余量" });
+    ).toEqual({ ok: false, errorText: "Exceeds available supply" });
   });
 
-  test("余额不足以覆盖总价与 gas 缓冲时返回余额提示", () => {
+  test("returns an insufficient balance error when balance cannot cover total value and gas buffer", () => {
     expect(
       validatePurchase({
         amountInput: "1",
@@ -89,36 +89,36 @@ describe("validatePurchase", () => {
         balance: USDC + GAS_BUFFER - 1n,
         pricePerShare: USDC,
       }),
-    ).toEqual({ ok: false, errorZh: "USDC 余额不足" });
+    ).toEqual({ ok: false, errorText: "Insufficient USDC balance" });
   });
 });
 
 describe("mapWagmiError", () => {
-  test("按错误名识别用户取消签名", () => {
-    expect(mapWagmiError({ name: "UserRejectedRequestError" })).toBe("已取消签名");
+  test("maps user cancellation by error name", () => {
+    expect(mapWagmiError({ name: "UserRejectedRequestError" })).toBe("Signature cancelled");
   });
 
-  test("错误名包含 User rejected 时识别为用户取消签名", () => {
-    expect(mapWagmiError({ name: "User rejected by wallet" })).toBe("已取消签名");
+  test("maps user cancellation when the name contains User rejected", () => {
+    expect(mapWagmiError({ name: "User rejected by wallet" })).toBe("Signature cancelled");
   });
 
-  test("按错误消息识别用户取消签名", () => {
-    expect(mapWagmiError(new Error("User rejected the request."))).toBe("已取消签名");
+  test("maps user cancellation by error message", () => {
+    expect(mapWagmiError(new Error("User rejected the request."))).toBe("Signature cancelled");
   });
 
-  test("识别 insufficient funds 余额错误", () => {
+  test("maps insufficient funds errors", () => {
     expect(mapWagmiError(new Error("insufficient funds for gas * price + value"))).toBe(
-      "余额不足以支付交易",
+      "Insufficient funds for this transaction",
     );
   });
 
-  test("未知错误返回通用失败提示", () => {
-    expect(mapWagmiError(new Error("execution reverted"))).toBe("交易失败，请稍后重试");
+  test("maps unknown errors to a generic retry prompt", () => {
+    expect(mapWagmiError(new Error("execution reverted"))).toBe("Transaction failed, please retry");
   });
 });
 
 describe("deriveBuyPrimaryState", () => {
-  test("pending 收到成功 receipt 时派生为 success", () => {
+  test("derives success when a pending transaction receives a success receipt", () => {
     expect(
       deriveBuyPrimaryState({
         localStatus: "pending",
@@ -127,31 +127,31 @@ describe("deriveBuyPrimaryState", () => {
     ).toEqual({ status: "success" });
   });
 
-  test("pending 收到回滚 receipt 时派生为中文错误", () => {
+  test("derives an on-chain revert error when a pending transaction receives a reverted receipt", () => {
     expect(
       deriveBuyPrimaryState({
         localStatus: "pending",
         receiptStatus: "reverted",
       }),
-    ).toEqual({ status: "error", errorZh: "交易被链上回滚" });
+    ).toEqual({ status: "error", errorText: "Transaction reverted on-chain" });
   });
 
-  test("pending 的 receipt 查询错误复用 wagmi 错误映射", () => {
+  test("reuses wagmi error mapping for pending receipt query errors", () => {
     expect(
       deriveBuyPrimaryState({
         localStatus: "pending",
         receiptError: new Error("insufficient funds for gas * price + value"),
       }),
-    ).toEqual({ status: "error", errorZh: "余额不足以支付交易" });
+    ).toEqual({ status: "error", errorText: "Insufficient funds for this transaction" });
   });
 
-  test("非 pending 本地状态不会被旧 receipt 覆盖", () => {
+  test("does not override non-pending local state with a stale receipt", () => {
     expect(
       deriveBuyPrimaryState({
-        localErrorZh: "已取消签名",
+        localErrorText: "Signature cancelled",
         localStatus: "error",
         receiptStatus: "success",
       }),
-    ).toEqual({ status: "error", errorZh: "已取消签名" });
+    ).toEqual({ status: "error", errorText: "Signature cancelled" });
   });
 });

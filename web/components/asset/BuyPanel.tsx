@@ -34,7 +34,7 @@ export function BuyPanel({ asset }: { asset: AssetView }) {
   const { address, isConnected } = useAccount();
   const { connect, connectors, isPending: isConnectPending } = useConnect();
   const { isCorrectChain, switchToArc } = useNetworkGuard();
-  const { buy, errorZh, reset, status, txHash } = useBuyPrimary();
+  const { buy, errorText, reset, status, txHash } = useBuyPrimary();
   const { pushError, pushSuccess } = useToast();
   const lastToastKey = useRef<string | null>(null);
   const offering = asset.offering;
@@ -81,18 +81,18 @@ export function BuyPanel({ asset }: { asset: AssetView }) {
       const key = `success:${txHash}`;
 
       if (lastToastKey.current !== key) {
-        pushSuccess({ message: "购买成功", txHash });
+        pushSuccess({ message: "Purchase successful", txHash });
         lastToastKey.current = key;
       }
 
       return;
     }
 
-    if (status === "error" && errorZh) {
-      const key = `error:${errorZh}:${txHash ?? ""}`;
+    if (status === "error" && errorText) {
+      const key = `error:${errorText}:${txHash ?? ""}`;
 
       if (lastToastKey.current !== key) {
-        pushError(errorZh);
+        pushError(errorText);
         lastToastKey.current = key;
       }
 
@@ -100,18 +100,18 @@ export function BuyPanel({ asset }: { asset: AssetView }) {
     }
 
     lastToastKey.current = null;
-  }, [errorZh, pushError, pushSuccess, status, txHash]);
+  }, [errorText, pushError, pushSuccess, status, txHash]);
 
   function connectWallet() {
     if (!injectedConnector) {
-      pushError("请安装 MetaMask 或兼容 injected 钱包。");
+      pushError("Install MetaMask or a compatible injected wallet.");
       return;
     }
 
     connect(
       { connector: injectedConnector },
       {
-        onError: () => pushError("请安装 MetaMask 或确认钱包已解锁。"),
+        onError: () => pushError("Install MetaMask or unlock your wallet."),
       },
     );
   }
@@ -144,31 +144,31 @@ export function BuyPanel({ asset }: { asset: AssetView }) {
   }
 
   const totalText = validation?.ok ? `${formatUsdc(validation.totalValue)} USDC` : "—";
-  const validationError = validation?.ok === false ? validation.errorZh : null;
+  const validationError = validation?.ok === false ? validation.errorText : null;
   const balanceText = !isConnected
-    ? "未连接"
+    ? "Not connected"
     : balanceQuery.isLoading
-      ? "读取中…"
+      ? "Loading..."
       : `${formatUsdc(balanceValue)} USDC`;
 
   let buttonLabel = "BUY";
   let isButtonDisabled = false;
 
   if (!hasOffering) {
-    buttonLabel = "当前无发行";
+    buttonLabel = "No active offering";
     isButtonDisabled = true;
   } else if (!isConnected) {
     buttonLabel = isConnectPending ? "CONNECTING" : "CONNECT WALLET";
   } else if (!isCorrectChain) {
-    buttonLabel = "切换到 ARC TESTNET";
+    buttonLabel = "Switch to ARC TESTNET";
   } else if (status === "signing") {
-    buttonLabel = "钱包确认中…";
+    buttonLabel = "Confirm in wallet…";
     isButtonDisabled = true;
   } else if (status === "pending") {
-    buttonLabel = "上链确认中…";
+    buttonLabel = "Confirming on-chain…";
     isButtonDisabled = true;
   } else if (balanceQuery.isLoading) {
-    buttonLabel = "读取余额中…";
+    buttonLabel = "Loading balance…";
     isButtonDisabled = true;
   } else if (validation?.ok !== true) {
     isButtonDisabled = true;
@@ -188,7 +188,7 @@ export function BuyPanel({ asset }: { asset: AssetView }) {
       </div>
 
       <label className="mt-8 block">
-        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">数量</span>
+        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">AMOUNT</span>
         <input
           className="mt-3 h-12 w-full border border-border bg-bg px-4 font-mono text-lg text-text outline-none transition-colors placeholder:text-muted focus:border-neon disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-text-dim"
           disabled={status === "signing" || status === "pending"}
@@ -216,7 +216,7 @@ export function BuyPanel({ asset }: { asset: AssetView }) {
       <div className="mt-6">
         {status === "success" ? (
           <div className="border border-up/70 bg-up/10 p-4">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-up">购买成功</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-up">Purchase successful</p>
             {txHash ? (
               <a
                 className="mt-3 inline-flex font-mono text-[11px] uppercase tracking-[0.2em] text-neon-dim underline-offset-4 hover:text-neon hover:underline"
@@ -227,14 +227,14 @@ export function BuyPanel({ asset }: { asset: AssetView }) {
                 {shortAddress(txHash)}
               </a>
             ) : null}
-            <SecondaryButton onClick={resetPurchase}>再买一笔</SecondaryButton>
+            <SecondaryButton onClick={resetPurchase}>Buy again</SecondaryButton>
           </div>
         ) : status === "error" ? (
           <div className="border border-down/70 bg-down/10 p-4">
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-down">
-              {errorZh ?? "交易失败，请稍后重试"}
+              {errorText ?? "Transaction failed, please retry"}
             </p>
-            <SecondaryButton onClick={resetPurchase}>重试</SecondaryButton>
+            <SecondaryButton onClick={resetPurchase}>Retry</SecondaryButton>
           </div>
         ) : (
           <GlowButton

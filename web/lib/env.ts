@@ -6,7 +6,9 @@ export function requirePublicEnv(name: PublicEnvName, value: string | undefined)
   const normalized = value?.trim();
 
   if (!normalized) {
-    throw new Error(`缺少必填环境变量 ${name}，请检查 web/.env.local 或部署环境。`);
+    throw new Error(
+      `Missing required environment variable ${name}. Check web/.env.local or the deployment environment.`,
+    );
   }
 
   return normalized;
@@ -27,7 +29,7 @@ export function parsePublicIntEnv(name: PublicEnvName, value: string | undefined
   const parsed = Number(normalized);
 
   if (!Number.isSafeInteger(parsed) || parsed <= 0) {
-    throw new Error(`环境变量 ${name} 必须是正整数。`);
+    throw new Error(`Environment variable ${name} must be a positive integer.`);
   }
 
   return parsed;
@@ -37,7 +39,7 @@ export function readAddressEnv(name: PublicEnvName, value: string | undefined): 
   const normalized = requirePublicEnv(name, value);
 
   if (!isAddress(normalized)) {
-    throw new Error(`环境变量 ${name} 必须是 0x 开头的 EVM 地址。`);
+    throw new Error(`Environment variable ${name} must be a 0x-prefixed EVM address.`);
   }
 
   return normalized;

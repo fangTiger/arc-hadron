@@ -13,8 +13,9 @@ function holding(overrides: Partial<Holding> = {}): Holding {
       totalShares: 100_000n,
       meta: {
         slug: "t-bill-2026-q3",
-        nameZh: "美国短债 2026-Q3",
-        description: "测试资产",
+        displayName: "US T-Bill 2026-Q3",
+        ticker: "TBILL",
+        description: "Test asset",
         issuer: "Hadron Treasury Desk",
         apyBps: 510,
         docs: [],
@@ -36,7 +37,7 @@ function holding(overrides: Partial<Holding> = {}): Holding {
 }
 
 describe("HoldingsTableView", () => {
-  test("渲染持仓表头、资产行、格式化金额和禁用转售入口", () => {
+  test("renders table headers, asset row, formatted values, and disabled resale entry", () => {
     const html = renderToStaticMarkup(
       <HoldingsTableView holdings={[holding()]} isConnected isLoading={false} />,
     );
@@ -45,19 +46,19 @@ describe("HoldingsTableView", () => {
       expect(html).toContain(label);
     }
 
-    expect(html).toContain("美国短债 2026-Q3");
+    expect(html).toContain("US T-Bill 2026-Q3");
     expect(html).toContain("TREASURIES");
     expect(html).toContain("12,345");
     expect(html).toContain("24,690.00 USDC");
     expect(html).toContain("1.80 USDC");
     expect(html).toContain("22,221.00 USDC");
-    expect(html).toContain("title=\"M3 开放\"");
+    expect(html).toContain("title=\"Secondary market opens in M3\"");
     expect(html).toContain("disabled=\"\"");
-    expect(html).toContain("挂单转售");
-    expect(html).toContain("aria-label=\"总市值 24,690.00 USDC\"");
+    expect(html).toContain("List for resale");
+    expect(html).toContain("aria-label=\"Total market value 24,690.00 USDC\"");
   });
 
-  test("成本未知时展示中文空值占位", () => {
+  test("renders a dash placeholder when cost is unknown", () => {
     const html = renderToStaticMarkup(
       <HoldingsTableView
         holdings={[
@@ -74,7 +75,7 @@ describe("HoldingsTableView", () => {
     expect((html.match(/—/g) ?? []).length).toBeGreaterThanOrEqual(2);
   });
 
-  test("未连接和空持仓状态提供下一步引导", () => {
+  test("renders next-step guidance for disconnected and empty states", () => {
     const disconnected = renderToStaticMarkup(
       <HoldingsTableView
         connectAction={<button type="button">CONNECT WALLET</button>}
@@ -87,24 +88,24 @@ describe("HoldingsTableView", () => {
       <HoldingsTableView holdings={[]} isConnected isLoading={false} />,
     );
 
-    expect(disconnected).toContain("连接钱包查看持仓");
+    expect(disconnected).toContain("Connect wallet to view holdings");
     expect(disconnected).toContain("CONNECT WALLET");
-    expect(empty).toContain("当前钱包暂无持仓");
-    expect(empty).toContain("去市场看看");
+    expect(empty).toContain("No holdings yet");
+    expect(empty).toContain("Browse market");
     expect(empty).toContain("href=\"/\"");
   });
 
-  test("读取失败时展示错误态而不是空持仓", () => {
+  test("renders the error state instead of the empty state when reads fail", () => {
     const html = renderToStaticMarkup(
       <HoldingsTableView
-        errorZh="持仓读取失败，请稍后重试。"
+        errorZh="Failed to load portfolio data from Arc RPC."
         holdings={[]}
         isConnected
         isLoading={false}
       />,
     );
 
-    expect(html).toContain("持仓读取失败");
-    expect(html).not.toContain("当前钱包暂无持仓");
+    expect(html).toContain("Failed to load holdings");
+    expect(html).not.toContain("No holdings yet");
   });
 });

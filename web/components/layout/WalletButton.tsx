@@ -21,14 +21,14 @@ export function WalletButton() {
     setNotice(null);
 
     if (!injectedConnector) {
-      setNotice("请安装 MetaMask 或兼容 injected 钱包。");
+      setNotice("Install MetaMask or a compatible injected wallet.");
       return;
     }
 
     connect(
       { connector: injectedConnector },
       {
-        onError: () => setNotice("请安装 MetaMask 或确认钱包已解锁。"),
+        onError: () => setNotice("Install MetaMask or unlock your wallet."),
       },
     );
   }
@@ -40,9 +40,9 @@ export function WalletButton() {
 
     try {
       await navigator.clipboard.writeText(address);
-      setNotice("地址已复制。");
+      setNotice("Address copied.");
     } catch {
-      setNotice("复制失败，请手动复制地址。");
+      setNotice("Copy failed. Copy the address manually.");
     }
   }
 
@@ -84,7 +84,7 @@ export function WalletButton() {
             role="menuitem"
             type="button"
           >
-            复制地址
+            Copy address
           </button>
           <button
             className="block w-full px-3 py-2 text-left text-down transition-colors hover:bg-border/40"
@@ -95,7 +95,7 @@ export function WalletButton() {
             role="menuitem"
             type="button"
           >
-            断开连接
+            Disconnect
           </button>
           {notice ? <p className="border-t border-border px-3 py-2 text-[11px] text-text-dim">{notice}</p> : null}
         </div>

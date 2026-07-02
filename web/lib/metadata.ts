@@ -1,11 +1,22 @@
+import artFraction from "../content/assets/blue-chip-art-fraction-7.json";
 import carbon from "../content/assets/verra-carbon-9.json";
+import dockside from "../content/assets/dockside-logistics-park.json";
+import fiber from "../content/assets/fiber-grid-metro-loop.json";
 import gold from "../content/assets/gold-ounce-4.json";
+import goldOffset from "../content/assets/gold-standard-offset-bundle.json";
+import invoicePool from "../content/assets/nexus-invoice-pool-2026-07.json";
 import marina from "../content/assets/marina-tower-12f.json";
+import meridianCredit from "../content/assets/meridian-sme-credit-a.json";
+import receivables from "../content/assets/atlas-trade-receivables-b.json";
+import silver from "../content/assets/silver-bullion-vault-2.json";
+import solar from "../content/assets/solar-farm-basin-2.json";
 import tBill from "../content/assets/t-bill-2026-q3.json";
+import tNote from "../content/assets/us-t-note-2028.json";
 
 export interface AssetMeta {
   slug: string;
-  nameZh: string;
+  displayName: string;
+  ticker: string;
   description: string;
   issuer: string;
   apyBps: number | null;
@@ -14,25 +25,41 @@ export interface AssetMeta {
 
 const UNKNOWN_META: AssetMeta = {
   slug: "unknown",
-  nameZh: "未知资产",
+  displayName: "Unknown Asset",
+  ticker: "—",
   description:
-    "该资产尚未登记静态披露信息。前端将继续展示链上基础数据，并等待后续元数据补录。",
+    "This asset has not registered static disclosure metadata yet. HADRON will continue to show on-chain fields while metadata is updated.",
   issuer: "HADRON Metadata Registry",
   apyBps: null,
   docs: [
     {
-      label: "资产占位说明",
-      note: "演示文档，非真实法律文件；用于说明未知资产的兜底展示策略。",
+      label: "Metadata placeholder",
+      note: "Demo document, not a legal instrument. This placeholder explains how unknown assets are displayed.",
     },
     {
-      label: "链上数据优先声明",
-      note: "演示文档，非真实法律文件；资产份额与交易状态以合约读取结果为准。",
+      label: "On-chain data priority",
+      note: "Demo document, not a legal instrument. Share balances and transaction states are sourced from contract reads.",
     },
   ],
 };
 
 const ASSET_META_BY_SLUG = new Map<string, AssetMeta>(
-  [tBill, gold, marina, carbon].map((meta) => [meta.slug, meta as AssetMeta]),
+  [
+    tBill,
+    gold,
+    marina,
+    carbon,
+    tNote,
+    meridianCredit,
+    receivables,
+    dockside,
+    silver,
+    goldOffset,
+    solar,
+    fiber,
+    artFraction,
+    invoicePool,
+  ].map((meta) => [meta.slug, meta as AssetMeta]),
 );
 
 function normalizeSlug(input: string): string {

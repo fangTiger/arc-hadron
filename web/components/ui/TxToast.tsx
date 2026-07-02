@@ -69,17 +69,17 @@ function ToastItem({
               rel="noreferrer"
               target="_blank"
             >
-              查看交易
+              View transaction
             </a>
           ) : null}
         </div>
         <button
-          aria-label="关闭通知"
+          aria-label="Close notification"
           className="shrink-0 font-mono text-[10px] uppercase tracking-[0.2em] text-muted transition-colors hover:text-text"
           onClick={() => onClose(toast.id)}
           type="button"
         >
-          关闭
+          Close
         </button>
       </div>
     </div>
@@ -125,7 +125,7 @@ export function useToast(): ToastContextValue {
   const value = useContext(ToastContext);
 
   if (!value) {
-    throw new Error("useToast 必须在 ToastProvider 内使用。");
+    throw new Error("useToast must be used within ToastProvider.");
   }
 
   return value;

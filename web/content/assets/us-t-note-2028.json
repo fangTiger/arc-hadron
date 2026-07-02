@@ -1,0 +1,22 @@
+{
+  "slug": "us-t-note-2028",
+  "displayName": "US T-Note 2028",
+  "ticker": "TNOTE",
+  "description": "A demo fractional asset referencing intermediate-duration U.S. Treasury note exposure for accounts seeking transparent sovereign-rate carry. Disclosures emphasize maturity profile, valuation discipline, and on-chain settlement state on Arc testnet.",
+  "issuer": "Northstar Treasury Vault LLC",
+  "apyBps": 460,
+  "docs": [
+    {
+      "label": "Offering memorandum",
+      "note": "Demo document, not a legal instrument. Summarizes note tenor, share structure, and yield assumptions."
+    },
+    {
+      "label": "Custody statement",
+      "note": "Demo document, not a legal instrument. Describes illustrative custody and reconciliation controls."
+    },
+    {
+      "label": "Rate risk memo",
+      "note": "Demo document, not a legal instrument. Lists duration, liquidity, and mark-to-market considerations."
+    }
+  ]
+}

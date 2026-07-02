@@ -39,13 +39,21 @@ export function AssetCard({ asset, featured = false }: { asset: AssetView; featu
       ].join(" ")}
     >
       <div className="relative h-36 border-b border-border" style={{ background: style.gradient }}>
-        <span className="absolute bottom-4 left-4 border border-white/10 bg-bg/55 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-text">
-          {style.label}
+        <span
+          className={[
+            "absolute bottom-4 left-4 border px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em]",
+            style.tickerClassName,
+          ].join(" ")}
+        >
+          {asset.meta.ticker}
         </span>
       </div>
 
       <div className="flex flex-1 flex-col p-5">
-        <h2 className="min-h-14 text-xl font-semibold leading-tight text-text">{asset.meta.nameZh}</h2>
+        <div className="flex min-h-14 flex-col gap-2">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">{style.label}</p>
+          <h2 className="text-xl font-semibold leading-tight text-text">{asset.meta.displayName}</h2>
+        </div>
         <p className="mt-2 line-clamp-2 text-sm leading-6 text-text-dim">{asset.meta.issuer}</p>
 
         <div className="mt-6 flex items-start justify-between gap-4 border-y border-border py-4">

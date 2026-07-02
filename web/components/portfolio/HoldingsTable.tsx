@@ -64,9 +64,10 @@ function DisconnectedState({ connectAction }: { connectAction?: ReactNode }) {
   return (
     <section className="border border-border bg-panel/80 p-8 text-center">
       <p className={labelClassName()}>WALLET REQUIRED</p>
-      <h2 className="mt-4 text-2xl font-semibold text-text">连接钱包查看持仓</h2>
+      <h2 className="mt-4 text-2xl font-semibold text-text">Connect wallet to view holdings</h2>
       <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-text-dim">
-        持仓、成本与份额余额全部从链上读取；连接后即可查看当前地址的 RWA 资产。
+        Holdings, cost basis, and share balances are read from Arc contracts. Connect to view the
+        current address portfolio.
       </p>
       <div className="mt-7 flex justify-center">{connectAction}</div>
     </section>
@@ -77,12 +78,12 @@ function EmptyState() {
   return (
     <section className="border border-border bg-panel/80 p-8 text-center">
       <p className={labelClassName()}>NO HOLDINGS</p>
-      <h2 className="mt-4 text-2xl font-semibold text-text">当前钱包暂无持仓</h2>
+      <h2 className="mt-4 text-2xl font-semibold text-text">No holdings yet</h2>
       <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-text-dim">
-        完成一笔一级购买后，资产份额、市值和移动平均成本会在这里展示。
+        After a primary purchase, shares, market value, and moving-average cost will appear here.
       </p>
       <Link className={glowButtonClassName({ className: "mt-7" })} href="/">
-        去市场看看
+        Browse market
       </Link>
     </section>
   );
@@ -92,7 +93,7 @@ function ErrorState({ message }: { message: string }) {
   return (
     <section className="border border-down/70 bg-down/10 p-8 text-center">
       <p className={labelClassName()}>READ FAILED</p>
-      <h2 className="mt-4 text-2xl font-semibold text-text">持仓读取失败</h2>
+      <h2 className="mt-4 text-2xl font-semibold text-text">Failed to load holdings</h2>
       <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-text-dim">{message}</p>
     </section>
   );
@@ -103,8 +104,10 @@ function CategoryBadge({ category }: { category: string }) {
 
   return (
     <span
-      className="inline-flex border border-white/10 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-text"
-      style={{ background: display.gradient }}
+      className={[
+        "inline-flex border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.2em]",
+        display.tickerClassName,
+      ].join(" ")}
     >
       {display.label}
     </span>
@@ -116,11 +119,11 @@ function HoldingRow({ holding }: { holding: Holding }) {
     <tr className="border-t border-border align-middle transition-colors hover:bg-border/20">
       <td className="min-w-72 py-5 pr-5">
         <div className="flex flex-col gap-3">
-          <p className="text-base font-semibold text-text">{holding.asset.meta.nameZh}</p>
+          <p className="text-base font-semibold text-text">{holding.asset.meta.displayName}</p>
           <div className="flex flex-wrap items-center gap-2">
             <CategoryBadge category={holding.asset.category} />
             <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
-              #{holding.asset.tokenId.toString()}
+              {holding.asset.meta.ticker} / #{holding.asset.tokenId.toString()}
             </span>
           </div>
         </div>
@@ -139,10 +142,10 @@ function HoldingRow({ holding }: { holding: Holding }) {
         <button
           className="h-9 border border-border bg-muted/20 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-muted"
           disabled
-          title="M3 开放"
+          title="Secondary market opens in M3"
           type="button"
         >
-          挂单转售
+          List for resale
         </button>
       </td>
     </tr>
@@ -202,7 +205,7 @@ export function HoldingsTableView({
                 <p className={labelClassName()}>TOTAL MARKET VALUE</p>
               </td>
               <td
-                aria-label={`总市值 ${totalMarketValueText}`}
+                aria-label={`Total market value ${totalMarketValueText}`}
                 className="px-5 py-5 font-mono text-xl font-semibold tabular-nums text-up"
                 colSpan={4}
               >

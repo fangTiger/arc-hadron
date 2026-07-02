@@ -1,21 +1,22 @@
 {
   "slug": "verra-carbon-9",
-  "nameZh": "VERRA 碳信用 LOT-9",
-  "description": "由自愿碳市场信用额度映射的演示型份额资产，强调批次追踪、项目披露与链上可转让性。该资产不声明固定收益率，适合作为非收益类 RWA 展示样本。",
+  "displayName": "Verra Carbon Credit Lot-9",
+  "ticker": "CARB-9",
+  "description": "A demo fractional asset referencing voluntary carbon-market credits with batch tracking, project disclosure, and transferable on-chain shares. The asset does not claim fixed yield and serves as a non-yielding RWA display sample.",
   "issuer": "Greenline Climate Registry Pte. Ltd.",
   "apyBps": null,
   "docs": [
     {
-      "label": "项目说明",
-      "note": "演示文档，非真实法律文件；说明碳信用项目类型与批次叙事。"
+      "label": "Project overview",
+      "note": "Demo document, not a legal instrument. Describes the credit project type and batch narrative."
     },
     {
-      "label": "核验证明",
-      "note": "演示文档，非真实法律文件；展示减排量核验流程的演示摘要。"
+      "label": "Verification summary",
+      "note": "Demo document, not a legal instrument. Shows an illustrative emissions-reduction verification workflow."
     },
     {
-      "label": "退休规则",
-      "note": "演示文档，非真实法律文件；说明碳信用使用与退休路径的演示口径。"
+      "label": "Retirement rules",
+      "note": "Demo document, not a legal instrument. Explains illustrative usage and retirement paths for demo credits."
     }
   ]
 }

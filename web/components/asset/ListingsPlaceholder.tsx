@@ -5,7 +5,7 @@ interface ListingsPlaceholderProps {
 
 export function ListingsPlaceholder({
   title = "SECONDARY LISTINGS",
-  message = "二级挂单将在 M3 开放",
+  message = "Secondary listings open in M3",
 }: ListingsPlaceholderProps) {
   return (
     <section className="border border-border bg-panel p-6">

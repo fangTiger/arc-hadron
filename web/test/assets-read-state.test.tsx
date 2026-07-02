@@ -16,10 +16,11 @@ function assetView(overrides: Partial<AssetView> = {}): AssetView {
     category: "treasuries",
     meta: {
       apyBps: 510,
-      description: "测试资产",
+      description: "Test asset",
       docs: [],
       issuer: "Hadron Treasury Desk",
-      nameZh: "美国短债 2026-Q3",
+      displayName: "US T-Bill 2026-Q3",
+      ticker: "TBILL",
       slug: "t-bill-2026-q3",
     },
     name: "US T-BILL 2026-Q3",
@@ -36,25 +37,25 @@ function assetView(overrides: Partial<AssetView> = {}): AssetView {
   };
 }
 
-describe("链上资产读取状态", () => {
-  test("assetCount=0 是真实空集，不是加载中", () => {
+describe("on-chain asset read state", () => {
+  test("assetCount=0 is a real empty set, not a loading state", () => {
     expect(readContractCount(undefined)).toBe(0);
     expect(readContractCount(0n)).toBe(0);
     expect(readContractCount(4n)).toBe(4);
   });
 
-  test("超出安全整数范围的链上计数会显式失败", () => {
+  test("fails explicitly when an on-chain count exceeds the safe integer range", () => {
     expect(() => readContractCount(BigInt(Number.MAX_SAFE_INTEGER) + 1n)).toThrow(
-      "链上资产数量超出前端可处理范围",
+      "On-chain asset count exceeds the frontend safe range",
     );
   });
 
-  test("任一 RPC 查询失败时返回中文错误而不是静默空列表", () => {
+  test("returns an English RPC error when any query fails instead of silently returning an empty list", () => {
     expect(assetReadErrorZh([{ isError: false }, { isError: true }])).toBe(ASSETS_READ_ERROR_ZH);
     expect(assetReadErrorZh([{ isError: false }])).toBeUndefined();
   });
 
-  test("市场列表在 RPC 失败时展示错误态", () => {
+  test("renders the market list error state when RPC reads fail", () => {
     const html = renderToStaticMarkup(
       <AssetGridView
         assets={[]}
@@ -66,10 +67,10 @@ describe("链上资产读取状态", () => {
     );
 
     expect(html).toContain(ASSETS_READ_ERROR_ZH);
-    expect(html).not.toContain("当前类别暂无活跃资产。");
+    expect(html).not.toContain("No active assets in this category.");
   });
 
-  test("统计条在 RPC 失败时不把 TVL 伪装成 0", () => {
+  test("does not disguise TVL as zero when RPC reads fail", () => {
     const html = renderToStaticMarkup(
       <StatsBarView
         avgApyBps={null}
@@ -79,20 +80,20 @@ describe("链上资产读取状态", () => {
       />,
     );
 
-    expect(html).toContain("读取失败");
+    expect(html).toContain("Read failed");
     expect(html).not.toContain("0.00");
   });
 
-  test("资产详情在 assetCount=0 时展示未找到而不是永久骨架", () => {
+  test("renders not found instead of a permanent skeleton when assetCount=0", () => {
     const html = renderToStaticMarkup(
       <AssetDetailView assets={[]} id="1" isLoading={false} />,
     );
 
-    expect(html).toContain("未找到该资产");
+    expect(html).toContain("Asset not found");
     expect(html).not.toContain("REMAINING SHARES");
   });
 
-  test("剩余额度比例在 bigint 域封顶后再转成 number", () => {
+  test("caps remaining ratio in bigint space before converting to number", () => {
     expect(
       remainingRatio(
         assetView({
@@ -107,5 +108,41 @@ describe("链上资产读取状态", () => {
         }),
       ),
     ).toBe(100);
+  });
+
+  test("filters gold and commodities assets into the COMMODITIES display category", () => {
+    const html = renderToStaticMarkup(
+      <AssetGridView
+        assets={[
+          assetView({
+            category: "gold",
+            meta: {
+              ...assetView().meta,
+              displayName: "Gold Ounce Vault #4",
+              ticker: "GOLD",
+              slug: "gold-ounce-4",
+            },
+            tokenId: 2n,
+          }),
+          assetView({
+            category: "commodities",
+            meta: {
+              ...assetView().meta,
+              displayName: "Silver Bullion Vault #2",
+              ticker: "SLVR",
+              slug: "silver-bullion-vault-2",
+            },
+            tokenId: 9n,
+          }),
+        ]}
+        category="commodities"
+        isLoading={false}
+        onCategoryChange={() => undefined}
+      />,
+    );
+
+    expect(html).toContain("Gold Ounce Vault #4");
+    expect(html).toContain("Silver Bullion Vault #2");
+    expect(html).toContain("COMMODITIES");
   });
 });

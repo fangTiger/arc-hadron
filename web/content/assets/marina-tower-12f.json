@@ -1,21 +1,22 @@
 {
   "slug": "marina-tower-12f",
-  "nameZh": "Marina Tower 12F 单元",
-  "description": "由滨海核心区办公单元租金现金流映射的演示型房地产份额资产，面向追求周期性租金收益的账户。资产叙事突出出租率、租约稳定性与发行价口径下的链上市值展示。",
+  "displayName": "Marina Tower 12F Unit",
+  "ticker": "RES-12F",
+  "description": "A demo fractional real-estate asset referencing office-unit rental cash flows in a marina business district. Disclosures focus on occupancy, lease stability, and issuance-price market value displayed from Arc contract data.",
   "issuer": "Harborline Real Asset Trust",
   "apyBps": 620,
   "docs": [
     {
-      "label": "发行说明书",
-      "note": "演示文档，非真实法律文件；说明租金收益、份额结构与费用假设。"
+      "label": "Offering memorandum",
+      "note": "Demo document, not a legal instrument. Summarizes rental income, share structure, and fee assumptions."
     },
     {
-      "label": "估值备忘录",
-      "note": "演示文档，非真实法律文件；展示物业估值与租约假设。"
+      "label": "Valuation memo",
+      "note": "Demo document, not a legal instrument. Presents illustrative property valuation and lease assumptions."
     },
     {
-      "label": "托管证明",
-      "note": "演示文档，非真实法律文件；说明资产权益托管叙事。"
+      "label": "Custody statement",
+      "note": "Demo document, not a legal instrument. Describes the asset-interest custody narrative for demo purposes."
     }
   ]
 }

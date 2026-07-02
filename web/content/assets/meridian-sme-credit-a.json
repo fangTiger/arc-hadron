@@ -1,0 +1,22 @@
+{
+  "slug": "meridian-sme-credit-a",
+  "displayName": "Meridian SME Credit Pool A",
+  "ticker": "PCRD-A",
+  "description": "A demo private-credit pool referencing senior secured loans to diversified small and mid-sized enterprises. Disclosures focus on borrower concentration, amortization cadence, and overcollateralization assumptions.",
+  "issuer": "Meridian Credit Management LP",
+  "apyBps": 875,
+  "docs": [
+    {
+      "label": "Pool summary",
+      "note": "Demo document, not a legal instrument. Summarizes borrower mix, advance rates, and payment cadence."
+    },
+    {
+      "label": "Servicing report",
+      "note": "Demo document, not a legal instrument. Provides an illustrative servicing and delinquency snapshot."
+    },
+    {
+      "label": "Risk disclosure",
+      "note": "Demo document, not a legal instrument. Describes credit, liquidity, and recovery assumptions."
+    }
+  ]
+}

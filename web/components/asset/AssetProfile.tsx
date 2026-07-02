@@ -19,9 +19,9 @@ export function AssetProfile({ asset }: { asset: AssetView }) {
   async function copyContractAddress() {
     try {
       await navigator.clipboard.writeText(HADRON_ASSETS_ADDRESS);
-      setCopyNotice("已复制");
+      setCopyNotice("Copied");
     } catch {
-      setCopyNotice("复制失败");
+      setCopyNotice("Copy failed");
     }
   }
 
@@ -32,10 +32,10 @@ export function AssetProfile({ asset }: { asset: AssetView }) {
         <div className="relative flex min-h-56 flex-col justify-end p-6 sm:p-8">
           <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-dim">{category.label}</p>
           <h1 className="mt-4 max-w-4xl text-3xl font-semibold leading-tight text-text sm:text-5xl">
-            {asset.meta.nameZh}
+            {asset.meta.displayName}
           </h1>
           <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.2em] text-neon-dim">
-            TOKEN #{asset.tokenId.toString()}
+            {asset.meta.ticker} / TOKEN #{asset.tokenId.toString()}
           </p>
         </div>
       </div>
@@ -75,7 +75,7 @@ export function AssetProfile({ asset }: { asset: AssetView }) {
               <dd className="font-mono text-sm text-text">{asset.tokenId.toString()}</dd>
             </div>
             <div className="py-4">
-              <dt className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">合约地址</dt>
+              <dt className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">CONTRACT ADDRESS</dt>
               <dd className="mt-3 flex flex-wrap items-center gap-3">
                 <a
                   className="font-mono text-sm text-neon-dim underline-offset-4 hover:text-neon hover:underline"
@@ -90,7 +90,7 @@ export function AssetProfile({ asset }: { asset: AssetView }) {
                   onClick={copyContractAddress}
                   type="button"
                 >
-                  复制
+                  Copy
                 </button>
                 {copyNotice ? <span className="text-xs text-muted">{copyNotice}</span> : null}
               </dd>

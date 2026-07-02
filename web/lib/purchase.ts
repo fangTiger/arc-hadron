@@ -9,7 +9,7 @@ export interface ValidatePurchaseInput {
 
 export type PurchaseValidationResult =
   | { ok: true; amount: bigint; totalValue: bigint }
-  | { ok: false; errorZh: string };
+  | { ok: false; errorText: string };
 
 export function validatePurchase({
   amountInput,
@@ -20,23 +20,23 @@ export function validatePurchase({
   const normalized = amountInput.trim();
 
   if (!/^\d+$/.test(normalized)) {
-    return { ok: false, errorZh: "请输入有效的购买数量" };
+    return { ok: false, errorText: "Enter a valid amount" };
   }
 
   const amount = BigInt(normalized);
 
   if (amount === 0n) {
-    return { ok: false, errorZh: "请输入有效的购买数量" };
+    return { ok: false, errorText: "Enter a valid amount" };
   }
 
   if (amount > remaining) {
-    return { ok: false, errorZh: "超出发行余量" };
+    return { ok: false, errorText: "Exceeds available supply" };
   }
 
   const totalValue = amount * pricePerShare;
 
   if (totalValue + GAS_BUFFER > balance) {
-    return { ok: false, errorZh: "USDC 余额不足" };
+    return { ok: false, errorText: "Insufficient USDC balance" };
   }
 
   return { ok: true, amount, totalValue };
@@ -65,12 +65,12 @@ export function mapWagmiError(err: unknown): string {
     name === "UserRejectedRequestError" ||
     lowerMessage.includes("user rejected")
   ) {
-    return "已取消签名";
+    return "Signature cancelled";
   }
 
   if (lowerMessage.includes("insufficient funds")) {
-    return "余额不足以支付交易";
+    return "Insufficient funds for this transaction";
   }
 
-  return "交易失败，请稍后重试";
+  return "Transaction failed, please retry";
 }

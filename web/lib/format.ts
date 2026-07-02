@@ -9,7 +9,7 @@ interface FormatUsdcOptions {
 
 function assertDigits(digits: number) {
   if (!Number.isInteger(digits) || digits < 0 || digits > 6) {
-    throw new Error("小数位数必须在 0 到 6 之间。");
+    throw new Error("Decimal digits must be between 0 and 6.");
   }
 }
 
@@ -33,7 +33,7 @@ function formatFixed(wei: bigint, scale: bigint, digits: number, withThousands: 
 
 export function formatUsdc(wei: bigint, opts: FormatUsdcOptions = {}): string {
   if (wei < BigInt(0)) {
-    throw new Error("金额不能为负数。");
+    throw new Error("Amount cannot be negative.");
   }
 
   const requestedDigits = opts.digits ?? 2;
@@ -63,13 +63,13 @@ export function parseUsdc(input: string): bigint {
   const normalized = input.trim();
 
   if (!/^\d+(\.\d+)?$/.test(normalized)) {
-    throw new Error("请输入合法的 USDC 金额。");
+    throw new Error("Enter a valid USDC amount.");
   }
 
   const [whole, fractional = ""] = normalized.split(".");
 
   if (fractional.length > 18) {
-    throw new Error("USDC 最多支持 18 位小数。");
+    throw new Error("USDC supports at most 18 decimal places.");
   }
 
   return BigInt(whole) * USDC_SCALE + BigInt(fractional.padEnd(18, "0"));
@@ -81,7 +81,7 @@ export function shortAddress(addr: string): string {
 
 export function formatShares(n: bigint): string {
   if (n < BigInt(0)) {
-    throw new Error("份额不能为负数。");
+    throw new Error("Shares cannot be negative.");
   }
 
   return groupThousands(n.toString());

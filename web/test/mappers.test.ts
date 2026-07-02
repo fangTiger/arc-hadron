@@ -9,11 +9,12 @@ import type { AssetMeta } from "../lib/metadata";
 
 const meta = (slug: string, apyBps: number | null = null): AssetMeta => ({
   slug,
-  nameZh: `资产 ${slug}`,
-  description: "测试资产描述",
-  issuer: "测试发行方",
+  displayName: `Asset ${slug}`,
+  ticker: "TEST",
+  description: "Test asset description",
+  issuer: "Test issuer",
   apyBps,
-  docs: [{ label: "测试文档", note: "演示文档，非真实法律文件" }],
+  docs: [{ label: "Test document", note: "Demo document, not a legal instrument." }],
 });
 
 const assets = [
@@ -40,7 +41,7 @@ const offerings = [
 ];
 
 describe("joinAssetsWithOfferings", () => {
-  test("聚合链上资产、静态元数据与活跃发行", () => {
+  test("joins on-chain assets, static metadata, and active offerings", () => {
     const views = joinAssetsWithOfferings(assets.slice(0, 1), offerings.slice(1, 2), (slug) =>
       meta(slug, 510),
     );
@@ -56,20 +57,20 @@ describe("joinAssetsWithOfferings", () => {
     expect(views[0].meta.slug).toBe("t-bill-2026-q3");
   });
 
-  test("无活跃发行时 offering 为 null", () => {
+  test("returns null offering when no active offering exists", () => {
     const views = joinAssetsWithOfferings(assets, offerings.slice(0, 1), (slug) => meta(slug));
 
     expect(views[1].offering).toBeNull();
   });
 
-  test("同一 tokenId 取 active 且 id 最大的发行", () => {
+  test("selects the active offering with the largest id for the same tokenId", () => {
     const views = joinAssetsWithOfferings(assets.slice(0, 1), offerings, (slug) => meta(slug));
 
     expect(views[0].offering?.id).toBe(3n);
     expect(views[0].offering?.pricePerShare).toBe(11n);
   });
 
-  test("从 hadron metadataURI 中提取 slug 传给 metaResolver", () => {
+  test("extracts the slug from hadron metadataURI before calling metaResolver", () => {
     const seen: string[] = [];
 
     joinAssetsWithOfferings(assets.slice(0, 1), [], (slug) => {
@@ -82,7 +83,7 @@ describe("joinAssetsWithOfferings", () => {
 });
 
 describe("computeStats", () => {
-  test("计算 TVL 并忽略 null APY 求平均收益率", () => {
+  test("computes TVL and ignores null APY values when averaging yield", () => {
     const views: AssetView[] = [
       {
         ...assets[0],
@@ -99,7 +100,7 @@ describe("computeStats", () => {
     expect(computeStats(views)).toEqual({ tvl: 2250n, avgApyBps: 510 });
   });
 
-  test("无非 null APY 时平均收益率为 null", () => {
+  test("returns null average yield when all APY values are null", () => {
     const views = joinAssetsWithOfferings(assets, [], (slug) => meta(slug, null));
 
     expect(computeStats(views)).toEqual({ tvl: 0n, avgApyBps: null });
@@ -107,7 +108,7 @@ describe("computeStats", () => {
 });
 
 describe("toHoldings", () => {
-  test("按购买事件计算移动平均成本、市值与成本额", () => {
+  test("computes moving-average cost, market value, and cost basis from purchase events", () => {
     const views = joinAssetsWithOfferings(assets.slice(0, 1), offerings.slice(1, 2), (slug) =>
       meta(slug),
     );
@@ -130,13 +131,13 @@ describe("toHoldings", () => {
     });
   });
 
-  test("过滤 0 余额资产", () => {
+  test("filters zero-balance assets", () => {
     const views = joinAssetsWithOfferings(assets, offerings, (slug) => meta(slug));
 
     expect(toHoldings(views, [{ tokenId: 1n, balance: 0n }], [])).toEqual([]);
   });
 
-  test("无购买事件时成本字段为 null", () => {
+  test("returns null cost fields when there are no purchase events", () => {
     const views = joinAssetsWithOfferings(assets.slice(1), [], (slug) => meta(slug));
     const holdings = toHoldings(views, [{ tokenId: 2n, balance: 4n }], []);
 

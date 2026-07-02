@@ -14,8 +14,8 @@ export default function Home() {
             HADRON<span className="text-neon">.</span>
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-text-dim">
-            承载真实资产的链上交易所。浏览链上发行资产、比较价格与收益口径，并在 Arc testnet
-            上完成可查证的一级购买。
+            An on-chain exchange for real-world assets. Browse issued assets, compare price and
+            yield metrics, and complete verifiable primary purchases on Arc testnet.
           </p>
         </div>
 

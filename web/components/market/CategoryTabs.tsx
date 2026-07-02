@@ -1,14 +1,8 @@
 "use client";
 
-export type MarketCategory = "all" | "treasuries" | "gold" | "real-estate" | "carbon";
+import { CATEGORY_TAB_OPTIONS, type MarketCategory } from "@/lib/categories";
 
-const categories: { label: string; value: MarketCategory }[] = [
-  { label: "ALL", value: "all" },
-  { label: "TREASURIES", value: "treasuries" },
-  { label: "GOLD", value: "gold" },
-  { label: "REAL ESTATE", value: "real-estate" },
-  { label: "CARBON", value: "carbon" },
-];
+export type { MarketCategory } from "@/lib/categories";
 
 export function CategoryTabs({
   onChange,
@@ -19,7 +13,7 @@ export function CategoryTabs({
 }) {
   return (
     <div className="flex flex-wrap gap-2">
-      {categories.map((category) => {
+      {CATEGORY_TAB_OPTIONS.map((category) => {
         const active = value === category.value;
 
         return (

@@ -14,7 +14,7 @@ import { useAssets } from "./useAssets";
 const PRIMARY_SALE_EVENT = parseAbiItem(
   "event PrimarySale(uint256 indexed offeringId, uint256 indexed tokenId, address indexed buyer, uint256 amount, uint256 totalPaid, uint256 fee)",
 );
-export const PORTFOLIO_READ_ERROR_ZH = "持仓读取失败，请稍后重试。";
+export const PORTFOLIO_READ_ERROR_ZH = "Failed to load portfolio data from Arc RPC.";
 
 export function usePortfolio(): { errorZh?: string; holdings: Holding[]; isLoading: boolean } {
   const { address, isConnected } = useAccount();

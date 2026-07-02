@@ -1,0 +1,22 @@
+{
+  "slug": "fiber-grid-metro-loop",
+  "displayName": "Fiber Grid Metro Loop",
+  "ticker": "FIBR",
+  "description": "A demo infrastructure asset referencing contracted fiber capacity across a metropolitan network loop. Disclosures focus on customer contracts, utilization, and maintenance reserve assumptions.",
+  "issuer": "Metro Fiber Finance LLC",
+  "apyBps": 680,
+  "docs": [
+    {
+      "label": "Network summary",
+      "note": "Demo document, not a legal instrument. Summarizes route footprint, capacity, and customer contract assumptions."
+    },
+    {
+      "label": "Revenue memo",
+      "note": "Demo document, not a legal instrument. Describes illustrative recurring revenue and utilization assumptions."
+    },
+    {
+      "label": "Maintenance report",
+      "note": "Demo document, not a legal instrument. Provides demo maintenance reserve and service-level assumptions."
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { displayCategoryForChainCategory } from "@/lib/categories";
 import { useAssets } from "@/lib/hooks/useAssets";
 import type { AssetView } from "@/lib/mappers";
 import { AssetCard } from "./AssetCard";
@@ -51,7 +52,10 @@ export function AssetGridView({
   onCategoryChange: (value: MarketCategory) => void;
 }) {
   const filteredAssets = useMemo(
-    () => assets.filter((asset) => category === "all" || asset.category === category),
+    () =>
+      assets.filter(
+        (asset) => category === "all" || displayCategoryForChainCategory(asset.category) === category,
+      ),
     [assets, category],
   );
 
@@ -77,7 +81,7 @@ export function AssetGridView({
         </div>
       ) : (
         <div className="border border-border bg-panel/70 p-10 text-center text-sm text-text-dim">
-          当前类别暂无活跃资产。
+          No active assets in this category.
         </div>
       )}
     </section>

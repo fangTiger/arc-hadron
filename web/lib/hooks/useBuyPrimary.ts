@@ -11,12 +11,12 @@ type LocalBuyPrimaryStatus = Exclude<BuyPrimaryStatus, "success">;
 interface BuyPrimaryLocalState {
   status: LocalBuyPrimaryStatus;
   txHash?: `0x${string}`;
-  errorZh?: string;
+  errorText?: string;
 }
 
 interface DeriveBuyPrimaryStateInput {
   localStatus: BuyPrimaryStatus;
-  localErrorZh?: string;
+  localErrorText?: string;
   receiptError?: unknown;
   receiptStatus?: "success" | "reverted";
 }
@@ -25,22 +25,22 @@ export interface UseBuyPrimaryResult {
   buy: (offeringId: bigint, amount: bigint, totalValue: bigint) => void;
   status: BuyPrimaryStatus;
   txHash?: `0x${string}`;
-  errorZh?: string;
+  errorText?: string;
   reset: () => void;
 }
 
 export function deriveBuyPrimaryState({
-  localErrorZh,
+  localErrorText,
   localStatus,
   receiptError,
   receiptStatus,
-}: DeriveBuyPrimaryStateInput): { status: BuyPrimaryStatus; errorZh?: string } {
+}: DeriveBuyPrimaryStateInput): { status: BuyPrimaryStatus; errorText?: string } {
   if (localStatus !== "pending") {
-    return { status: localStatus, errorZh: localErrorZh };
+    return { status: localStatus, errorText: localErrorText };
   }
 
   if (receiptError) {
-    return { status: "error", errorZh: mapWagmiError(receiptError) };
+    return { status: "error", errorText: mapWagmiError(receiptError) };
   }
 
   if (receiptStatus === "success") {
@@ -48,7 +48,7 @@ export function deriveBuyPrimaryState({
   }
 
   if (receiptStatus === "reverted") {
-    return { status: "error", errorZh: "交易被链上回滚" };
+    return { status: "error", errorText: "Transaction reverted on-chain" };
   }
 
   return { status: "pending" };
@@ -70,15 +70,15 @@ export function useBuyPrimary(): UseBuyPrimaryResult {
   const derivedState = useMemo(
     () =>
       deriveBuyPrimaryState({
-        localErrorZh: localState.errorZh,
+        localErrorText: localState.errorText,
         localStatus: localState.status,
         receiptError: receiptQuery.isError ? receiptQuery.error : undefined,
         receiptStatus: receiptQuery.data?.status,
       }),
-    [localState.errorZh, localState.status, receiptQuery.data?.status, receiptQuery.error, receiptQuery.isError],
+    [localState.errorText, localState.status, receiptQuery.data?.status, receiptQuery.error, receiptQuery.isError],
   );
   const status = derivedState.status;
-  const errorZh = derivedState.errorZh;
+  const errorText = derivedState.errorText;
 
   const reset = useCallback(() => {
     setLocalState({ status: "idle" });
@@ -105,7 +105,7 @@ export function useBuyPrimary(): UseBuyPrimaryResult {
         },
         {
           onError: (err) => {
-            setLocalState({ status: "error", errorZh: mapWagmiError(err) });
+            setLocalState({ status: "error", errorText: mapWagmiError(err) });
             busyRef.current = false;
           },
           onSuccess: (hash) => {
@@ -117,5 +117,5 @@ export function useBuyPrimary(): UseBuyPrimaryResult {
     [status, writeContract],
   );
 
-  return { buy, status, txHash, errorZh, reset };
+  return { buy, status, txHash, errorText, reset };
 }

@@ -1,0 +1,22 @@
+{
+  "slug": "dockside-logistics-park",
+  "displayName": "Dockside Logistics Park",
+  "ticker": "DOCK",
+  "description": "A demo real-estate asset referencing stabilized logistics warehouses adjacent to a port corridor. Disclosures focus on tenant quality, lease maturity ladder, and operating-expense assumptions.",
+  "issuer": "Dockside Real Asset Partners",
+  "apyBps": 710,
+  "docs": [
+    {
+      "label": "Property summary",
+      "note": "Demo document, not a legal instrument. Summarizes location, tenant mix, and lease tenor."
+    },
+    {
+      "label": "Valuation memo",
+      "note": "Demo document, not a legal instrument. Provides illustrative cap-rate and rental growth assumptions."
+    },
+    {
+      "label": "Operating report",
+      "note": "Demo document, not a legal instrument. Describes demo occupancy and expense assumptions."
+    }
+  ]
+}

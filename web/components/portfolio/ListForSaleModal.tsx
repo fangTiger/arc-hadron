@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { buildTxExplorerUrl, useToast } from "@/components/ui/TxToast";
 import { formatShares, formatUsdc, shortAddress } from "@/lib/format";
 import { useListForSale, type ListForSaleStatus } from "@/lib/hooks/useListForSale";
+import { useNetworkGuard } from "@/lib/hooks/useNetworkGuard";
 import { validateListing } from "@/lib/listing";
 import type { Holding } from "@/lib/mappers";
 
@@ -268,6 +269,7 @@ export function ListForSaleModal({
     holding.asset.offering ? formatListingPriceInput(holding.asset.offering.pricePerShare) : "",
   );
   const { approveTxHash, errorText, listForSale, reset, status, txHash } = useListForSale();
+  const { isCorrectChain, switchToArc } = useNetworkGuard();
   const { pushError, pushSuccess } = useToast();
   const queryClient = useQueryClient();
   const lastNoticeKey = useRef<string | null>(null);
@@ -328,6 +330,12 @@ export function ListForSaleModal({
       onClose={closeModal}
       onPriceChange={setPriceInput}
       onSubmit={(amount, pricePerShare) => {
+        // 错误网络必须先切链，禁止发起交易（trading-flow 规范）。
+        if (!isCorrectChain) {
+          switchToArc();
+          return;
+        }
+
         listForSale(holding.asset.tokenId, amount, pricePerShare);
       }}
       priceInput={priceInput}

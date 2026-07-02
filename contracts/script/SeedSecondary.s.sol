@@ -8,6 +8,8 @@ import {HadronMarket} from "../src/HadronMarket.sol";
 /// @notice 为测试网制造二级挂单与变价 Purchased 事件。
 /// @dev 该脚本会让 deployer 购买自己的一部分挂单；这是测试网种子数据自成交，用于生成真实二级市场价格事件，不用于生产。
 contract SeedSecondary is Script {
+    /// @dev 仅允许在 ARC 测试网运行，防止误用于其他链（授权 operator + 自成交均为测试网专用行为）。
+    uint256 private constant ARC_TESTNET_CHAIN_ID = 5042002;
     uint256 private constant MAX_SINGLE_TRADE_VALUE = 130e18;
     uint256 private constant MAX_TARGET_ASSETS = 6;
     uint256 private constant MIN_TARGET_ASSETS = 4;
@@ -24,6 +26,8 @@ contract SeedSecondary is Script {
     }
 
     function run() external {
+        require(block.chainid == ARC_TESTNET_CHAIN_ID, "SeedSecondary: ARC testnet only");
+
         uint256 deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
         HadronAssets assets = HadronAssets(vm.envAddress("HADRON_ASSETS"));

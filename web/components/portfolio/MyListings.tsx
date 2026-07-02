@@ -7,6 +7,7 @@ import { formatShares, formatUsdc, shortAddress } from "@/lib/format";
 import { useAssets } from "@/lib/hooks/useAssets";
 import { useCancelListing } from "@/lib/hooks/useCancelListing";
 import { type ListingView, useMyListings } from "@/lib/hooks/useListings";
+import { useNetworkGuard } from "@/lib/hooks/useNetworkGuard";
 
 type TxHash = `0x${string}`;
 type CancelStatus = "idle" | "signing" | "pending" | "success" | "error";
@@ -183,6 +184,7 @@ export function MyListings() {
   const { assets } = useAssets();
   const { listings, isLoading } = useMyListings();
   const { cancel, errorText, reset, status, txHash } = useCancelListing();
+  const { isCorrectChain, switchToArc } = useNetworkGuard();
   const { pushError, pushSuccess } = useToast();
   const queryClient = useQueryClient();
   const lastNoticeKey = useRef<string | null>(null);
@@ -231,6 +233,12 @@ export function MyListings() {
       onAskCancel={(listingId) => setCancellingId(listingId)}
       onCancel={(listingId) => {
         if (listingId === null) {
+          return;
+        }
+
+        // 错误网络必须先切链，禁止发起交易（trading-flow 规范）。
+        if (!isCorrectChain) {
+          switchToArc();
           return;
         }
 

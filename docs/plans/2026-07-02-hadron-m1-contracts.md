@@ -223,7 +223,7 @@ contracts/
 
 **Files:** Create `contracts/test/HadronMarket.adversarial.t.sol`、`contracts/test/helpers/MaliciousReceiver.sol`
 
-- [ ] **Step 6.1（RED）** 测试用例：
+- [x] **Step 6.1（RED）** 测试用例：
 
 | 测试函数 | 断言 | Spec 场景 |
 |---|---|---|
@@ -233,9 +233,9 @@ contracts/
 | `testFuzz_SecondaryLifecycle(uint64 listAmt, uint64 buyAmt)` | 任意部分成交序列后：托管余额 == Σ活跃挂单余量（守恒） | 生命周期边界 |
 | `testFuzz_FeeNeverExceedsCap(uint96 price, uint64 amount)` | fee <= totalPaid * MAX_FEE_BPS / 10000 | 配置不变量 |
 
-- [ ] **Step 6.2** `forge test --match-path test/HadronMarket.adversarial.t.sol` → 期望 FAIL（helper 未建）
-- [ ] **Step 6.3（GREEN）** 实现 `MaliciousReceiver.sol`（receive 中重入 / 直接 revert 两种模式），修复暴露的问题（若有）
-- [ ] **Step 6.4** `forge test -vv` 全量 → 全部 PASS；记录 fuzz runs（默认 256）输出为证据
+- [x] **Step 6.2** `forge test --match-path test/HadronMarket.adversarial.t.sol` → 期望 FAIL（helper 未建）
+- [x] **Step 6.3（GREEN）** 实现 `MaliciousReceiver.sol`（receive 中重入 / 直接 revert 两种模式），修复暴露的问题（若有）
+- [x] **Step 6.4** `forge test -vv` 全量 → 全部 PASS；记录 fuzz runs（默认 256）输出为证据
 - [ ] **Step 6.5** 提交：`git commit -m "test(contracts): 对抗性重入/拒收与 fuzz 不变量测试"`
 
 ## Task 7: 部署脚本与 Arc testnet 部署 + 结算冒烟实证

@@ -9,7 +9,7 @@
 - [x] 1.2 TDD 实现 `HadronAssets`（asset-registry spec：登记/铸造/getter/不变量/事件）
 - [x] 1.3 TDD 实现 `HadronMarket` 一级发行（primary-market spec：创建/购买/关闭/协议费/精确付款）
 - [x] 1.4 TDD 实现 `HadronMarket` 二级市场（secondary-market spec：挂单/部分成交/撤单/对抗性安全）
-- [ ] 1.5 fuzz 与对抗性测试补全（输入不变量、恶意收款合约、费用取整）
+- [x] 1.5 fuzz 与对抗性测试补全（输入不变量、恶意收款合约、费用取整）
 - [ ] 1.6 部署脚本 + Arc testnet 部署（含领水确认），小额冒烟交易实证原生 USDC 结算（失败则切 ERC-20 备用分支并回改 spec）
 - [ ] 1.7 种子资产发行脚本：4 类资产（国债/黄金/房地产/碳信用）上架一级发行；Codex 交叉检查合约代码
 

@@ -15,3 +15,5 @@ frontend/.next/
 .superpowers/
 docs/HANDOFF.md
 contracts/lib/
+contracts/cache/
+contracts/out/

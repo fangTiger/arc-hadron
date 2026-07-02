@@ -6,7 +6,7 @@
 ## 1. M1 — 合约与链上地基
 
 - [x] 1.1 初始化 `contracts/` Foundry 工程（OpenZeppelin 依赖、目录规范、CI 可用的 forge test）
-- [ ] 1.2 TDD 实现 `HadronAssets`（asset-registry spec：登记/铸造/getter/不变量/事件）
+- [x] 1.2 TDD 实现 `HadronAssets`（asset-registry spec：登记/铸造/getter/不变量/事件）
 - [ ] 1.3 TDD 实现 `HadronMarket` 一级发行（primary-market spec：创建/购买/关闭/协议费/精确付款）
 - [ ] 1.4 TDD 实现 `HadronMarket` 二级市场（secondary-market spec：挂单/部分成交/撤单/对抗性安全）
 - [ ] 1.5 fuzz 与对抗性测试补全（输入不变量、恶意收款合约、费用取整）

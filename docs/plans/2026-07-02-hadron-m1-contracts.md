@@ -133,7 +133,7 @@ contracts/
 
 **Files:** Create `contracts/src/HadronAssets.sol`、`contracts/test/HadronAssets.t.sol`
 
-- [ ] **Step 2.1（RED）** 编写 `HadronAssets.t.sol`，测试用例与 spec 场景一一对应：
+- [x] **Step 2.1（RED）** 编写 `HadronAssets.t.sol`，测试用例与 spec 场景一一对应：
 
 | 测试函数 | 断言（GIVEN/WHEN/THEN） | Spec 场景 |
 |---|---|---|
@@ -146,9 +146,9 @@ contracts/
 | `test_Uri_ReturnsMetadataURI` | `uri(1)` 返回创建时的 metadataURI | 前端枚举全部资产 |
 | `test_AssetCount_IncrementsAcrossCreations` | 连续创建 3 个资产，tokenId 依次 1/2/3 | 前端枚举全部资产 |
 
-- [ ] **Step 2.2** 运行 `forge test --match-path test/HadronAssets.t.sol` → 期望：编译失败或全部 FAIL（合约未实现）
-- [ ] **Step 2.3（GREEN）** 按冻结接口实现 `HadronAssets.sol`（最小实现，不加接口之外的功能）
-- [ ] **Step 2.4** 运行 `forge test --match-path test/HadronAssets.t.sol -vv` → 期望：8 个测试全部 PASS
+- [x] **Step 2.2** 运行 `forge test --match-path test/HadronAssets.t.sol` → 期望：编译失败或全部 FAIL（合约未实现）
+- [x] **Step 2.3（GREEN）** 按冻结接口实现 `HadronAssets.sol`（最小实现，不加接口之外的功能）
+- [x] **Step 2.4** 运行 `forge test --match-path test/HadronAssets.t.sol -vv` → 期望：8 个测试全部 PASS
 - [ ] **Step 2.5** 提交：`git commit -m "feat(contracts): HadronAssets ERC-1155 资产登记（TDD）"`
 
 ## Task 3: HadronMarket 骨架与配置不变量（TDD）

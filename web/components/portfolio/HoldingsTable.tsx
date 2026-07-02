@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useAccount } from "wagmi";
 import { WalletButton } from "@/components/layout/WalletButton";
+import { ListForSaleModal } from "@/components/portfolio/ListForSaleModal";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { glowButtonClassName } from "@/components/ui/GlowButton";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -20,6 +21,7 @@ interface HoldingsTableViewProps {
   holdings: Holding[];
   isConnected: boolean;
   isLoading: boolean;
+  onListForSale?: (holding: Holding) => void;
 }
 
 function labelClassName() {
@@ -114,7 +116,13 @@ function CategoryBadge({ category }: { category: string }) {
   );
 }
 
-function HoldingRow({ holding }: { holding: Holding }) {
+function HoldingRow({
+  holding,
+  onListForSale,
+}: {
+  holding: Holding;
+  onListForSale?: (holding: Holding) => void;
+}) {
   return (
     <tr className="border-t border-border align-middle transition-colors hover:bg-border/20">
       <td className="min-w-72 py-5 pr-5">
@@ -140,12 +148,11 @@ function HoldingRow({ holding }: { holding: Holding }) {
       </td>
       <td className="py-5 pl-5">
         <button
-          className="h-9 border border-border bg-muted/20 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-muted"
-          disabled
-          title="Secondary market opens in M3"
+          className="h-9 border border-border bg-bg/50 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-text-dim transition-colors hover:border-border-glow hover:text-text"
+          onClick={() => onListForSale?.(holding)}
           type="button"
         >
-          List for resale
+          List for sale
         </button>
       </td>
     </tr>
@@ -158,6 +165,7 @@ export function HoldingsTableView({
   holdings,
   isConnected,
   isLoading,
+  onListForSale,
 }: HoldingsTableViewProps) {
   const totalMarketValue = useMemo(
     () => holdings.reduce((total, holding) => total + holding.marketValue, 0n),
@@ -198,7 +206,19 @@ export function HoldingsTableView({
               ))}
             </tr>
           </thead>
-          <tbody>{isLoading ? <LoadingRows /> : holdings.map((holding) => <HoldingRow holding={holding} key={holding.asset.tokenId.toString()} />)}</tbody>
+          <tbody>
+            {isLoading ? (
+              <LoadingRows />
+            ) : (
+              holdings.map((holding) => (
+                <HoldingRow
+                  holding={holding}
+                  key={holding.asset.tokenId.toString()}
+                  onListForSale={onListForSale}
+                />
+              ))
+            )}
+          </tbody>
           <tfoot>
             <tr className="border-t border-border-glow">
               <td className="py-5 pr-5" colSpan={2}>
@@ -222,14 +242,25 @@ export function HoldingsTableView({
 export function HoldingsTable() {
   const { isConnected } = useAccount();
   const { errorZh, holdings, isLoading } = usePortfolio();
+  const [listingHolding, setListingHolding] = useState<Holding | null>(null);
 
   return (
-    <HoldingsTableView
-      connectAction={<WalletButton />}
-      errorZh={errorZh}
-      holdings={holdings}
-      isConnected={isConnected}
-      isLoading={isConnected ? isLoading : false}
-    />
+    <>
+      <HoldingsTableView
+        connectAction={<WalletButton />}
+        errorZh={errorZh}
+        holdings={holdings}
+        isConnected={isConnected}
+        isLoading={isConnected ? isLoading : false}
+        onListForSale={setListingHolding}
+      />
+      {listingHolding ? (
+        <ListForSaleModal
+          holding={listingHolding}
+          key={listingHolding.asset.tokenId.toString()}
+          onClose={() => setListingHolding(null)}
+        />
+      ) : null}
+    </>
   );
 }

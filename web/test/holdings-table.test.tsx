@@ -37,7 +37,7 @@ function holding(overrides: Partial<Holding> = {}): Holding {
 }
 
 describe("HoldingsTableView", () => {
-  test("renders table headers, asset row, formatted values, and disabled resale entry", () => {
+  test("renders table headers, asset row, formatted values, and resale entry", () => {
     const html = renderToStaticMarkup(
       <HoldingsTableView holdings={[holding()]} isConnected isLoading={false} />,
     );
@@ -52,9 +52,8 @@ describe("HoldingsTableView", () => {
     expect(html).toContain("24,690.00 USDC");
     expect(html).toContain("1.80 USDC");
     expect(html).toContain("22,221.00 USDC");
-    expect(html).toContain("title=\"Secondary market opens in M3\"");
-    expect(html).toContain("disabled=\"\"");
-    expect(html).toContain("List for resale");
+    expect(html).toContain("List for sale");
+    expect(html).not.toContain("title=\"Secondary market opens in M3\"");
     expect(html).toContain("aria-label=\"Total market value 24,690.00 USDC\"");
   });
 

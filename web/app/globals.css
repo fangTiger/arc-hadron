@@ -86,3 +86,9 @@ a {
   border: 2px solid var(--bg);
   border-radius: 999px;
 }
+
+@keyframes hadron-skeleton {
+  100% {
+    transform: translateX(100%);
+  }
+}

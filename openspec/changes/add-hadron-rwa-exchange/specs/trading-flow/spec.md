@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: 钱包连接与网络守卫
-系统 SHALL 通过 wagmi + WalletConnect 连接钱包（移植 arc-lepton 配置），顶栏展示网络指示灯与地址；当钱包处于非 Arc testnet 网络时 MUST 阻止交易并引导切换网络。
+系统 SHALL 通过 **Reown AppKit**（复用 arc-lepton 的 WalletConnect/Reown project ID）+ wagmi 连接钱包，顶栏展示网络指示灯与地址；当钱包处于非 Arc testnet 网络时 MUST 阻止交易并引导切换网络。
 
 #### Scenario: 成功连接钱包
 - **WHEN** 用户点击连接并在钱包中确认
@@ -26,11 +26,11 @@
 - **THEN** 界面依次展示 pending 与确认成功状态，成功 Toast 含可点击的 explorer 交易链接
 
 ### Requirement: 失败场景处理
-对余额不足、付款金额不符、用户拒签、交易 revert、重复点击等失败场景，前端 SHALL 给出明确中文提示且不产生错误的本地状态；交易 revert 后 MUST 可通过刷新从链上完整重建页面状态。
+对余额不足、付款金额不符、用户拒签、交易 revert、重复点击等失败场景，前端 SHALL 给出明确的**英文**提示（产品界面语言为英文，2026-07-02 修订）且不产生错误的本地状态；交易 revert 后 MUST 可通过刷新从链上完整重建页面状态。
 
 #### Scenario: 用户拒签
 - **WHEN** 用户在钱包中拒绝签名
-- **THEN** 界面提示"已取消签名"类中文信息，页面状态与交易前一致
+- **THEN** 界面提示 "Signature cancelled" 类英文信息，页面状态与交易前一致
 
 #### Scenario: 余额不足
 - **WHEN** 用户 USDC 余额低于购买总价

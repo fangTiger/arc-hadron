@@ -155,7 +155,7 @@ contracts/
 
 **Files:** Create `contracts/src/HadronMarket.sol`、`contracts/test/HadronMarket.config.t.sol`
 
-- [ ] **Step 3.1（RED）** 测试用例：
+- [x] **Step 3.1（RED）** 测试用例：
 
 | 测试函数 | 断言 | Spec 场景 |
 |---|---|---|
@@ -165,9 +165,9 @@ contracts/
 | `test_SetTreasury_EmitsEvent_And_RevertZero` | 变更发 `TreasuryUpdated`；零地址 revert | 金库地址变更可追溯 |
 | `test_SupportsERC1155Receiver` | 合约可安全接收 ERC-1155（`onERC1155Received` selector） | 挂单托管前置 |
 
-- [ ] **Step 3.2** `forge test --match-path test/HadronMarket.config.t.sol` → 期望 FAIL/编译失败
-- [ ] **Step 3.3（GREEN）** 实现构造器、`setTreasury`、继承 `ERC1155Holder/Ownable2Step/ReentrancyGuard`（交易函数留空实现或 revert，后续 Task 补齐）
-- [ ] **Step 3.4** `forge test --match-path test/HadronMarket.config.t.sol -vv` → 期望 5 个 PASS
+- [x] **Step 3.2** `forge test --match-path test/HadronMarket.config.t.sol` → 期望 FAIL/编译失败
+- [x] **Step 3.3（GREEN）** 实现构造器、`setTreasury`、继承 `ERC1155Holder/Ownable2Step/ReentrancyGuard`（交易函数留空实现或 revert，后续 Task 补齐）
+- [x] **Step 3.4** `forge test --match-path test/HadronMarket.config.t.sol -vv` → 期望 5 个 PASS
 - [ ] **Step 3.5** 提交：`git commit -m "feat(contracts): HadronMarket 骨架与配置不变量（TDD）"`
 
 ## Task 4: 一级发行（TDD，对应 primary-market spec）

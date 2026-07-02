@@ -244,21 +244,21 @@ contracts/
 
 - [x] **Step 7.1** 从 arc-lepton 读取 Arc testnet 链参数（`/Users/captain/python/arc-lepton/lib/wagmi.ts`：chainId、RPC URL），写入 `.env.example`（`ARC_RPC_URL`、`DEPLOYER_PRIVATE_KEY`、`TREASURY_ADDRESS`）
 - [x] **Step 7.2** 编写 `Deploy.s.sol`：部署 `HadronAssets` → `HadronMarket(assets, treasury, 50)`，`console2.log` 输出地址与部署区块
-- [ ] **Step 7.3** 本地演练：`forge script script/Deploy.s.sol --fork-url $ARC_RPC_URL` → 期望模拟成功（**需要用户提供已领水的部署私钥**，此步为用户检查点）
-- [ ] **Step 7.4** 实际部署：`forge script script/Deploy.s.sol --rpc-url $ARC_RPC_URL --broadcast`，把地址/区块写入 `deployments/arc-testnet.json`
-- [ ] **Step 7.5（结算冒烟实证）** 用 `cast send` 走一遍：createAsset → approve → createPrimaryOffering → `buyPrimary`（带 `--value` 精确原生 USDC）→ `cast balance` 核对 owner/treasury 分账。**若原生结算失败：停止，回改 spec 启用 ERC-20 备用分支（设计文档 4.3）**
-- [ ] **Step 7.6** 在 explorer 确认交易可查证，记录交易哈希于 `deployments/arc-testnet.json` 的 `smokeTest` 字段
+- [x] **Step 7.3** 本地演练：fork 模拟成功（预估 gas 0.163 原生 USDC）
+- [x] **Step 7.4** 实际部署成功：`HadronAssets 0x735B2be6A5e20d15885351F0d14f1d02e87555FC`、`HadronMarket 0x18f15aD92B3352532Da23a31999Ce273203d859c`、部署区块 49769440
+- [x] **Step 7.5（结算冒烟实证）** 通过：4 笔交易全部 success，金库精确收到 10000000000000 wei（0.002e18 × 50bps）。**关键发现：链上原生 USDC 为 18 位小数 wei 计价**（非设计假设的 6 位），前端/种子定价按 1 USDC = 1e18 修正
+- [x] **Step 7.6** 交易哈希与口径结论已记录于 `deployments/arc-testnet.json`
 - [ ] **Step 7.7** 提交：`git commit -m "feat(contracts): Arc testnet 部署脚本与部署记录（含结算冒烟实证）"`
 
 ## Task 8: 种子资产发行脚本
 
 **Files:** Create `contracts/script/Seed.s.sol`
 
-- [ ] **Step 8.1** 编写 `Seed.s.sol`：创建 4 类资产并各建一级发行（价格单位 6 位小数 USDC）：
-  - `US T-BILL 2026-Q3`（treasuries，10,000 份，100.000000/份）
-  - `GOLD OUNCE VAULT #4`（gold，500 份，23.800000/份）
-  - `MARINA TOWER UNIT 12F`（real-estate，2,000 份，55.500000/份）
-  - `VERRA CARBON LOT-9`（carbon，8,000 份，1.850000/份）
+- [ ] **Step 8.1** 编写 `Seed.s.sol`：创建 4 类资产并各建一级发行（**价格单位：18 位小数 wei，1 USDC = 1e18，冒烟实证口径**）：
+  - `US T-BILL 2026-Q3`（treasuries，10,000 份，100e18/份）
+  - `GOLD OUNCE VAULT #4`（gold，500 份，23.8e18/份）
+  - `MARINA TOWER UNIT 12F`（real-estate，2,000 份，55.5e18/份）
+  - `VERRA CARBON LOT-9`（carbon，8,000 份，1.85e18/份 —— 低价资产，保证小额领水钱包也能完成购买）
 - [ ] **Step 8.2** 执行：`forge script script/Seed.s.sol --rpc-url $ARC_RPC_URL --broadcast` → 期望 4 个 `AssetIssued` + 4 个 `OfferingCreated`
 - [ ] **Step 8.3** 用 `cast call` 验证 `assetCount() == 4`、`offeringCount() == 4`，逐个 `getOffering` 核对价格
 - [ ] **Step 8.4** 提交：`git commit -m "feat(contracts): 4 类种子资产发行脚本与链上执行记录"`

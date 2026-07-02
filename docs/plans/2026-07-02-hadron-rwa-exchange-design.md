@@ -84,7 +84,8 @@
 
 ### 4.3 结算方式（默认已冻结为原生 USDC）
 
-**默认方案 A：原生 `msg.value` 结算**——`payable` 函数要求精确付款（`msg.value == pricePerShare × amount`），USDC 按 6 位小数计。依据（Codex 审查 arc-lepton 的实证）：
+**默认方案 A：原生 `msg.value` 结算**——`payable` 函数要求精确付款（`msg.value == pricePerShare × amount`）。
+**2026-07-02 链上冒烟实证已确认方案 A 成立**（部署与交易哈希见 `contracts/deployments/arc-testnet.json`），并修正口径：**链上原生 USDC 按 18 位小数 wei 计价**（gas 报价为 gwei、余额为 10¹⁸ 量级），arc-lepton 的 `decimals: 6` 仅是显示层配置；前端格式化与种子定价一律按 1 USDC = 10¹⁸ wei。原始依据（Codex 审查 arc-lepton 的实证）：
 
 - `arc-lepton/lib/wagmi.ts` 将 Arc 的 `nativeCurrency` 配置为 `USDC, decimals: 6`，且其真实上链交易已按此验证通过；
 - arc-lepton 未验证过任何 ERC-20 形态的 USDC 付款路径。

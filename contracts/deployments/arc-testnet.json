@@ -1,0 +1,27 @@
+{
+  "chainId": 5042002,
+  "rpcUrl": "https://rpc.testnet.arc.network",
+  "explorerUrl": "https://testnet.arcscan.app",
+  "deployBlock": 49769440,
+  "contracts": {
+    "HadronAssets": "0x735B2be6A5e20d15885351F0d14f1d02e87555FC",
+    "HadronMarket": "0x18f15aD92B3352532Da23a31999Ce273203d859c"
+  },
+  "config": {
+    "feeBps": 50,
+    "treasury": "0x84e243a60a75eFe615537af49c5eAEe8F3C32ED9",
+    "nativeCurrency": "USDC",
+    "nativeDecimalsOnChain": 18,
+    "note": "链上原生计价单位为 18 位小数 wei（冒烟交易实证）；显示层 1 USDC = 1e18 wei"
+  },
+  "smokeTest": {
+    "date": "2026-07-02",
+    "conclusion": "原生 msg.value 结算成立；协议费 0.5% 分账精确（金库收到 10000000000000 wei = 0.002e18 × 50bps）",
+    "transactions": {
+      "createAsset": "0x3bc9c0a85554f51bab9c10cf7609c77f6b189f401cd73573fd421d4f7f63aff2",
+      "setApprovalForAll": "0x04b309c03f37cfd4c6c318424c025e904b178d8dd7e2d6c0e88187e4c1bbfc26",
+      "createPrimaryOffering": "0xa0ecf350f481a4f878880d3b5c529047c9aee6e5102cbc7ac3ed767edd725fe0",
+      "buyPrimary": "0x34ce4a6eff91e79ee756efd0b1476b990e0a8a02220399c9e9fdcdb3f2701d12"
+    }
+  }
+}

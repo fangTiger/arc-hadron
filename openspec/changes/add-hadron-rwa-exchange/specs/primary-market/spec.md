@@ -16,7 +16,7 @@
 - **THEN** 交易 revert
 
 ### Requirement: 一级购买与协议费分账
-任何地址 SHALL 可调用 `buyPrimary(offeringId, amount)` 以原生 USDC 精确付款（`msg.value == pricePerShare × amount`，6 位小数）购买：份额直转买家，货款的 99.5% 转 owner、0.5%（向下取整）转金库；`amount` MUST 满足 `0 < amount <= remaining`。
+任何地址 SHALL 可调用 `buyPrimary(offeringId, amount)` 以原生 USDC 精确付款（`msg.value == pricePerShare × amount`，链上按 18 位小数 wei 计价，经 2026-07-02 冒烟交易实证）购买：份额直转买家，货款的 99.5% 转 owner、0.5%（向下取整）转金库；`amount` MUST 满足 `0 < amount <= remaining`。
 
 #### Scenario: 成功购买 N 份
 - **WHEN** 买家以精确金额购买 N 份

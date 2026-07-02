@@ -242,8 +242,8 @@ contracts/
 
 **Files:** Create `contracts/script/Deploy.s.sol`、`contracts/.env.example`、`contracts/deployments/arc-testnet.json`
 
-- [ ] **Step 7.1** 从 arc-lepton 读取 Arc testnet 链参数（`/Users/captain/python/arc-lepton/lib/wagmi.ts`：chainId、RPC URL），写入 `.env.example`（`ARC_RPC_URL`、`DEPLOYER_PRIVATE_KEY`、`TREASURY_ADDRESS`）
-- [ ] **Step 7.2** 编写 `Deploy.s.sol`：部署 `HadronAssets` → `HadronMarket(assets, treasury, 50)`，`console2.log` 输出地址与部署区块
+- [x] **Step 7.1** 从 arc-lepton 读取 Arc testnet 链参数（`/Users/captain/python/arc-lepton/lib/wagmi.ts`：chainId、RPC URL），写入 `.env.example`（`ARC_RPC_URL`、`DEPLOYER_PRIVATE_KEY`、`TREASURY_ADDRESS`）
+- [x] **Step 7.2** 编写 `Deploy.s.sol`：部署 `HadronAssets` → `HadronMarket(assets, treasury, 50)`，`console2.log` 输出地址与部署区块
 - [ ] **Step 7.3** 本地演练：`forge script script/Deploy.s.sol --fork-url $ARC_RPC_URL` → 期望模拟成功（**需要用户提供已领水的部署私钥**，此步为用户检查点）
 - [ ] **Step 7.4** 实际部署：`forge script script/Deploy.s.sol --rpc-url $ARC_RPC_URL --broadcast`，把地址/区块写入 `deployments/arc-testnet.json`
 - [ ] **Step 7.5（结算冒烟实证）** 用 `cast send` 走一遍：createAsset → approve → createPrimaryOffering → `buyPrimary`（带 `--value` 精确原生 USDC）→ `cast balance` 核对 owner/treasury 分账。**若原生结算失败：停止，回改 spec 启用 ERC-20 备用分支（设计文档 4.3）**

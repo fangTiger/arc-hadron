@@ -33,4 +33,4 @@
 - [x] 5.1 Claude：全量 `npm run test` + `npm run lint` + `npm run build` + dev 三页 200 取证
 - [x] 5.2 Codex 只读交叉检查（SSE 竞态/限流绕过/密钥暴露面/中文残留/spec 符合性）；阻塞项修复后重验
 - [x] 5.3 用户验收：真实 key 各生成一次 Insight 与 Brief（观察流式/缓存/Refresh/数据变化徽章），mock 态一次（临时移除 key）——反馈两处 UI 问题（行宽、按钮溢出），已修复
-- [ ] 5.4 归档：delta 合并 `openspec/specs/ai-insights/`、design.md 同步、完整性 6 项检查
+- [x] 5.4 归档：delta 合并 `openspec/specs/ai-insights/`、design.md 同步、完整性 6 项检查

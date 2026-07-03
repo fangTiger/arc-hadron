@@ -14,48 +14,6 @@
     "nativeDecimalsOnChain": 18,
     "note": "链上原生计价单位为 18 位小数 wei（冒烟交易实证）；显示层 1 USDC = 1e18 wei"
   },
-  "seedAssets": {
-    "1": {
-      "name": "US T-BILL 2026-Q3",
-      "category": "treasuries",
-      "totalShares": 10000,
-      "offering": {
-        "id": 1,
-        "pricePerShare": "100e18",
-        "listed": 6000
-      }
-    },
-    "2": {
-      "name": "GOLD OUNCE VAULT #4",
-      "category": "gold",
-      "totalShares": 500,
-      "offering": {
-        "id": 2,
-        "pricePerShare": "23.8e18",
-        "listed": 300
-      }
-    },
-    "3": {
-      "name": "MARINA TOWER UNIT 12F",
-      "category": "real-estate",
-      "totalShares": 2000,
-      "offering": {
-        "id": 3,
-        "pricePerShare": "55.5e18",
-        "listed": 1200
-      }
-    },
-    "4": {
-      "name": "VERRA CARBON LOT-9",
-      "category": "carbon",
-      "totalShares": 8000,
-      "offering": {
-        "id": 4,
-        "pricePerShare": "1.85e18",
-        "listed": 4800
-      }
-    }
-  },
   "smokeTest": {
     "date": "2026-07-02",
     "conclusion": "原生 msg.value 结算成立；buyPrimary(4,1) 付款 1.85e18，金库精确收到 9.25e15 wei（50bps），发行余量 4800→4799",
@@ -147,5 +105,48 @@
     },
     "firstActiveTokenId": 1,
     "note": "SeedV4 直接按 ×100 粒度（SHARE_SCALE=100）自 tokenId 1 发行；买单档位按目标托管金额 0.5-1.6 USDC 定档"
-  }
+  },
+  "legacySeedAssetsV1": {
+    "1": {
+      "name": "US T-BILL 2026-Q3",
+      "category": "treasuries",
+      "totalShares": 10000,
+      "offering": {
+        "id": 1,
+        "pricePerShare": "100e18",
+        "listed": 6000
+      }
+    },
+    "2": {
+      "name": "GOLD OUNCE VAULT #4",
+      "category": "gold",
+      "totalShares": 500,
+      "offering": {
+        "id": 2,
+        "pricePerShare": "23.8e18",
+        "listed": 300
+      }
+    },
+    "3": {
+      "name": "MARINA TOWER UNIT 12F",
+      "category": "real-estate",
+      "totalShares": 2000,
+      "offering": {
+        "id": 3,
+        "pricePerShare": "55.5e18",
+        "listed": 1200
+      }
+    },
+    "4": {
+      "name": "VERRA CARBON LOT-9",
+      "category": "carbon",
+      "totalShares": 8000,
+      "offering": {
+        "id": 4,
+        "pricePerShare": "1.85e18",
+        "listed": 4800
+      }
+    }
+  },
+  "legacySeedAssetsV1Note": "V1 首播样例（历史记录）；当前目录见 v4BuyDepth 与 SeedV4.s.sol"
 }

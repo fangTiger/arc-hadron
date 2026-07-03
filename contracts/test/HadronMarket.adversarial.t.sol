@@ -161,6 +161,29 @@ contract HadronMarketAdversarialTest is Test, ERC1155Holder {
         assertEq(_activeBidEscrow(), address(market).balance);
     }
 
+    function test_FillBid_BidderReceiverReenterPlaceBidBlocked_SettlesOnce() public {
+        _seedSellerShares(20);
+        MaliciousERC1155Receiver contractBidder = new MaliciousERC1155Receiver();
+        uint256 bidId = _placeContractBid(contractBidder, 10, SECONDARY_PRICE);
+        contractBidder.configureReentry(market, bidId, tokenId, 1, SECONDARY_PRICE, SECONDARY_PRICE);
+        contractBidder.setMode(MaliciousERC1155Receiver.Mode.ReenterPlaceBid);
+        vm.deal(address(contractBidder), SECONDARY_PRICE);
+
+        uint256 bidCountBefore = market.bidCount();
+
+        vm.prank(seller);
+        market.fillBid(bidId, 5);
+
+        HadronMarket.Bid memory bid = market.getBid(bidId);
+        assertTrue(contractBidder.reentryAttempted());
+        assertTrue(contractBidder.reentryFailed());
+        assertEq(market.bidCount(), bidCountBefore);
+        assertEq(bid.remaining, 5);
+        assertTrue(bid.active);
+        assertEq(assets.balanceOf(address(contractBidder), tokenId), 5);
+        assertEq(_activeBidEscrow(), address(market).balance);
+    }
+
     function test_FillBid_BidderReceiverReenterCancelBidBlocked_SettlesOnce() public {
         _seedSellerShares(20);
         MaliciousERC1155Receiver contractBidder = new MaliciousERC1155Receiver();

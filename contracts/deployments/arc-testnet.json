@@ -38,9 +38,10 @@
     "date": "2026-07-03",
     "wallet": "0xf87f514d19bf89833e87e8d9ddd0c7cfb80a1a98",
     "transactions": {
-      "fractionalBuyPrimary": "0xf3b7cc241dbc776955725e84cb77dbd4a750e0c7c18c812fa160c4c5a58539e7"
+      "fractionalBuyPrimary": "0xf3b7cc241dbc776955725e84cb77dbd4a750e0c7c18c812fa160c4c5a58539e7",
+      "secondaryBuyListing17": "0x9909b3477393595e70beb076d1474c19bdea4619473fc9c3f23977fa5eea75dd"
     },
-    "conclusion": "用户真实钱包完成 0.01 份额一级购买（tokenId 19，98.40 USDC/份，支付 0.984e18，协议费 4.92e15 = 精确 50bps），block 49914376；Claude cast 解码 PrimarySale 事件核对通过"
+    "conclusion": "用户真实钱包完成 ① 0.01 份额一级购买（tokenId 19，98.40 USDC/份，支付 0.984e18，协议费 4.92e15 = 精确 50bps，block 49914376）② 二级购买 listing 17（tokenId 15，0.01 份，支付 1e18，协议费 5e15 = 精确 50bps）；Claude cast 解码 PrimarySale/Purchased 事件核对通过。挂单/撤单验收因 UX 问题（弹窗不带持仓、买卖分离）未完成，待 M4 UX 修复后重验"
   },
   "deprecatedDeployments": [
     {

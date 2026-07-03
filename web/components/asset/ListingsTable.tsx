@@ -34,7 +34,7 @@ function SecondaryButton({
 }) {
   return (
     <button
-      className="h-8 border border-border bg-bg/50 px-3 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-text-dim transition-colors hover:border-border-glow hover:text-text disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-muted"
+      className="h-8 border border-border bg-bg/50 px-3 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-text-dim transition-colors duration-200 hover:border-border-glow hover:text-text disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-muted"
       disabled={disabled}
       onClick={(event) => {
         stopRowNavigation(event);
@@ -128,7 +128,7 @@ function TransactionStatusPanel({
         <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-up">{successLabel}</p>
         {txHash ? (
           <a
-            className="mt-3 inline-flex font-mono text-[11px] uppercase tracking-[0.2em] text-neon-dim underline-offset-4 hover:text-neon hover:underline"
+            className="mt-3 inline-flex font-mono text-[11px] uppercase tracking-[0.2em] text-neon-dim underline-offset-4 transition-colors duration-200 hover:text-neon hover:underline"
             href={buildTxExplorerUrl(explorerUrl, txHash)}
             rel="noreferrer"
             target="_blank"
@@ -437,7 +437,7 @@ export function ListingsTable({
                     aria-label={listing.isMine ? undefined : `Open buy form for listing ${listing.id.toString()}`}
                     className={[
                       isExpanded ? "bg-bg/40" : "bg-panel",
-                      "transition-colors hover:bg-border/20",
+                      "transition-colors duration-200 hover:bg-border/20",
                       listing.isMine ? "" : "cursor-pointer",
                     ].join(" ")}
                     onClick={() => {
@@ -529,7 +529,7 @@ export function ListingsTable({
                                 AMOUNT
                               </span>
                               <input
-                                className="mt-3 h-11 w-full border border-border bg-bg px-4 font-mono text-base text-text outline-none transition-colors placeholder:text-muted focus:border-neon disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-text-dim"
+                                className="mt-3 h-11 w-full border border-border bg-bg px-4 font-mono text-base text-text outline-none transition-colors duration-200 placeholder:text-muted focus:border-neon disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-text-dim"
                                 disabled={isBusy(buyStatus)}
                                 inputMode="decimal"
                                 onChange={(event) => setAmountInput(event.target.value)}
@@ -552,7 +552,7 @@ export function ListingsTable({
                                 size="md"
                               >
                                 {buyStatus === "pending" ? (
-                                  <span className="size-3 animate-spin rounded-full border border-current border-t-transparent" />
+                                  <span className="size-3 animate-spin rounded-full border border-current border-t-transparent motion-reduce:animate-none" />
                                 ) : null}
                                 <span>{confirmLabel}</span>
                                 {buyStatus === "pending" && buyTxHash ? (

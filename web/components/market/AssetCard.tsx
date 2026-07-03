@@ -96,7 +96,7 @@ export function AssetCard({ asset, featured = false }: { asset: AssetView; featu
             </Link>
           ) : (
             <Link
-              className="inline-flex h-10 w-full items-center justify-center border border-border bg-muted/20 px-5 font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-text-dim transition-colors hover:border-border-glow hover:text-text"
+              className="inline-flex h-10 w-full items-center justify-center border border-border bg-muted/20 px-5 font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-text-dim transition-colors duration-200 hover:border-border-glow hover:text-text"
               href={`/asset/${asset.tokenId.toString()}`}
             >
               VIEW

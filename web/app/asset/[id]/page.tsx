@@ -244,7 +244,7 @@ function TradeHistoryTable({
           <tbody>
             {isLoading ? (
               <tr>
-                <td className="px-5 py-6" colSpan={5}>
+                <td className="px-5 py-6" colSpan={6}>
                   <Skeleton className="h-5 w-full max-w-lg" />
                 </td>
               </tr>
@@ -258,7 +258,10 @@ function TradeHistoryTable({
             ) : null}
             {!isLoading
               ? rows.map((event) => (
-                  <tr className="border-b border-border/80 last:border-b-0" key={`${event.txHash}:${event.logIndex}`}>
+                  <tr
+                    className="border-b border-border/80 transition-colors duration-200 last:border-b-0 hover:bg-border/20"
+                    key={`${event.txHash}:${event.logIndex}`}
+                  >
                     <td className="px-5 py-4 font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
                       {relativeTime(event.timestamp, nowMs)}
                     </td>
@@ -278,7 +281,7 @@ function TradeHistoryTable({
                     </td>
                     <td className="px-5 py-4">
                       <a
-                        className="font-mono text-[11px] uppercase tracking-[0.16em] text-neon-dim underline-offset-4 hover:text-neon hover:underline"
+                        className="font-mono text-[11px] uppercase tracking-[0.16em] text-neon-dim underline-offset-4 transition-colors duration-200 hover:text-neon hover:underline"
                         href={eventExplorerUrl(event.txHash)}
                         rel="noreferrer"
                         target="_blank"

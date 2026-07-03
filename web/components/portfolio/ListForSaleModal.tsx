@@ -67,7 +67,7 @@ export function ListForSaleModalView({
             </p>
           </div>
           <button
-            className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted transition-colors hover:text-text"
+            className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted transition-colors duration-200 hover:text-text"
             onClick={onClose}
             type="button"
           >

@@ -100,7 +100,7 @@ function TransactionLink({
 
   return (
     <a
-      className="mt-2 inline-flex font-mono text-[10px] uppercase tracking-[0.2em] text-neon-dim underline-offset-4 hover:text-neon hover:underline"
+      className="mt-2 inline-flex font-mono text-[10px] uppercase tracking-[0.2em] text-neon-dim underline-offset-4 transition-colors duration-200 hover:text-neon hover:underline"
       href={buildTxExplorerUrl(explorerUrl, txHash)}
       rel="noreferrer"
       target="_blank"
@@ -198,7 +198,7 @@ export function ListForSaleForm({
           <span className={labelClassName()}>AMOUNT</span>
           <div className="mt-3 flex">
             <input
-              className="h-12 min-w-0 flex-1 border border-border bg-bg px-4 font-mono text-lg text-text outline-none transition-colors placeholder:text-muted focus:border-neon disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-text-dim"
+              className="h-12 min-w-0 flex-1 border border-border bg-bg px-4 font-mono text-lg text-text outline-none transition-colors duration-200 placeholder:text-muted focus:border-neon disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-text-dim"
               disabled={isBusy}
               inputMode="decimal"
               onChange={(event) => onAmountChange(event.target.value)}
@@ -206,7 +206,7 @@ export function ListForSaleForm({
             />
             <button
               aria-label={`Use maximum amount ${maxAmountInput}`}
-              className="h-12 border border-l-0 border-border bg-bg/60 px-3 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-neon-dim transition-colors hover:border-neon hover:text-neon disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-muted"
+              className="h-12 border border-l-0 border-border bg-bg/60 px-3 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-neon-dim transition-colors duration-200 hover:border-neon hover:text-neon disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-muted"
               disabled={isBusy}
               onClick={onMaxAmount}
               type="button"
@@ -218,7 +218,7 @@ export function ListForSaleForm({
         <label className="block">
           <span className={labelClassName()}>PRICE (USDC)</span>
           <input
-            className="mt-3 h-12 w-full border border-border bg-bg px-4 font-mono text-lg text-text outline-none transition-colors placeholder:text-muted focus:border-neon disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-text-dim"
+            className="mt-3 h-12 w-full border border-border bg-bg px-4 font-mono text-lg text-text outline-none transition-colors duration-200 placeholder:text-muted focus:border-neon disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-text-dim"
             disabled={isBusy}
             inputMode="decimal"
             onChange={(event) => onPriceChange(event.target.value)}
@@ -261,13 +261,13 @@ export function ListForSaleForm({
       ) : null}
 
       <button
-        className="mt-6 flex h-11 w-full items-center justify-center gap-2 border border-neon bg-neon/15 px-4 font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-neon transition-colors hover:bg-neon/25 disabled:cursor-not-allowed disabled:border-border disabled:bg-muted/20 disabled:text-muted"
+        className="mt-6 flex h-11 w-full items-center justify-center gap-2 border border-neon bg-neon/15 px-4 font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-neon transition-colors duration-200 hover:bg-neon/25 disabled:cursor-not-allowed disabled:border-border disabled:bg-muted/20 disabled:text-muted"
         disabled={submitDisabled}
         onClick={submitListing}
         type="button"
       >
         {isBusy ? (
-          <span className="size-3 animate-spin rounded-full border border-current border-t-transparent" />
+          <span className="size-3 animate-spin rounded-full border border-current border-t-transparent motion-reduce:animate-none" />
         ) : null}
         <span>{submitButtonLabel ?? statusLabel(status)}</span>
       </button>

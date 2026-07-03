@@ -51,7 +51,7 @@ export default function Home() {
           <label className="block w-full lg:max-w-xs">
             <span className="sr-only">Search assets</span>
             <input
-              className="h-10 w-full border border-border bg-panel/80 px-3 font-mono text-[11px] uppercase tracking-[0.16em] text-text outline-none transition-colors placeholder:text-muted focus:border-neon"
+              className="h-10 w-full border border-border bg-panel/80 px-3 font-mono text-[11px] uppercase tracking-[0.16em] text-text outline-none transition-colors duration-200 placeholder:text-muted focus:border-neon"
               onChange={(event) => setSearch(event.target.value)}
               placeholder="SEARCH ASSET / TICKER"
               value={search}

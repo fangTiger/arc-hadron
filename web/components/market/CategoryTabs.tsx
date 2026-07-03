@@ -19,7 +19,7 @@ export function CategoryTabs({
         return (
           <button
             className={[
-              "h-9 border px-4 font-mono text-[10px] uppercase tracking-[0.2em] transition-colors",
+              "h-9 border px-4 font-mono text-[10px] uppercase tracking-[0.2em] transition-colors duration-200",
               active
                 ? "border-border-glow bg-neon/10 text-neon"
                 : "border-border bg-panel/60 text-muted hover:border-border-glow hover:text-text",

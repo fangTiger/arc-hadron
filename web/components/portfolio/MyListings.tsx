@@ -78,13 +78,14 @@ export function MyListingsView({
           <h2 className="mt-2 text-xl font-semibold text-text">Active sell orders</h2>
         </div>
         {isLoading ? (
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-dim">Loading...</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-dim">LOADING</p>
         ) : null}
       </div>
 
       {!isLoading && listings.length === 0 ? (
         <div className="px-5 py-10 text-center">
-          <p className="font-mono text-sm text-text-dim">No active listings</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">NO ACTIVE LISTINGS</p>
+          <p className="mt-3 text-sm text-text-dim">No active listings. Listings created from holdings appear here.</p>
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -116,7 +117,7 @@ export function MyListingsView({
                 return (
                   <tr
                     aria-label={`Open ${assetName}`}
-                    className="cursor-pointer border-t border-border align-middle transition-colors hover:bg-border/20"
+                    className="cursor-pointer border-t border-border align-middle transition-colors duration-200 hover:bg-border/20"
                     key={listing.id.toString()}
                     onClick={() => onNavigate(assetHref)}
                     onKeyDown={(event) => handleRowNavigationKeyDown(event, assetHref, onNavigate)}
@@ -144,7 +145,7 @@ export function MyListingsView({
                             Confirm cancel?
                           </span>
                           <button
-                            className="h-8 border border-down/70 bg-down/10 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-down disabled:cursor-not-allowed disabled:opacity-60"
+                            className="h-8 border border-down/70 bg-down/10 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-down transition-colors duration-200 hover:bg-down/15 disabled:cursor-not-allowed disabled:opacity-60"
                             disabled={isBusy}
                             onClick={(event) => {
                               stopRowNavigation(event);
@@ -155,7 +156,7 @@ export function MyListingsView({
                             {cancelLabel(status)}
                           </button>
                           <button
-                            className="h-8 border border-border bg-bg/50 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-text-dim disabled:cursor-not-allowed disabled:opacity-60"
+                            className="h-8 border border-border bg-bg/50 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-text-dim transition-colors duration-200 hover:border-border-glow hover:text-text disabled:cursor-not-allowed disabled:opacity-60"
                             disabled={isBusy}
                             onClick={(event) => {
                               stopRowNavigation(event);
@@ -179,7 +180,7 @@ export function MyListingsView({
                         </div>
                       ) : (
                         <button
-                          className="h-9 border border-border bg-bg/50 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-text-dim transition-colors hover:border-border-glow hover:text-text"
+                          className="h-9 border border-border bg-bg/50 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-text-dim transition-colors duration-200 hover:border-border-glow hover:text-text"
                           disabled={isBusy}
                           onClick={(event) => {
                             stopRowNavigation(event);

@@ -5,7 +5,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 const NUMBER_TOKEN = /[\d,]+(?:\.\d+)?/g;
 
 function prefersReducedMotion() {
-  return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
 }
 
 function numberValue(token: string) {
@@ -46,7 +50,7 @@ function interpolateValue(target: string, progress: number, previous?: string) {
 export function AnimatedNumber({ value }: { value: string }) {
   const previousValue = useRef<string | undefined>(undefined);
   const initialValue = useMemo(() => interpolateValue(value, 0), [value]);
-  const [display, setDisplay] = useState(initialValue);
+  const [display, setDisplay] = useState(() => (prefersReducedMotion() ? value : initialValue));
 
   useEffect(() => {
     if (prefersReducedMotion()) {

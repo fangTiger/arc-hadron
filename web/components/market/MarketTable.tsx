@@ -147,7 +147,7 @@ function SortHeader({
 }) {
   return (
     <button
-      className="inline-flex items-center gap-1 text-left font-mono text-[10px] uppercase tracking-[0.16em] text-muted transition-colors hover:text-text"
+      className="inline-flex items-center gap-1 text-left font-mono text-[10px] uppercase tracking-[0.16em] text-muted transition-colors duration-200 hover:text-text"
       onClick={onClick}
       type="button"
     >
@@ -320,7 +320,7 @@ export function MarketTableView({
                   return (
                     <tr
                       aria-label={`Open ${row.asset.meta.displayName}`}
-                      className="cursor-pointer border-b border-border/80 transition-colors last:border-b-0 hover:bg-border-glow/18"
+                      className="cursor-pointer border-b border-border/80 transition-colors duration-200 last:border-b-0 hover:bg-border-glow/18"
                       key={row.asset.tokenId.toString()}
                       onClick={() => onNavigate(assetHref)}
                       onKeyDown={(event) => handleRowNavigationKeyDown(event, assetHref, onNavigate)}
@@ -360,7 +360,7 @@ export function MarketTableView({
                       </td>
                       <td className="px-4 py-4 text-right">
                         <Link
-                          className="inline-flex h-8 items-center justify-center bg-[#0e7490] px-3 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-[#155e75]"
+                          className="inline-flex h-8 items-center justify-center border border-neon/50 bg-neon/12 px-3 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-neon transition-colors duration-200 hover:border-neon hover:bg-neon/20"
                           href={assetHref}
                           onClick={stopRowNavigation}
                         >

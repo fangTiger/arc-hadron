@@ -142,7 +142,7 @@ function HoldingRow({
   return (
     <tr
       aria-label={`Open ${holding.asset.meta.displayName}`}
-      className="cursor-pointer border-t border-border align-middle transition-colors hover:bg-border/20"
+      className="cursor-pointer border-t border-border align-middle transition-colors duration-200 hover:bg-border/20"
       onClick={() => onNavigate(assetHref)}
       onKeyDown={(event) => handleRowNavigationKeyDown(event, assetHref, onNavigate)}
       role="link"
@@ -171,7 +171,7 @@ function HoldingRow({
       </td>
       <td className="py-5 pl-5">
         <button
-          className="h-9 border border-border bg-bg/50 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-text-dim transition-colors hover:border-border-glow hover:text-text"
+          className="h-9 border border-border bg-bg/50 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-text-dim transition-colors duration-200 hover:border-border-glow hover:text-text"
           onClick={(event) => {
             stopRowNavigation(event);
             onListForSale?.(holding);

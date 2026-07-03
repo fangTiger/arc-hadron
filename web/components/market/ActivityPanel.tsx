@@ -70,7 +70,7 @@ export function ActivityPanel({
       </div>
 
       {recent.length === 0 ? (
-        <p className="px-4 py-8 text-sm text-muted">No on-chain activity yet</p>
+        <p className="px-4 py-8 text-sm text-muted">No on-chain activity yet.</p>
       ) : (
         <ul className="divide-y divide-border">
           {recent.map((event) => {
@@ -78,7 +78,10 @@ export function ActivityPanel({
             const counterparties = eventCounterparties(event);
 
             return (
-              <li className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 px-4 py-3" key={`${event.txHash}:${event.logIndex}`}>
+              <li
+                className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 px-4 py-3 transition-colors duration-200 hover:bg-border/20"
+                key={`${event.txHash}:${event.logIndex}`}
+              >
                 <div className="min-w-0">
                   <p className={["truncate font-mono text-[11px] uppercase tracking-[0.12em]", eventToneClassName(event.type)].join(" ")}>
                     {eventSentence(event, asset)}
@@ -87,7 +90,7 @@ export function ActivityPanel({
                     <span>{relativeTime(event.timestamp, nowMs)}</span>
                     {counterparties.map((counterparty) => (
                       <a
-                        className="underline-offset-4 transition-colors hover:text-neon hover:underline"
+                        className="underline-offset-4 transition-colors duration-200 hover:text-neon hover:underline"
                         href={addressExplorerUrl(counterparty.address)}
                         key={`${event.txHash}:${event.logIndex}:${counterparty.label}`}
                         rel="noreferrer"
@@ -100,7 +103,7 @@ export function ActivityPanel({
                 </div>
                 <a
                   aria-label={`Open transaction ${event.txHash}`}
-                  className="mt-0.5 text-muted transition-colors hover:text-neon"
+                  className="mt-0.5 text-muted transition-colors duration-200 hover:text-neon"
                   href={eventExplorerUrl(event.txHash)}
                   rel="noreferrer"
                   target="_blank"

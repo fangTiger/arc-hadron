@@ -66,7 +66,7 @@ export function WalletButtonView({
       <button
         aria-expanded={isOpen}
         aria-haspopup="menu"
-        className="h-8 border border-border-glow bg-panel/80 px-3 font-mono text-[11px] text-neon-dim transition-colors hover:border-neon"
+        className="h-8 border border-border-glow bg-panel/80 px-3 font-mono text-[11px] text-neon-dim transition-colors duration-200 hover:border-neon"
         onClick={onToggleMenu}
         type="button"
       >
@@ -79,7 +79,7 @@ export function WalletButtonView({
           role="menu"
         >
           <button
-            className="block w-full px-3 py-2 text-left text-text-dim transition-colors hover:bg-border/40 hover:text-text"
+            className="block w-full px-3 py-2 text-left text-text-dim transition-colors duration-200 hover:bg-border/40 hover:text-text"
             onClick={onCopyAddress}
             role="menuitem"
             type="button"
@@ -87,7 +87,7 @@ export function WalletButtonView({
             Copy address
           </button>
           <button
-            className="block w-full px-3 py-2 text-left text-down transition-colors hover:bg-border/40"
+            className="block w-full px-3 py-2 text-left text-down transition-colors duration-200 hover:bg-border/40"
             onClick={onDisconnect}
             role="menuitem"
             type="button"

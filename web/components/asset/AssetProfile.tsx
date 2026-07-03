@@ -78,7 +78,7 @@ export function AssetProfile({ asset }: { asset: AssetView }) {
               <dt className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">CONTRACT ADDRESS</dt>
               <dd className="mt-3 flex flex-wrap items-center gap-3">
                 <a
-                  className="font-mono text-sm text-neon-dim underline-offset-4 hover:text-neon hover:underline"
+                  className="font-mono text-sm text-neon-dim underline-offset-4 transition-colors duration-200 hover:text-neon hover:underline"
                   href={addressExplorerUrl(HADRON_ASSETS_ADDRESS)}
                   rel="noreferrer"
                   target="_blank"
@@ -86,7 +86,7 @@ export function AssetProfile({ asset }: { asset: AssetView }) {
                   {shortAddress(HADRON_ASSETS_ADDRESS)}
                 </a>
                 <button
-                  className="border border-border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-text-dim transition-colors hover:border-border-glow hover:text-text"
+                  className="border border-border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-text-dim transition-colors duration-200 hover:border-border-glow hover:text-text"
                   onClick={copyContractAddress}
                   type="button"
                 >

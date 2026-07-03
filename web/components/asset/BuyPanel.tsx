@@ -30,7 +30,7 @@ function SecondaryButton({
 }) {
   return (
     <button
-      className="mt-4 h-10 w-full border border-border bg-bg/50 px-4 font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-text-dim transition-colors hover:border-border-glow hover:text-text"
+      className="mt-4 h-10 w-full border border-border bg-bg/50 px-4 font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-text-dim transition-colors duration-200 hover:border-border-glow hover:text-text"
       onClick={onClick}
       type="button"
     >
@@ -67,7 +67,7 @@ interface SellDraft {
 function tradeTabClassName(isActive: boolean) {
   return [
     "h-9 flex-1 border px-3 font-mono text-[10px] font-semibold uppercase tracking-[0.2em]",
-    "transition-colors",
+    "transition-colors duration-200",
     isActive
       ? "border-neon bg-neon/10 text-neon"
       : "border-border bg-bg/50 text-text-dim hover:border-border-glow hover:text-text",
@@ -404,7 +404,7 @@ export function BuyPanel({ asset, initialMode = "buy" }: BuyPanelProps) {
           <label className="mt-8 block">
             <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">AMOUNT</span>
             <input
-              className="mt-3 h-12 w-full border border-border bg-bg px-4 font-mono text-lg text-text outline-none transition-colors placeholder:text-muted focus:border-neon disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-text-dim"
+              className="mt-3 h-12 w-full border border-border bg-bg px-4 font-mono text-lg text-text outline-none transition-colors duration-200 placeholder:text-muted focus:border-neon disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-text-dim"
               disabled={status === "signing" || status === "pending"}
               inputMode="decimal"
               onChange={(event) => setAmountInput(event.target.value)}
@@ -432,7 +432,7 @@ export function BuyPanel({ asset, initialMode = "buy" }: BuyPanelProps) {
                 <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-up">Purchase successful</p>
                 {txHash ? (
                   <a
-                    className="mt-3 inline-flex font-mono text-[11px] uppercase tracking-[0.2em] text-neon-dim underline-offset-4 hover:text-neon hover:underline"
+                    className="mt-3 inline-flex font-mono text-[11px] uppercase tracking-[0.2em] text-neon-dim underline-offset-4 transition-colors duration-200 hover:text-neon hover:underline"
                     href={buildTxExplorerUrl(explorerUrl, txHash)}
                     rel="noreferrer"
                     target="_blank"
@@ -457,7 +457,7 @@ export function BuyPanel({ asset, initialMode = "buy" }: BuyPanelProps) {
                 size="md"
               >
                 {status === "pending" ? (
-                  <span className="size-3 animate-spin rounded-full border border-current border-t-transparent" />
+                  <span className="size-3 animate-spin rounded-full border border-current border-t-transparent motion-reduce:animate-none" />
                 ) : null}
                 <span>{buttonLabel}</span>
                 {status === "pending" && txHash ? <span className="text-[10px]">{shortAddress(txHash)}</span> : null}
@@ -490,7 +490,7 @@ export function BuyPanel({ asset, initialMode = "buy" }: BuyPanelProps) {
             </div>
           ) : tokenBalanceQuery.isLoading ? (
             <div className="mt-6 border border-border bg-bg/50 p-4">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">Loading holding...</p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">LOADING HOLDING</p>
             </div>
           ) : tokenBalance === 0n ? (
             <div className="mt-6 border border-border bg-bg/50 p-4">

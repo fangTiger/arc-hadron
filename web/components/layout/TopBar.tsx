@@ -19,7 +19,11 @@ function NetworkBadge() {
       <span className={`size-2 rounded-full ${dotClass}`} />
       <span>ARC TESTNET</span>
       {isConnected && !isCorrectChain ? (
-        <button className="ml-1 text-down underline-offset-4 hover:underline" onClick={switchToArc} type="button">
+        <button
+          className="ml-1 text-down underline-offset-4 transition-colors duration-200 hover:text-text hover:underline"
+          onClick={switchToArc}
+          type="button"
+        >
           Switch network
         </button>
       ) : null}
@@ -49,7 +53,7 @@ export function TopBar() {
             return (
               <Link
                 className={[
-                  "px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em] transition-colors",
+                  "px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em] transition-colors duration-200",
                   isActive ? "text-neon" : "text-muted hover:text-text",
                 ].join(" ")}
                 href={item.href}

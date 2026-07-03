@@ -38,17 +38,8 @@ function generatedAgo(generatedAt: number | null, nowMs: number): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-function actionLabel({
-  generatedAt,
-  isStale,
-  nowMs,
-  status,
-}: {
-  generatedAt: number | null;
-  isStale: boolean;
-  nowMs: number;
-  status: AiGenerationStatus;
-}) {
+// 按钮只放短动词，避免在窄侧栏溢出；时间戳单独作为 meta 文本展示。
+function actionLabel({ isStale, status }: { isStale: boolean; status: AiGenerationStatus }) {
   if (status === "streaming") {
     return "Generating";
   }
@@ -58,7 +49,7 @@ function actionLabel({
   }
 
   if (status === "done") {
-    return isStale ? "Regenerate" : `Generated ${generatedAgo(generatedAt, nowMs)} · Refresh`;
+    return isStale ? "Regenerate" : "Refresh";
   }
 
   return "Generate";
@@ -102,14 +93,21 @@ export function AiPanelView({
             </span>
           ) : null}
         </div>
-        <button
-          className={glowButtonClassName({ disabled: isStreaming, size: "sm" })}
-          disabled={isStreaming}
-          onClick={onGenerate}
-          type="button"
-        >
-          {actionLabel({ generatedAt, isStale, nowMs, status })}
-        </button>
+        <div className="flex shrink-0 items-center gap-3">
+          {status === "done" ? (
+            <span className="whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
+              Generated {generatedAgo(generatedAt, nowMs)}
+            </span>
+          ) : null}
+          <button
+            className={glowButtonClassName({ disabled: isStreaming, size: "sm" })}
+            disabled={isStreaming}
+            onClick={onGenerate}
+            type="button"
+          >
+            {actionLabel({ isStale, status })}
+          </button>
+        </div>
       </div>
 
       <div className="space-y-4 px-5 py-5 sm:px-6">
@@ -122,7 +120,9 @@ export function AiPanelView({
         ) : null}
 
         {markdown ? (
-          <AiMarkdown markdown={markdown} />
+          <div className="max-w-[70ch]">
+            <AiMarkdown markdown={markdown} />
+          </div>
         ) : status === "idle" ? (
           <p className="text-sm leading-6 text-muted">{emptyText}</p>
         ) : null}

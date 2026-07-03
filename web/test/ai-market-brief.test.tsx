@@ -189,9 +189,10 @@ describe("MarketBrief", () => {
 
     expect(streaming).toContain("disabled=\"\"");
     expect(streaming).toContain("Partial brief");
-    expect(done).toContain("Generated 3h ago · Refresh");
+    expect(done).toContain("Generated 3h ago");
+    expect(done).toContain(">Refresh<");
     expect(stale).toContain("Data changed");
-    expect(stale).toContain("Regenerate");
+    expect(stale).toContain(">Regenerate<");
     expect(failed).toContain("Too many requests");
     expect(failed).toContain(">Retry<");
   });

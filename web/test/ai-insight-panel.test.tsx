@@ -176,9 +176,11 @@ describe("InsightPanel", () => {
     expect(streaming).toContain("disabled=\"\"");
     expect(streaming).toContain("Generating");
     expect(streaming).toContain("Partial text");
-    expect(done).toContain("Generated 2h ago · Refresh");
+    expect(done).toContain("Generated 2h ago");
+    expect(done).toContain(">Refresh<");
+    expect(done).toContain("max-w-[70ch]");
     expect(stale).toContain("Data changed");
-    expect(stale).toContain("Regenerate");
+    expect(stale).toContain(">Regenerate<");
     expect(failed).toContain("Generation failed");
     expect(failed).toContain(">Retry<");
     expect(streaming).toContain("AI-generated · testnet demo data · not financial advice");

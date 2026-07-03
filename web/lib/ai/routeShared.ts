@@ -328,12 +328,12 @@ function isTrade(value: unknown): boolean {
   );
 }
 
-function isBoundedArray<T>(
+function isBoundedArray(
   value: unknown,
   maxLength: number,
-  itemGuard: (item: unknown) => item is T,
-): value is T[] {
-  return Array.isArray(value) && value.length <= maxLength && value.every(itemGuard);
+  itemGuard: (item: unknown) => boolean,
+): boolean {
+  return Array.isArray(value) && value.length <= maxLength && value.every((item) => itemGuard(item));
 }
 
 export function isAssetSnapshotShape(snapshot: unknown): snapshot is AssetSnapshot {

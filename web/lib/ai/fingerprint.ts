@@ -29,10 +29,11 @@ function fnv1a32(input: string): string {
   return hash.toString(16).padStart(8, "0");
 }
 
-export function fingerprintSnapshot(snapshot: JsonValue): string {
-  return fnv1a32(stableStringify(snapshot));
+// 快照由 lib/ai/snapshot.ts 构造，保证 JSON 可序列化；入口收 unknown，内部按 JsonValue 处理。
+export function fingerprintSnapshot(snapshot: unknown): string {
+  return fnv1a32(stableStringify(snapshot as JsonValue));
 }
 
-export function stableSnapshotJson(snapshot: JsonValue): string {
-  return stableStringify(snapshot);
+export function stableSnapshotJson(snapshot: unknown): string {
+  return stableStringify(snapshot as JsonValue);
 }

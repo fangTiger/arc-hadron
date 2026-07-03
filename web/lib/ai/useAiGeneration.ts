@@ -34,8 +34,6 @@ interface CachedGeneration {
   generatedAt: number;
 }
 
-type FingerprintInput = Parameters<typeof fingerprintSnapshot>[0];
-
 function insightTokenId(snapshot: AssetSnapshot | MarketSnapshot, tokenId?: bigint | number | string): string {
   if (tokenId !== undefined) {
     return tokenId.toString();
@@ -160,7 +158,7 @@ export function useAiGeneration({
   const abortRef = useRef<AbortController | null>(null);
   const runIdRef = useRef(0);
   const currentFingerprint = useMemo(
-    () => fingerprintSnapshot(snapshot as FingerprintInput),
+    () => fingerprintSnapshot(snapshot),
     [snapshot],
   );
   const cacheKey = useMemo(

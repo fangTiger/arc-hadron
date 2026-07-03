@@ -5,9 +5,9 @@
 
 ## 1. 合约（forge TDD）
 
-- [ ] 1.1 `HadronMarket.sol`：Bid 结构 + `placeBid`（托管 + ERC165 receiver 门）+ `fillBid`（部分成交 + 费结算）+ `cancelBid`（退款）+ `getBid`/`bidsByToken`/`bidCount` + 三事件（indexed tokenId/bidder）+ 新 error；`HadronMarket.bids.t.sol` 全场景（成功/边界/权限/部分成交/退款/费取整）
-- [ ] 1.2 对抗测试扩展：ERC1155 恶意 receiver helper（回调重入/回调 revert）+ 拒收退款 bidder + 无 receiver 合约被 ERC165 门拒绝；escrow 守恒 invariant/fuzz
-- [ ] 1.3 forge test 全绿取证（Claude 亲自跑）
+- [x] 1.1 `HadronMarket.sol`：Bid 结构 + `placeBid`（托管 + ERC165 receiver 门）+ `fillBid`（部分成交 + 费结算）+ `cancelBid`（退款）+ `getBid`/`bidsByToken`/`bidCount` + 三事件（indexed tokenId/bidder）+ 新 error；`HadronMarket.bids.t.sol` 全场景（成功/边界/权限/部分成交/退款/费取整）
+- [x] 1.2 对抗测试扩展：ERC1155 恶意 receiver helper（回调重入/回调 revert）+ 拒收退款 bidder + 无 receiver 合约被 ERC165 门拒绝；escrow 守恒 invariant/fuzz
+- [x] 1.3 forge test 全绿取证（Claude 亲自跑）——66/66 通过（bids 15 + adversarial 14 含 escrow fuzz）
 
 ## 2. 前端事件层与数据（web TDD，新 ABI 来自组 1 产物，无需链上）
 

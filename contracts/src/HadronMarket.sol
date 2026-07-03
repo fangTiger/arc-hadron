@@ -5,6 +5,7 @@ import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155
 import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {HadronAssets} from "./HadronAssets.sol";
 
@@ -26,6 +27,14 @@ contract HadronMarket is ERC1155Holder, Ownable2Step, ReentrancyGuard {
         bool active;
     }
 
+    struct Bid {
+        address bidder;
+        uint256 tokenId;
+        uint256 pricePerShare;
+        uint256 remaining;
+        bool active;
+    }
+
     uint16 public constant MAX_FEE_BPS = 500;
     HadronAssets public immutable assets;
     uint256 public immutable deployBlock;
@@ -33,9 +42,11 @@ contract HadronMarket is ERC1155Holder, Ownable2Step, ReentrancyGuard {
     uint16 public feeBps;
     uint256 public offeringCount;
     uint256 public listingCount;
+    uint256 public bidCount;
 
     mapping(uint256 offeringId => Offering offering) private offerings;
     mapping(uint256 listingId => Listing listing) private listings;
+    mapping(uint256 bidId => Bid bid) private bids;
 
     event OfferingCreated(uint256 indexed offeringId, uint256 indexed tokenId, uint256 pricePerShare, uint256 amount);
     event OfferingClosed(uint256 indexed offeringId, uint256 returnedAmount);
@@ -64,6 +75,30 @@ contract HadronMarket is ERC1155Holder, Ownable2Step, ReentrancyGuard {
         uint256 totalPaid,
         uint256 fee
     );
+    event BidPlaced(
+        uint256 indexed bidId,
+        uint256 indexed tokenId,
+        address indexed bidder,
+        uint256 pricePerShare,
+        uint256 amount
+    );
+    event BidFilled(
+        uint256 indexed bidId,
+        uint256 indexed tokenId,
+        address indexed bidder,
+        address seller,
+        uint256 amount,
+        uint256 totalPaid,
+        uint256 fee
+    );
+    event BidCancelled(
+        uint256 indexed bidId,
+        uint256 indexed tokenId,
+        address indexed bidder,
+        uint256 pricePerShare,
+        uint256 amount,
+        uint256 returnedAmount
+    );
     event TreasuryUpdated(address newTreasury);
 
     error ZeroAddress();
@@ -75,6 +110,9 @@ contract HadronMarket is ERC1155Holder, Ownable2Step, ReentrancyGuard {
     error ExceedsRemaining();
     error WrongPayment();
     error NotSeller();
+    error NotBidder();
+    error InactiveBid();
+    error BidderNotReceiver();
     error TransferFailed();
     error DirectTransferNotAllowed();
 
@@ -298,6 +336,116 @@ contract HadronMarket is ERC1155Holder, Ownable2Step, ReentrancyGuard {
         return activeListingIds;
     }
 
+    function placeBid(uint256 tokenId, uint256 amount, uint256 pricePerShare)
+        external
+        payable
+        nonReentrant
+        returns (uint256)
+    {
+        if (amount == 0) {
+            revert ZeroAmount();
+        }
+        if (pricePerShare == 0) {
+            revert ZeroPrice();
+        }
+        if (msg.value != pricePerShare * amount) {
+            revert WrongPayment();
+        }
+        _requireBidderReceiver(msg.sender);
+
+        uint256 bidId = bidCount + 1;
+        bidCount = bidId;
+        bids[bidId] = Bid({
+            bidder: msg.sender,
+            tokenId: tokenId,
+            pricePerShare: pricePerShare,
+            remaining: amount,
+            active: true
+        });
+
+        emit BidPlaced(bidId, tokenId, msg.sender, pricePerShare, amount);
+
+        return bidId;
+    }
+
+    function fillBid(uint256 bidId, uint256 amount) external nonReentrant {
+        Bid storage bid = _requireActiveBid(bidId);
+        if (amount == 0) {
+            revert ZeroAmount();
+        }
+        if (amount > bid.remaining) {
+            revert ExceedsRemaining();
+        }
+
+        uint256 totalPaid = bid.pricePerShare * amount;
+        uint256 fee = totalPaid * feeBps / 10_000;
+        uint256 sellerProceeds = totalPaid - fee;
+        address bidder = bid.bidder;
+        uint256 tokenId = bid.tokenId;
+
+        bid.remaining -= amount;
+        if (bid.remaining == 0) {
+            bid.active = false;
+        }
+
+        emit BidFilled(bidId, tokenId, bidder, msg.sender, amount, totalPaid, fee);
+        assets.safeTransferFrom(msg.sender, bidder, tokenId, amount, "");
+        _sendValue(msg.sender, sellerProceeds);
+        _sendValue(treasury, fee);
+    }
+
+    function cancelBid(uint256 bidId) external nonReentrant {
+        _requireExistingBid(bidId);
+
+        Bid storage bid = bids[bidId];
+        if (bid.bidder != msg.sender) {
+            revert NotBidder();
+        }
+        if (!bid.active) {
+            revert InactiveBid();
+        }
+
+        uint256 amount = bid.remaining;
+        uint256 pricePerShare = bid.pricePerShare;
+        uint256 returnedAmount = pricePerShare * amount;
+        uint256 tokenId = bid.tokenId;
+        address bidder = bid.bidder;
+
+        bid.active = false;
+        bid.remaining = 0;
+
+        emit BidCancelled(bidId, tokenId, bidder, pricePerShare, amount, returnedAmount);
+        _sendValue(bidder, returnedAmount);
+    }
+
+    function getBid(uint256 bidId) external view returns (Bid memory) {
+        _requireExistingBid(bidId);
+
+        return bids[bidId];
+    }
+
+    function bidsByToken(uint256 tokenId) external view returns (uint256[] memory) {
+        uint256 activeCount;
+        for (uint256 bidId = 1; bidId <= bidCount; bidId++) {
+            Bid storage bid = bids[bidId];
+            if (bid.active && bid.remaining > 0 && bid.tokenId == tokenId) {
+                activeCount++;
+            }
+        }
+
+        uint256[] memory activeBidIds = new uint256[](activeCount);
+        uint256 writeIndex;
+        for (uint256 bidId = 1; bidId <= bidCount; bidId++) {
+            Bid storage bid = bids[bidId];
+            if (bid.active && bid.remaining > 0 && bid.tokenId == tokenId) {
+                activeBidIds[writeIndex] = bidId;
+                writeIndex++;
+            }
+        }
+
+        return activeBidIds;
+    }
+
     function setTreasury(address newTreasury) external onlyOwner {
         if (newTreasury == address(0)) {
             revert ZeroAddress();
@@ -339,6 +487,37 @@ contract HadronMarket is ERC1155Holder, Ownable2Step, ReentrancyGuard {
         }
 
         return listing;
+    }
+
+    function _requireExistingBid(uint256 bidId) private view {
+        if (bidId == 0 || bidId > bidCount) {
+            revert InactiveBid();
+        }
+    }
+
+    function _requireActiveBid(uint256 bidId) private view returns (Bid storage) {
+        _requireExistingBid(bidId);
+
+        Bid storage bid = bids[bidId];
+        if (!bid.active) {
+            revert InactiveBid();
+        }
+
+        return bid;
+    }
+
+    function _requireBidderReceiver(address bidder) private view {
+        if (bidder.code.length == 0) {
+            return;
+        }
+
+        try IERC165(bidder).supportsInterface(type(IERC1155Receiver).interfaceId) returns (bool supported) {
+            if (!supported) {
+                revert BidderNotReceiver();
+            }
+        } catch {
+            revert BidderNotReceiver();
+        }
     }
 
     function _sendValue(address recipient, uint256 amount) private {

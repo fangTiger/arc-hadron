@@ -11,12 +11,15 @@ contract MaliciousReceiver is ERC1155Holder {
         None,
         ReenterBuy,
         ReenterCancel,
+        ReenterFillBid,
+        ReenterCancelBid,
         RevertReceive
     }
 
     Mode public mode;
     HadronMarket public targetMarket;
     uint256 public targetListingId;
+    uint256 public targetBidId;
     uint256 public reenterAmount;
     uint256 public reenterValue;
 
@@ -29,6 +32,10 @@ contract MaliciousReceiver is ERC1155Holder {
             targetMarket.buy{value: reenterValue}(targetListingId, reenterAmount);
         } else if (mode == Mode.ReenterCancel) {
             targetMarket.cancel(targetListingId);
+        } else if (mode == Mode.ReenterFillBid) {
+            targetMarket.fillBid(targetBidId, reenterAmount);
+        } else if (mode == Mode.ReenterCancelBid) {
+            targetMarket.cancelBid(targetBidId);
         }
     }
 
@@ -46,6 +53,16 @@ contract MaliciousReceiver is ERC1155Holder {
         targetListingId = listingId_;
         reenterAmount = amount_;
         reenterValue = value_;
+    }
+
+    function configureBidReentry(
+        HadronMarket market_,
+        uint256 bidId_,
+        uint256 amount_
+    ) external {
+        targetMarket = market_;
+        targetBidId = bidId_;
+        reenterAmount = amount_;
     }
 
     function callSetApprovalForAll(HadronAssets assets, address operator, bool approved) external {
@@ -67,5 +84,9 @@ contract MaliciousReceiver is ERC1155Holder {
 
     function callCancel(HadronMarket market, uint256 listingId) external {
         market.cancel(listingId);
+    }
+
+    function callFillBid(HadronMarket market, uint256 bidId, uint256 amount) external {
+        market.fillBid(bidId, amount);
     }
 }

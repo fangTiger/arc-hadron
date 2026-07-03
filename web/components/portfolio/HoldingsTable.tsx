@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import { useAccount } from "wagmi";
 import { WalletButton } from "@/components/layout/WalletButton";
+import { BidsTable } from "@/components/asset/BidsTable";
 import { ListForSaleModal } from "@/components/portfolio/ListForSaleModal";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { glowButtonClassName } from "@/components/ui/GlowButton";
@@ -29,6 +30,7 @@ interface HoldingsTableViewProps {
   isConnected: boolean;
   isLoading: boolean;
   onListForSale?: (holding: Holding) => void;
+  onSellToBid?: (holding: Holding) => void;
   onNavigate?: (href: string) => void;
 }
 
@@ -131,10 +133,12 @@ function CategoryBadge({ category }: { category: string }) {
 function HoldingRow({
   holding,
   onListForSale,
+  onSellToBid,
   onNavigate = navigateToHref,
 }: {
   holding: Holding;
   onListForSale?: (holding: Holding) => void;
+  onSellToBid?: (holding: Holding) => void;
   onNavigate?: (href: string) => void;
 }) {
   const assetHref = `/asset/${holding.asset.tokenId.toString()}`;
@@ -170,16 +174,28 @@ function HoldingRow({
         {formatMaybeUsdc(holding.costBasis)}
       </td>
       <td className="py-5 pl-5">
-        <button
-          className="h-9 border border-border bg-bg/50 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-text-dim transition-colors duration-200 hover:border-border-glow hover:text-text"
-          onClick={(event) => {
-            stopRowNavigation(event);
-            onListForSale?.(holding);
-          }}
-          type="button"
-        >
-          List for sale
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            className="h-9 border border-border bg-bg/50 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-text-dim transition-colors duration-200 hover:border-border-glow hover:text-text"
+            onClick={(event) => {
+              stopRowNavigation(event);
+              onListForSale?.(holding);
+            }}
+            type="button"
+          >
+            List for sale
+          </button>
+          <button
+            className="h-9 border border-neon/50 bg-neon/10 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-neon transition-colors duration-200 hover:border-neon hover:bg-neon/15"
+            onClick={(event) => {
+              stopRowNavigation(event);
+              onSellToBid?.(holding);
+            }}
+            type="button"
+          >
+            Sell to bid
+          </button>
+        </div>
       </td>
     </tr>
   );
@@ -192,6 +208,7 @@ export function HoldingsTableView({
   isConnected,
   isLoading,
   onListForSale,
+  onSellToBid,
   onNavigate,
 }: HoldingsTableViewProps) {
   const totalMarketValue = useMemo(
@@ -242,6 +259,7 @@ export function HoldingsTableView({
                   holding={holding}
                   key={holding.asset.tokenId.toString()}
                   onListForSale={onListForSale}
+                  onSellToBid={onSellToBid}
                   onNavigate={onNavigate}
                 />
               ))
@@ -267,11 +285,53 @@ export function HoldingsTableView({
   );
 }
 
+function SellToBidModal({
+  holding,
+  onClose,
+}: {
+  holding: Holding;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-bg/80 px-4 py-8 backdrop-blur-sm">
+      <section
+        aria-modal="true"
+        className="w-full max-w-4xl border border-border bg-panel p-5 shadow-2xl shadow-bg/60"
+        role="dialog"
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-border pb-5">
+          <div>
+            <p className={labelClassName()}>SELL TO BID</p>
+            <h2 className="mt-3 text-2xl font-semibold text-text">
+              {holding.asset.meta.displayName}
+            </h2>
+            <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.2em] text-neon-dim">
+              BALANCE {formatShares(holding.balance)} {holding.asset.meta.ticker}
+            </p>
+          </div>
+          <button
+            className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted transition-colors duration-200 hover:text-text"
+            onClick={onClose}
+            type="button"
+          >
+            Close
+          </button>
+        </div>
+
+        <div className="mt-5">
+          <BidsTable tokenBalanceOverride={holding.balance} tokenId={holding.asset.tokenId} />
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export function HoldingsTable() {
   const router = useRouter();
   const { isConnected } = useAccount();
   const { errorZh, holdings, isLoading } = usePortfolio();
   const [listingHolding, setListingHolding] = useState<Holding | null>(null);
+  const [bidHolding, setBidHolding] = useState<Holding | null>(null);
 
   return (
     <>
@@ -282,6 +342,7 @@ export function HoldingsTable() {
         isConnected={isConnected}
         isLoading={isConnected ? isLoading : false}
         onListForSale={setListingHolding}
+        onSellToBid={setBidHolding}
         onNavigate={(href) => router.push(href)}
       />
       {listingHolding ? (
@@ -289,6 +350,13 @@ export function HoldingsTable() {
           holding={listingHolding}
           key={listingHolding.asset.tokenId.toString()}
           onClose={() => setListingHolding(null)}
+        />
+      ) : null}
+      {bidHolding ? (
+        <SellToBidModal
+          holding={bidHolding}
+          key={bidHolding.asset.tokenId.toString()}
+          onClose={() => setBidHolding(null)}
         />
       ) : null}
     </>

@@ -1,4 +1,5 @@
 import { HoldingsTable } from "@/components/portfolio/HoldingsTable";
+import { MyBids } from "@/components/portfolio/MyBids";
 import { MyListings } from "@/components/portfolio/MyListings";
 
 export default function PortfolioPage() {
@@ -11,6 +12,7 @@ export default function PortfolioPage() {
 
       <HoldingsTable />
       <MyListings />
+      <MyBids />
     </main>
   );
 }

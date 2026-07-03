@@ -23,6 +23,14 @@ vi.mock("../components/asset/ListingsTable", () => ({
   ListingsTable: () => <section>SELL ORDERS</section>,
 }));
 
+vi.mock("../components/asset/BidsTable", () => ({
+  BidsTable: () => <section>BUY ORDERS</section>,
+}));
+
+vi.mock("../components/asset/PlaceBidPanel", () => ({
+  PlaceBidPanel: () => <section>PLACE BID</section>,
+}));
+
 function assetView(overrides: Partial<AssetView> = {}): AssetView {
   return {
     category: "treasuries",
@@ -186,6 +194,22 @@ describe("on-chain asset read state", () => {
     expect(html).toContain("BID");
     expect(html).toContain("BID FILL");
     expect(html).toContain("BID CANCEL");
+  });
+
+  test("mounts buy orders and place bid controls between sell orders and trade history", () => {
+    const html = renderToStaticMarkup(
+      <AssetDetailView
+        assets={[assetView()]}
+        events={[tradeEvent()]}
+        id="15"
+        isLoading={false}
+        nowMs={Date.UTC(2026, 6, 2, 12)}
+      />,
+    );
+
+    expect(html.indexOf("SELL ORDERS")).toBeLessThan(html.indexOf("BUY ORDERS"));
+    expect(html.indexOf("BUY ORDERS")).toBeLessThan(html.indexOf("PLACE BID"));
+    expect(html.indexOf("PLACE BID")).toBeLessThan(html.indexOf("TRADE HISTORY"));
   });
 
   test("caps remaining ratio in bigint space before converting to number", () => {

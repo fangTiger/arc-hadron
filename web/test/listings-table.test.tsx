@@ -1,8 +1,11 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { BidsTable } from "../components/asset/BidsTable";
 import { BuyPanel } from "../components/asset/BuyPanel";
 import { ListingsTable } from "../components/asset/ListingsTable";
+import { PlaceBidPanel } from "../components/asset/PlaceBidPanel";
 import { ToastProvider } from "../components/ui/TxToast";
+import type { BidView } from "../lib/hooks/useBids";
 import type { AssetView } from "../lib/mappers";
 
 const USDC = 10n ** 18n;
@@ -14,11 +17,15 @@ function unitPriceFromSharePriceCents(cents: bigint): bigint {
 const mockState = vi.hoisted(() => ({
   address: "0x1111111111111111111111111111111111111111" as `0x${string}`,
   balance: 1_000n * 10n ** 18n,
+  bids: [] as BidView[],
   buyListing: vi.fn(),
   buyPrimary: vi.fn(),
   cancelListing: vi.fn(),
   connect: vi.fn(),
+  fillBid: vi.fn(),
+  fillBidStatus: "idle",
   invalidateQueries: vi.fn(),
+  isBidsLoading: false,
   listForSale: vi.fn(),
   listForSaleStatus: "idle",
   listForSaleApproveTxHash: undefined as `0x${string}` | undefined,
@@ -35,6 +42,10 @@ const mockState = vi.hoisted(() => ({
     remaining: bigint;
     isMine: boolean;
   }>,
+  placeBid: vi.fn(),
+  placeBidErrorText: undefined as string | undefined,
+  placeBidStatus: "idle",
+  placeBidTxHash: undefined as `0x${string}` | undefined,
   refetchBalance: vi.fn(),
   tokenBalance: 0n,
   switchToArc: vi.fn(),
@@ -117,6 +128,34 @@ vi.mock("@/lib/hooks/useCancelListing", () => ({
   }),
 }));
 
+vi.mock("@/lib/hooks/useBids", () => ({
+  useBids: () => ({
+    bids: mockState.bids,
+    isLoading: mockState.isBidsLoading,
+  }),
+}));
+
+vi.mock("@/lib/hooks/useFillBid", () => ({
+  useFillBid: () => ({
+    approveTxHash: undefined,
+    errorText: undefined,
+    fillBid: mockState.fillBid,
+    reset: vi.fn(),
+    status: mockState.fillBidStatus,
+    txHash: undefined,
+  }),
+}));
+
+vi.mock("@/lib/hooks/usePlaceBid", () => ({
+  usePlaceBid: () => ({
+    errorText: mockState.placeBidErrorText,
+    placeBid: mockState.placeBid,
+    reset: vi.fn(),
+    status: mockState.placeBidStatus,
+    txHash: mockState.placeBidTxHash,
+  }),
+}));
+
 function renderWithToast(node: React.ReactNode): string {
   return renderToStaticMarkup(<ToastProvider>{node}</ToastProvider>);
 }
@@ -151,6 +190,10 @@ describe("secondary listings detail surface", () => {
   beforeEach(() => {
     mockState.address = "0x1111111111111111111111111111111111111111";
     mockState.balance = 1_000n * USDC;
+    mockState.bids = [];
+    mockState.fillBid = vi.fn();
+    mockState.fillBidStatus = "idle";
+    mockState.isBidsLoading = false;
     mockState.isConnected = true;
     mockState.isCorrectChain = true;
     mockState.isListingsLoading = false;
@@ -159,6 +202,10 @@ describe("secondary listings detail surface", () => {
     mockState.listForSaleApproveTxHash = undefined;
     mockState.listForSaleErrorText = undefined;
     mockState.listForSaleTxHash = undefined;
+    mockState.placeBid = vi.fn();
+    mockState.placeBidErrorText = undefined;
+    mockState.placeBidStatus = "idle";
+    mockState.placeBidTxHash = undefined;
     mockState.tokenBalance = 1_234n;
     mockState.listings = [
       {
@@ -306,5 +353,89 @@ describe("secondary listings detail surface", () => {
 
     expect(html).toContain("You do not hold this asset");
     expect(html).not.toContain("List shares");
+  });
+
+  test("renders compact buy orders with bidder identity, own badge, and fill action", () => {
+    mockState.tokenBalance = 500n;
+    mockState.bids = [
+      {
+        active: true,
+        bidder: "0x2222222222222222222222222222222222222222",
+        id: 5n,
+        isOwn: false,
+        pricePerShare: unitPriceFromSharePriceCents(9_700n),
+        remaining: 300n,
+        tokenId: 1n,
+      },
+      {
+        active: true,
+        bidder: mockState.address,
+        id: 2n,
+        isOwn: true,
+        pricePerShare: unitPriceFromSharePriceCents(9_600n),
+        remaining: 125n,
+        tokenId: 1n,
+      },
+    ];
+
+    const html = renderWithToast(<BidsTable tokenId={1n} />);
+
+    expect(html).toContain("BUY ORDERS");
+    expect(html).toContain("BIDDER");
+    expect(html.indexOf("97.00")).toBeLessThan(html.indexOf("96.00"));
+    expect(html).toContain("3.00");
+    expect(html).toContain("0x2222");
+    expect(html).toContain("You");
+    expect(html).toContain("Fill");
+  });
+
+  test("renders the expanded fill form with full amount default and holding validation", () => {
+    mockState.bids = [
+      {
+        active: true,
+        bidder: "0x2222222222222222222222222222222222222222",
+        id: 9n,
+        isOwn: false,
+        pricePerShare: unitPriceFromSharePriceCents(9_825n),
+        remaining: 300n,
+        tokenId: 1n,
+      },
+    ];
+    mockState.tokenBalance = 500n;
+
+    const fullAmountHtml = renderWithToast(
+      <BidsTable initialExpandedBidId={9n} tokenId={1n} />,
+    );
+    mockState.tokenBalance = 0n;
+    const noHoldingHtml = renderWithToast(
+      <BidsTable initialExpandedBidId={9n} tokenId={1n} />,
+    );
+
+    expect(fullAmountHtml).toContain("value=\"3\"");
+    expect(fullAmountHtml).toContain("inputMode=\"decimal\"");
+    expect(fullAmountHtml).toContain("294.75 USDC");
+    expect(fullAmountHtml).toContain("CONFIRM FILL");
+    expect(noHoldingHtml).toContain("No shares available to fill this bid");
+    expect(noHoldingHtml).toContain("disabled=\"\"");
+  });
+
+  test("renders the place bid panel with escrow preview and balance validation", () => {
+    mockState.balance = 500n * USDC;
+
+    const fundedHtml = renderWithToast(
+      <PlaceBidPanel asset={assetView()} initialAmountInput="2.5" initialPriceInput="96" />,
+    );
+    mockState.balance = 100n * USDC;
+    const insufficientHtml = renderWithToast(
+      <PlaceBidPanel asset={assetView()} initialAmountInput="2.5" initialPriceInput="96" />,
+    );
+
+    expect(fundedHtml).toContain("PLACE BID");
+    expect(fundedHtml).toContain("BID PRICE (USDC)");
+    expect(fundedHtml).toContain("ESCROW TOTAL");
+    expect(fundedHtml).toContain("240.00 USDC");
+    expect(fundedHtml).toContain("500.00 USDC");
+    expect(insufficientHtml).toContain("Insufficient USDC balance");
+    expect(insufficientHtml).toContain("disabled=\"\"");
   });
 });

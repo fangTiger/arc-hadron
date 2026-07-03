@@ -7,8 +7,10 @@ import {
   listingProceeds,
   type ListForSaleModalViewProps,
 } from "../components/portfolio/ListForSaleModal";
+import { MyBidsView, type MyBidsViewProps } from "../components/portfolio/MyBids";
 import { MyListingsView, type MyListingsViewProps } from "../components/portfolio/MyListings";
 import { parseUsdc } from "../lib/format";
+import type { BidView } from "../lib/hooks/useBids";
 import type { ListingView } from "../lib/hooks/useListings";
 import type { Holding } from "../lib/mappers";
 
@@ -59,6 +61,19 @@ function listing(overrides: Partial<ListingView> = {}): ListingView {
   };
 }
 
+function bid(overrides: Partial<BidView> = {}): BidView {
+  return {
+    active: true,
+    bidder: "0x1111111111111111111111111111111111111111",
+    id: 8n,
+    isOwn: true,
+    pricePerShare: parseUsdc("0.025"),
+    remaining: 400n,
+    tokenId: 7n,
+    ...overrides,
+  };
+}
+
 function listModalProps(
   overrides: Partial<ListForSaleModalViewProps> = {},
 ): ListForSaleModalViewProps {
@@ -82,6 +97,22 @@ function myListingsProps(overrides: Partial<MyListingsViewProps> = {}): MyListin
     errorText: undefined,
     isLoading: false,
     listings: [listing()],
+    onAskCancel: () => undefined,
+    onCancel: () => undefined,
+    onDismissConfirm: () => undefined,
+    status: "idle",
+    txHash: undefined,
+    ...overrides,
+  };
+}
+
+function myBidsProps(overrides: Partial<MyBidsViewProps> = {}): MyBidsViewProps {
+  return {
+    assetNameByTokenId: new Map([[7n, "US T-Bill 2026-Q3"]]),
+    bids: [bid()],
+    cancellingId: null,
+    errorText: undefined,
+    isLoading: false,
     onAskCancel: () => undefined,
     onCancel: () => undefined,
     onDismissConfirm: () => undefined,
@@ -187,5 +218,45 @@ describe("MyListingsView", () => {
     props.onCancel(props.cancellingId);
 
     expect(onCancel).toHaveBeenCalledWith(3n);
+  });
+});
+
+describe("MyBidsView", () => {
+  test("renders an empty active bids state", () => {
+    const html = renderToStaticMarkup(
+      <MyBidsView {...myBidsProps({ bids: [] })} />,
+    );
+
+    expect(html).toContain("MY BIDS");
+    expect(html).toContain("No active bids");
+  });
+
+  test("renders active bid rows with price, remaining amount, escrow, and cancel action", () => {
+    const html = renderToStaticMarkup(<MyBidsView {...myBidsProps()} />);
+
+    expect(html).toContain("US T-Bill 2026-Q3");
+    expect(html).toContain("cursor-pointer");
+    expect(html).toContain("2.50 USDC");
+    expect(html).toContain("4.00");
+    expect(html).toContain("10.00 USDC");
+    expect(html).toContain("Cancel");
+  });
+
+  test("renders the secondary confirmation before cancelling a bid", () => {
+    const html = renderToStaticMarkup(
+      <MyBidsView {...myBidsProps({ cancellingId: 8n })} />,
+    );
+
+    expect(html).toContain("Confirm cancel?");
+    expect(html).toContain("Keep");
+  });
+
+  test("calls the cancel handler with the confirmed bid id", () => {
+    const onCancel = vi.fn();
+    const props = myBidsProps({ cancellingId: 8n, onCancel });
+
+    props.onCancel(props.cancellingId);
+
+    expect(onCancel).toHaveBeenCalledWith(8n);
   });
 });

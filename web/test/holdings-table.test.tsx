@@ -56,6 +56,7 @@ describe("HoldingsTableView", () => {
     expect(html).toContain("1.80 USDC");
     expect(html).toContain("222.21 USDC");
     expect(html).toContain("List for sale");
+    expect(html).toContain("Sell to bid");
     expect(html).not.toContain("title=\"Secondary market opens in M3\"");
     expect(html).toContain("aria-label=\"Total market value 246.90 USDC\"");
   });

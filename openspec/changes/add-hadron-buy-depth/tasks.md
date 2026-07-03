@@ -17,10 +17,10 @@
 
 ## 3. 前端交易与 UI（web TDD）
 
-- [ ] 3.1 `usePlaceBid`/`useCancelBid` 交易 hooks；`useFillBid` 两步授权状态机（复用 useListForSale 模式）
-- [ ] 3.2 资产页：`BidsTable`（BUY ORDERS，SELL ORDERS 下方，Fill 带数量输入）+ `PlaceBidPanel`（对称 BuyPanel/ListModal 风格）+ 挂载
-- [ ] 3.3 持仓页：My Bids 区块（撤单）+ 持有行 "Sell to bid" 入口 + 挂载
-- [ ] 3.4 活动流新事件文案（英文）
+- [x] 3.1 `usePlaceBid`/`useCancelBid` 交易 hooks；`useFillBid` 两步授权状态机（复用 useListForSale 模式）
+- [x] 3.2 资产页：`BidsTable`（BUY ORDERS，SELL ORDERS 下方，Fill 带数量输入）+ `PlaceBidPanel`（对称 BuyPanel/ListModal 风格）+ 挂载
+- [x] 3.3 持仓页：My Bids 区块（撤单）+ 持有行 "Sell to bid" 入口 + 挂载
+- [x] 3.4 活动流新事件文案（英文）
 
 ## 4. 部署与播种（一次性完成）
 

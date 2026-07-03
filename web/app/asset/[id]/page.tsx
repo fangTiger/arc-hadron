@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AssetProfile } from "@/components/asset/AssetProfile";
+import { BidsTable } from "@/components/asset/BidsTable";
 import { BuyPanel } from "@/components/asset/BuyPanel";
 import { ListingsTable } from "@/components/asset/ListingsTable";
+import { PlaceBidPanel } from "@/components/asset/PlaceBidPanel";
 import { PriceChart } from "@/components/asset/PriceChart";
 import { InsightPanel } from "@/components/ai/InsightPanel";
 import { glowButtonClassName } from "@/components/ui/GlowButton";
@@ -350,6 +352,8 @@ export function AssetDetailView({
         <AssetProfile asset={asset} />
         <InsightPanel asset={asset} events={events} listings={assetListings} nowMs={nowMs} />
         <ListingsTable tokenId={asset.tokenId} />
+        <BidsTable tokenId={asset.tokenId} />
+        <PlaceBidPanel asset={asset} />
         <TradeHistoryTable
           asset={asset}
           events={events}

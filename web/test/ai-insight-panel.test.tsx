@@ -18,6 +18,14 @@ vi.mock("../components/asset/ListingsTable", () => ({
   ListingsTable: () => <section>SELL ORDERS</section>,
 }));
 
+vi.mock("../components/asset/BidsTable", () => ({
+  BidsTable: () => <section>BUY ORDERS</section>,
+}));
+
+vi.mock("../components/asset/PlaceBidPanel", () => ({
+  PlaceBidPanel: () => <section>PLACE BID</section>,
+}));
+
 import { AssetDetailView } from "../app/asset/[id]/page";
 import { InsightPanel, InsightPanelView } from "../components/ai/InsightPanel";
 

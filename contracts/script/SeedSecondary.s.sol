@@ -32,20 +32,15 @@ contract SeedSecondary is Script {
         address deployer = vm.addr(deployerPrivateKey);
         HadronAssets assets = HadronAssets(vm.envAddress("HADRON_ASSETS"));
         HadronMarket market = HadronMarket(vm.envAddress("HADRON_MARKET"));
-        address treasury = vm.envAddress("TREASURY_ADDRESS");
+        uint256 minOfferingId = vm.envOr("SEED_MIN_OFFERING_ID", uint256(1));
+        if (minOfferingId == 0) {
+            minOfferingId = 1;
+        }
 
-        console2.log(unicode"二级种子 deployer:", deployer);
-        console2.log(unicode"HadronAssets:", address(assets));
-        console2.log(unicode"HadronMarket:", address(market));
-        console2.log(unicode"Treasury env:", treasury);
-        console2.log(unicode"Market treasury:", market.treasury());
-        console2.log(unicode"当前 offeringCount:", market.offeringCount());
-        console2.log(unicode"当前 listingCount:", market.listingCount());
-        console2.log(unicode"Market feeBps:", market.feeBps());
+        _logRunConfig(deployer, assets, market, minOfferingId);
 
         vm.startBroadcast(deployerPrivateKey);
-        bool approved = _ensureApproval(assets, market, deployer);
-        if (!approved) {
+        if (!_ensureApproval(assets, market, deployer)) {
             vm.stopBroadcast();
             console2.log(unicode"授权失败，跳过二级种子脚本");
             return;
@@ -55,7 +50,11 @@ contract SeedSecondary is Script {
         uint256 createdListings;
         uint256 selfBuys;
         uint256 offeringCount = market.offeringCount();
-        for (uint256 offeringId = 1; offeringId <= offeringCount && handledAssets < MAX_TARGET_ASSETS; offeringId++) {
+        for (
+            uint256 offeringId = minOfferingId;
+            offeringId <= offeringCount && handledAssets < MAX_TARGET_ASSETS;
+            offeringId++
+        ) {
             (bool handled, uint256 listed, uint256 bought) =
                 _seedOffering(assets, market, deployer, offeringId, handledAssets);
             if (!handled) {
@@ -74,6 +73,23 @@ contract SeedSecondary is Script {
         if (handledAssets < MIN_TARGET_ASSETS) {
             console2.log(unicode"可处理资产少于目标下限:", handledAssets);
         }
+    }
+
+    function _logRunConfig(
+        address deployer,
+        HadronAssets assets,
+        HadronMarket market,
+        uint256 minOfferingId
+    ) private view {
+        console2.log(unicode"二级种子 deployer:", deployer);
+        console2.log(unicode"HadronAssets:", address(assets));
+        console2.log(unicode"HadronMarket:", address(market));
+        console2.log(unicode"Treasury env:", vm.envAddress("TREASURY_ADDRESS"));
+        console2.log(unicode"Market treasury:", market.treasury());
+        console2.log(unicode"最小 offeringId:", minOfferingId);
+        console2.log(unicode"当前 offeringCount:", market.offeringCount());
+        console2.log(unicode"当前 listingCount:", market.listingCount());
+        console2.log(unicode"Market feeBps:", market.feeBps());
     }
 
     function _ensureApproval(HadronAssets assets, HadronMarket market, address owner) private returns (bool) {
@@ -165,10 +181,14 @@ contract SeedSecondary is Script {
                 targetListCount = missingOpenListings;
             }
         }
-        if (targetListCount > deployerBalance) {
-            targetListCount = deployerBalance;
-        }
+        targetListCount = _capListCountByBalance(planIndex, targetListCount, deployerBalance);
         if (targetListCount == 0) {
+            console2.log(unicode"跳过余额不足 tokenId:", tokenId);
+            return (false, 0, false);
+        }
+
+        uint256 plannedAmount = _plannedListingTotal(planIndex, targetListCount);
+        if (plannedAmount == 0) {
             console2.log(unicode"跳过余额不足 tokenId:", tokenId);
             return (false, 0, false);
         }
@@ -182,22 +202,34 @@ contract SeedSecondary is Script {
     ) private returns (uint256 listed, uint256 bought) {
         uint256[] memory listingIds = new uint256[](input.targetListCount);
         uint256[] memory prices = new uint256[](input.targetListCount);
+        uint256[] memory amounts = new uint256[](input.targetListCount);
         for (uint256 listingIndex = 0; listingIndex < input.targetListCount; listingIndex++) {
             uint256 bps = _planBps(input.planIndex, listingIndex);
             uint256 pricePerShare = input.issuePrice * bps / BPS_DENOMINATOR;
-            uint256 listingId = _listOne(market, input.tokenId, pricePerShare, bps);
+            uint256 amount = plannedListingAmount(input.planIndex, listingIndex);
+            uint256 listingId = _listOne(market, input.tokenId, amount, pricePerShare, bps);
             if (listingId == 0) {
                 continue;
             }
 
             listingIds[listed] = listingId;
             prices[listed] = pricePerShare;
+            amounts[listed] = amount;
             listed++;
         }
 
         if (input.allowSelfBuy && listed > 1) {
             uint256 buyIndex = _selfBuyIndex(input.planIndex, listed);
-            if (_buyOne(market, input.deployer, input.tokenId, listingIds[buyIndex], prices[buyIndex])) {
+            if (
+                _buyOne(
+                    market,
+                    input.deployer,
+                    input.tokenId,
+                    listingIds[buyIndex],
+                    prices[buyIndex],
+                    amounts[buyIndex]
+                )
+            ) {
                 bought = 1;
             }
         }
@@ -206,13 +238,14 @@ contract SeedSecondary is Script {
     function _listOne(
         HadronMarket market,
         uint256 tokenId,
+        uint256 amount,
         uint256 pricePerShare,
         uint256 bps
     ) private returns (uint256) {
-        try market.list(tokenId, 1, pricePerShare) returns (uint256 listingId) {
+        try market.list(tokenId, amount, pricePerShare) returns (uint256 listingId) {
             console2.log(unicode"二级挂单 listingId:", listingId);
             console2.log(unicode"二级挂单 tokenId:", tokenId);
-            console2.log(unicode"二级挂单 amount:", uint256(1));
+            console2.log(unicode"二级挂单 amount:", amount);
             console2.log(unicode"二级挂单 pricePerShare:", pricePerShare);
             console2.log(unicode"二级挂单 bps:", bps);
             return listingId;
@@ -228,9 +261,15 @@ contract SeedSecondary is Script {
         address deployer,
         uint256 tokenId,
         uint256 listingId,
-        uint256 pricePerShare
+        uint256 pricePerShare,
+        uint256 listingAmount
     ) private returns (bool) {
-        uint256 amount = 1;
+        uint256 amount = plannedSelfBuyAmount(pricePerShare, listingAmount);
+        if (amount == 0) {
+            console2.log(unicode"跳过自成交，单笔 value 超限 listingId:", listingId);
+            return false;
+        }
+
         uint256 value = pricePerShare * amount;
         if (value > MAX_SINGLE_TRADE_VALUE) {
             console2.log(unicode"跳过自成交，单笔 value 超限 listingId:", listingId);
@@ -275,6 +314,52 @@ contract SeedSecondary is Script {
             return ownActiveListings;
         } catch {
             return 0;
+        }
+    }
+
+    function plannedListingAmount(uint256 planIndex, uint256 listingIndex) public pure returns (uint256) {
+        uint256 variant = (planIndex + listingIndex) % 3;
+        if (variant == 0) {
+            return 100;
+        }
+        if (variant == 1) {
+            return 200;
+        }
+
+        return 300;
+    }
+
+    function plannedSelfBuyAmount(uint256 pricePerShare, uint256 listingAmount) public pure returns (uint256) {
+        if (pricePerShare == 0 || listingAmount == 0) {
+            return 0;
+        }
+
+        uint256 maxAmount = MAX_SINGLE_TRADE_VALUE / pricePerShare;
+        if (maxAmount == 0) {
+            return 0;
+        }
+        if (listingAmount < maxAmount) {
+            return listingAmount;
+        }
+
+        return maxAmount;
+    }
+
+    function _capListCountByBalance(
+        uint256 planIndex,
+        uint256 targetListCount,
+        uint256 deployerBalance
+    ) private pure returns (uint256) {
+        while (targetListCount > 0 && _plannedListingTotal(planIndex, targetListCount) > deployerBalance) {
+            targetListCount--;
+        }
+
+        return targetListCount;
+    }
+
+    function _plannedListingTotal(uint256 planIndex, uint256 targetListCount) private pure returns (uint256 total) {
+        for (uint256 listingIndex = 0; listingIndex < targetListCount; listingIndex++) {
+            total += plannedListingAmount(planIndex, listingIndex);
         }
     }
 

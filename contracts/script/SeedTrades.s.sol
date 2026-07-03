@@ -6,65 +6,82 @@ import {HadronMarket} from "../src/HadronMarket.sol";
 
 /// @notice 为市场制造小额一级成交事件；执行方应使用部署/owner 账户广播。
 contract SeedTrades is Script {
+    uint256 private constant ARC_TESTNET_CHAIN_ID = 5042002;
+    uint256 private constant MIN_SINGLE_TRADE_VALUE = 30e18;
     uint256 private constant MAX_SINGLE_TRADE_VALUE = 130e18;
-    uint256 private constant MAX_NEW_OFFERINGS = 6;
+    /// @dev 一级买入为净支出（价款进金库），deployer 余额降到保留线即停，
+    ///      剩余额度留给 SeedSecondary 自成交（近似只耗手续费）与 gas。
+    uint256 private constant MIN_DEPLOYER_RESERVE = 80e18;
+
+    address private deployer;
 
     function run() external {
-        uint256 deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
-        HadronMarket market = HadronMarket(vm.envAddress("HADRON_MARKET"));
+        require(block.chainid == ARC_TESTNET_CHAIN_ID, "SeedTrades: ARC testnet only");
 
-        vm.startBroadcast(deployerPrivateKey);
-        for (uint256 offeringId = 1; offeringId <= 4; offeringId++) {
-            _buyIfOpen(market, offeringId);
+        uint256 deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
+        deployer = vm.addr(deployerPrivateKey);
+        HadronMarket market = HadronMarket(vm.envAddress("HADRON_MARKET"));
+        uint256 minOfferingId = vm.envOr("SEED_MIN_OFFERING_ID", uint256(1));
+        if (minOfferingId == 0) {
+            minOfferingId = 1;
         }
 
-        uint256 tradedNewOfferings;
+        uint256 tradedOfferings;
+        uint256 seededTrades;
         uint256 offeringCount = market.offeringCount();
-        for (
-            uint256 offeringId = 5;
-            offeringId <= offeringCount && tradedNewOfferings < MAX_NEW_OFFERINGS;
-            offeringId++
-        ) {
-            if (_buyIfOpen(market, offeringId)) {
-                tradedNewOfferings++;
+        console2.log("Seed min offeringId:", minOfferingId);
+        console2.log("Current offeringCount:", offeringCount);
+        vm.startBroadcast(deployerPrivateKey);
+        for (uint256 offeringId = minOfferingId; offeringId <= offeringCount; offeringId++) {
+            (bool traded, uint256 tradeCount) = _buyIfOpen(market, offeringId);
+            if (traded) {
+                tradedOfferings++;
+                seededTrades += tradeCount;
             }
         }
         vm.stopBroadcast();
 
-        console2.log("Seeded new offerings:", tradedNewOfferings);
+        console2.log("Seeded offerings:", tradedOfferings);
+        console2.log("Seeded primary trades:", seededTrades);
     }
 
-    function _buyIfOpen(HadronMarket market, uint256 offeringId) private returns (bool) {
+    function _buyIfOpen(HadronMarket market, uint256 offeringId) private returns (bool traded, uint256 tradeCount) {
         if (offeringId > market.offeringCount()) {
             console2.log("Skip missing offeringId:", offeringId);
-            return false;
+            return (false, 0);
         }
 
         HadronMarket.Offering memory offering = market.getOffering(offeringId);
         if (!offering.active || offering.remaining == 0) {
             console2.log("Skip inactive offeringId:", offeringId);
-            return false;
+            return (false, 0);
         }
 
-        uint256 targetShares = _targetShares(offering.pricePerShare);
-        uint256 tradeCount = _targetTradeCount(offering.pricePerShare * targetShares);
-        bool traded;
-        for (uint256 tradeIndex = 0; tradeIndex < tradeCount; tradeIndex++) {
+        uint256 targetTradeCount = _targetTradeCount(offeringId);
+        for (uint256 tradeIndex = 0; tradeIndex < targetTradeCount; tradeIndex++) {
             offering = market.getOffering(offeringId);
             if (!offering.active || offering.remaining == 0) {
                 break;
             }
 
-            uint256 shares = targetShares;
-            if (shares > offering.remaining) {
-                shares = offering.remaining;
+            uint256 shares =
+                plannedPrimaryAmount(offeringId, tradeIndex, offering.pricePerShare, offering.remaining);
+            if (shares == 0) {
+                console2.log("Skip offeringId with zero planned shares:", offeringId);
+                return (traded, tradeCount);
             }
 
             uint256 value = offering.pricePerShare * shares;
             if (value > MAX_SINGLE_TRADE_VALUE) {
                 console2.log("Skip offeringId over max single value:", offeringId);
                 console2.log("Single trade value:", value);
-                return traded;
+                return (traded, tradeCount);
+            }
+
+            if (deployer.balance < value + MIN_DEPLOYER_RESERVE) {
+                console2.log("Stop: deployer balance would fall below reserve at offeringId:", offeringId);
+                console2.log("Deployer balance:", deployer.balance);
+                return (traded, tradeCount);
             }
 
             console2.log("Seed trade offeringId:", offeringId);
@@ -72,24 +89,65 @@ contract SeedTrades is Script {
             console2.log("Seed trade value:", value);
             market.buyPrimary{value: value}(offeringId, shares);
             traded = true;
+            tradeCount++;
         }
-
-        return traded;
     }
 
-    function _targetShares(uint256 pricePerShare) private pure returns (uint256) {
-        if (pricePerShare <= MAX_SINGLE_TRADE_VALUE / 3) {
-            return 3;
+    function plannedPrimaryTargetValue(
+        uint256 offeringId,
+        uint256 tradeIndex,
+        uint256 pricePerShare
+    ) public pure returns (uint256) {
+        if (pricePerShare == 0) {
+            return 0;
         }
 
-        return 1;
+        uint256 targetValue = _targetValueByIndex((offeringId + tradeIndex) % 4);
+        if (targetValue / pricePerShare == 0) {
+            return MAX_SINGLE_TRADE_VALUE;
+        }
+
+        return targetValue;
     }
 
-    function _targetTradeCount(uint256 singleTradeValue) private pure returns (uint256) {
-        if (singleTradeValue <= 90e18) {
+    function plannedPrimaryAmount(
+        uint256 offeringId,
+        uint256 tradeIndex,
+        uint256 pricePerShare,
+        uint256 remaining
+    ) public pure returns (uint256) {
+        if (pricePerShare == 0 || remaining == 0) {
+            return 0;
+        }
+
+        uint256 targetValue = plannedPrimaryTargetValue(offeringId, tradeIndex, pricePerShare);
+        uint256 amount = targetValue / pricePerShare;
+        if (amount > remaining) {
+            return remaining;
+        }
+
+        return amount;
+    }
+
+    function _targetTradeCount(uint256 offeringId) private pure returns (uint256) {
+        if (offeringId % 2 == 0) {
             return 2;
         }
 
         return 1;
+    }
+
+    function _targetValueByIndex(uint256 index) private pure returns (uint256) {
+        if (index == 0) {
+            return MIN_SINGLE_TRADE_VALUE;
+        }
+        if (index == 1) {
+            return 55e18;
+        }
+        if (index == 2) {
+            return 90e18;
+        }
+
+        return MAX_SINGLE_TRADE_VALUE;
     }
 }

@@ -7,10 +7,15 @@ import {HadronMarket} from "../src/HadronMarket.sol";
 /// @notice 为市场制造小额一级成交事件；执行方应使用部署/owner 账户广播。
 contract SeedTrades is Script {
     uint256 private constant ARC_TESTNET_CHAIN_ID = 5042002;
+    uint256 private constant SMALL_TRADE_VALUE_0 = 5e18;
+    uint256 private constant SMALL_TRADE_VALUE_1 = 8e18;
+    uint256 private constant SMALL_TRADE_VALUE_2 = 12e18;
+    uint256 private constant SMALL_TRADE_VALUE_3 = 15e18;
     uint256 private constant MIN_SINGLE_TRADE_VALUE = 30e18;
     uint256 private constant MAX_SINGLE_TRADE_VALUE = 130e18;
-    /// @dev 一级买入为净支出（价款进金库），deployer 余额降到保留线即停，
-    ///      剩余额度留给 SeedSecondary 自成交（近似只耗手续费）与 gas。
+    /// @dev 一级买入由 deployer 自购，价款回流给发行方 deployer，净支出近似只有 50bps 手续费。
+    ///      但 forge 模拟器按每笔 pre-tx 余额判断 msg.value，所以 14 个资产 * 2 笔 * <=15e18
+    ///      看似会超过预算，实际只要单笔 value + 保留线安全即可继续跑完整轮。
     uint256 private constant MIN_DEPLOYER_RESERVE = 80e18;
 
     address private deployer;
@@ -64,8 +69,9 @@ contract SeedTrades is Script {
                 break;
             }
 
-            uint256 shares =
-                plannedPrimaryAmount(offeringId, tradeIndex, offering.pricePerShare, offering.remaining);
+            uint256 targetValue =
+                _targetValueForBalance(offeringId, tradeIndex, offering.pricePerShare, deployer.balance);
+            uint256 shares = _amountForTargetValue(targetValue, offering.pricePerShare, offering.remaining);
             if (shares == 0) {
                 console2.log("Skip offeringId with zero planned shares:", offeringId);
                 return (traded, tradeCount);
@@ -78,7 +84,7 @@ contract SeedTrades is Script {
                 return (traded, tradeCount);
             }
 
-            if (deployer.balance < value + MIN_DEPLOYER_RESERVE) {
+            if (!_hasReserveForValue(deployer.balance, value)) {
                 console2.log("Stop: deployer balance would fall below reserve at offeringId:", offeringId);
                 console2.log("Deployer balance:", deployer.balance);
                 return (traded, tradeCount);
@@ -93,16 +99,16 @@ contract SeedTrades is Script {
         }
     }
 
-    function plannedPrimaryTargetValue(
-        uint256 offeringId,
-        uint256 tradeIndex,
-        uint256 pricePerShare
-    ) public pure returns (uint256) {
+    function plannedPrimaryTargetValue(uint256 offeringId, uint256 tradeIndex, uint256 pricePerShare)
+        public
+        pure
+        returns (uint256)
+    {
         if (pricePerShare == 0) {
             return 0;
         }
 
-        uint256 targetValue = _targetValueByIndex((offeringId + tradeIndex) % 4);
+        uint256 targetValue = _smallTargetValueByIndex((offeringId + tradeIndex) % 4);
         if (targetValue / pricePerShare == 0) {
             return MAX_SINGLE_TRADE_VALUE;
         }
@@ -110,17 +116,48 @@ contract SeedTrades is Script {
         return targetValue;
     }
 
-    function plannedPrimaryAmount(
-        uint256 offeringId,
-        uint256 tradeIndex,
-        uint256 pricePerShare,
-        uint256 remaining
-    ) public pure returns (uint256) {
+    function plannedPrimaryAmount(uint256 offeringId, uint256 tradeIndex, uint256 pricePerShare, uint256 remaining)
+        public
+        pure
+        returns (uint256)
+    {
         if (pricePerShare == 0 || remaining == 0) {
             return 0;
         }
 
-        uint256 targetValue = plannedPrimaryTargetValue(offeringId, tradeIndex, pricePerShare);
+        uint256 amount = _amountForTargetValue(
+            plannedPrimaryTargetValue(offeringId, tradeIndex, pricePerShare), pricePerShare, remaining
+        );
+        return amount;
+    }
+
+    function _targetValueForBalance(
+        uint256 offeringId,
+        uint256 tradeIndex,
+        uint256 pricePerShare,
+        uint256 deployerBalance
+    ) private pure returns (uint256) {
+        uint256 index = (offeringId + tradeIndex) % 4;
+        uint256 largeTargetValue = _largeTargetValueByIndex(index);
+        if (
+            pricePerShare > 0 && largeTargetValue / pricePerShare > 0
+                && _hasReserveForValue(deployerBalance, largeTargetValue)
+        ) {
+            return largeTargetValue;
+        }
+
+        return plannedPrimaryTargetValue(offeringId, tradeIndex, pricePerShare);
+    }
+
+    function _amountForTargetValue(uint256 targetValue, uint256 pricePerShare, uint256 remaining)
+        private
+        pure
+        returns (uint256)
+    {
+        if (pricePerShare == 0 || remaining == 0) {
+            return 0;
+        }
+
         uint256 amount = targetValue / pricePerShare;
         if (amount > remaining) {
             return remaining;
@@ -137,7 +174,25 @@ contract SeedTrades is Script {
         return 1;
     }
 
-    function _targetValueByIndex(uint256 index) private pure returns (uint256) {
+    function _hasReserveForValue(uint256 balance, uint256 value) private pure returns (bool) {
+        return balance >= value + MIN_DEPLOYER_RESERVE;
+    }
+
+    function _smallTargetValueByIndex(uint256 index) private pure returns (uint256) {
+        if (index == 0) {
+            return SMALL_TRADE_VALUE_0;
+        }
+        if (index == 1) {
+            return SMALL_TRADE_VALUE_1;
+        }
+        if (index == 2) {
+            return SMALL_TRADE_VALUE_2;
+        }
+
+        return SMALL_TRADE_VALUE_3;
+    }
+
+    function _largeTargetValueByIndex(uint256 index) private pure returns (uint256) {
         if (index == 0) {
             return MIN_SINGLE_TRADE_VALUE;
         }

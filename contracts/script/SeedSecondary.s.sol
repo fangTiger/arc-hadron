@@ -11,7 +11,7 @@ contract SeedSecondary is Script {
     /// @dev 仅允许在 ARC 测试网运行，防止误用于其他链（授权 operator + 自成交均为测试网专用行为）。
     uint256 private constant ARC_TESTNET_CHAIN_ID = 5042002;
     uint256 private constant MAX_SINGLE_TRADE_VALUE = 130e18;
-    uint256 private constant MAX_TARGET_ASSETS = 6;
+    uint256 private constant MAX_TARGET_ASSETS = 10;
     uint256 private constant MIN_TARGET_ASSETS = 4;
     uint256 private constant MAX_OPEN_LISTINGS_PER_ASSET = 2;
     uint256 private constant BPS_DENOMINATOR = 10_000;
@@ -75,12 +75,10 @@ contract SeedSecondary is Script {
         }
     }
 
-    function _logRunConfig(
-        address deployer,
-        HadronAssets assets,
-        HadronMarket market,
-        uint256 minOfferingId
-    ) private view {
+    function _logRunConfig(address deployer, HadronAssets assets, HadronMarket market, uint256 minOfferingId)
+        private
+        view
+    {
         console2.log(unicode"二级种子 deployer:", deployer);
         console2.log(unicode"HadronAssets:", address(assets));
         console2.log(unicode"HadronMarket:", address(market));
@@ -137,14 +135,17 @@ contract SeedSecondary is Script {
             return (true, 0, 0);
         }
 
-        (listed, bought) = _createListingsAndMaybeBuy(market, ListingSeedInput({
-            deployer: deployer,
-            tokenId: tokenId,
-            issuePrice: offering.pricePerShare,
-            planIndex: planIndex,
-            targetListCount: targetListCount,
-            allowSelfBuy: allowSelfBuy
-        }));
+        (listed, bought) = _createListingsAndMaybeBuy(
+            market,
+            ListingSeedInput({
+                deployer: deployer,
+                tokenId: tokenId,
+                issuePrice: offering.pricePerShare,
+                planIndex: planIndex,
+                targetListCount: targetListCount,
+                allowSelfBuy: allowSelfBuy
+            })
+        );
         if (listed == 0) {
             console2.log(unicode"未能创建挂单 tokenId:", tokenId);
             return (false, 0, 0);
@@ -196,10 +197,10 @@ contract SeedSecondary is Script {
         return (true, targetListCount, allowSelfBuy);
     }
 
-    function _createListingsAndMaybeBuy(
-        HadronMarket market,
-        ListingSeedInput memory input
-    ) private returns (uint256 listed, uint256 bought) {
+    function _createListingsAndMaybeBuy(HadronMarket market, ListingSeedInput memory input)
+        private
+        returns (uint256 listed, uint256 bought)
+    {
         uint256[] memory listingIds = new uint256[](input.targetListCount);
         uint256[] memory prices = new uint256[](input.targetListCount);
         uint256[] memory amounts = new uint256[](input.targetListCount);
@@ -220,28 +221,19 @@ contract SeedSecondary is Script {
 
         if (input.allowSelfBuy && listed > 1) {
             uint256 buyIndex = _selfBuyIndex(input.planIndex, listed);
-            if (
-                _buyOne(
-                    market,
-                    input.deployer,
-                    input.tokenId,
-                    listingIds[buyIndex],
-                    prices[buyIndex],
-                    amounts[buyIndex]
-                )
-            ) {
+            bool didBuy = _buyOne(
+                market, input.deployer, input.tokenId, listingIds[buyIndex], prices[buyIndex], amounts[buyIndex]
+            );
+            if (didBuy) {
                 bought = 1;
             }
         }
     }
 
-    function _listOne(
-        HadronMarket market,
-        uint256 tokenId,
-        uint256 amount,
-        uint256 pricePerShare,
-        uint256 bps
-    ) private returns (uint256) {
+    function _listOne(HadronMarket market, uint256 tokenId, uint256 amount, uint256 pricePerShare, uint256 bps)
+        private
+        returns (uint256)
+    {
         try market.list(tokenId, amount, pricePerShare) returns (uint256 listingId) {
             console2.log(unicode"二级挂单 listingId:", listingId);
             console2.log(unicode"二级挂单 tokenId:", tokenId);
@@ -297,11 +289,11 @@ contract SeedSecondary is Script {
         }
     }
 
-    function _activeOwnListingCount(
-        HadronMarket market,
-        address deployer,
-        uint256 tokenId
-    ) private view returns (uint256) {
+    function _activeOwnListingCount(HadronMarket market, address deployer, uint256 tokenId)
+        private
+        view
+        returns (uint256)
+    {
         try market.listingsByToken(tokenId) returns (uint256[] memory listingIds) {
             uint256 ownActiveListings;
             for (uint256 index = 0; index < listingIds.length; index++) {
@@ -345,11 +337,11 @@ contract SeedSecondary is Script {
         return maxAmount;
     }
 
-    function _capListCountByBalance(
-        uint256 planIndex,
-        uint256 targetListCount,
-        uint256 deployerBalance
-    ) private pure returns (uint256) {
+    function _capListCountByBalance(uint256 planIndex, uint256 targetListCount, uint256 deployerBalance)
+        private
+        pure
+        returns (uint256)
+    {
         while (targetListCount > 0 && _plannedListingTotal(planIndex, targetListCount) > deployerBalance) {
             targetListCount--;
         }
@@ -363,43 +355,62 @@ contract SeedSecondary is Script {
         }
     }
 
+    /// @dev 偶数序资产创建 3 笔并自成交 1 笔，最终留 2 个活跃挂单；奇数序资产直接留 2 笔。
     function _planListCount(uint256 planIndex) private pure returns (uint256) {
-        uint256 variant = planIndex % 6;
-        if (variant == 0 || variant == 2 || variant == 4) {
+        if (planIndex % 2 == 0) {
             return 3;
         }
 
         return 2;
     }
 
+    /// @dev 价格档位扩展到 9400-10800 bps，让 10 个目标资产的组合差异更明显。
     function _planBps(uint256 planIndex, uint256 listingIndex) private pure returns (uint256) {
-        uint256 variant = planIndex % 6;
+        uint256 variant = planIndex % 10;
         if (variant == 0) {
-            if (listingIndex == 0) return 9_700;
+            if (listingIndex == 0) return 9_400;
             if (listingIndex == 1) return 10_000;
-            return 10_300;
+            return 10_800;
         }
         if (variant == 1) {
-            if (listingIndex == 0) return 10_000;
+            if (listingIndex == 0) return 9_700;
             return 10_600;
         }
         if (variant == 2) {
-            if (listingIndex == 0) return 9_700;
+            if (listingIndex == 0) return 9_400;
             if (listingIndex == 1) return 10_300;
             return 10_600;
         }
         if (variant == 3) {
             if (listingIndex == 0) return 10_000;
-            return 10_300;
+            return 10_800;
         }
         if (variant == 4) {
             if (listingIndex == 0) return 9_700;
             if (listingIndex == 1) return 10_000;
+            return 10_800;
+        }
+        if (variant == 5) {
+            if (listingIndex == 0) return 9_400;
             return 10_600;
         }
+        if (variant == 6) {
+            if (listingIndex == 0) return 9_400;
+            if (listingIndex == 1) return 9_700;
+            return 10_300;
+        }
+        if (variant == 7) {
+            if (listingIndex == 0) return 10_000;
+            return 10_600;
+        }
+        if (variant == 8) {
+            if (listingIndex == 0) return 9_700;
+            if (listingIndex == 1) return 10_300;
+            return 10_800;
+        }
 
-        if (listingIndex == 0) return 10_300;
-        return 10_600;
+        if (listingIndex == 0) return 9_400;
+        return 10_000;
     }
 
     function _shouldSelfBuy(uint256 planIndex) private pure returns (bool) {
@@ -407,8 +418,8 @@ contract SeedSecondary is Script {
     }
 
     function _selfBuyIndex(uint256 planIndex, uint256 listed) private pure returns (uint256) {
-        uint256 variant = planIndex % 6;
-        if (variant == 2 && listed > 1) {
+        uint256 variant = planIndex % 10;
+        if ((variant == 2 || variant == 6 || variant == 8) && listed > 1) {
             return 1;
         }
         if (variant == 4) {

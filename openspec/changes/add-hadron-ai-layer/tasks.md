@@ -18,8 +18,8 @@
 
 ## 3. API 路由（codex，TDD）
 
-- [ ] 3.1 `web/app/api/ai/insight/route.ts` + `web/test/ai-insight-route.test.ts`：runtime=nodejs / maxDuration=60；顺序：限流(429) → raw byte 上限 32KB(400) → 形状校验(400) → 无 key（开发 mock 流 / 生产 503）→ DeepSeek 流式（55s AbortController，客户端断开中止上游）→ SSE 帧；mock 客户端断言帧序列与全部错误路径
-- [ ] 3.2 `web/app/api/ai/brief/route.ts` + `web/test/ai-brief-route.test.ts`：同 3.1，市场快照形状；与 3.1 共享的校验/流式逻辑提取 `web/lib/ai/routeShared.ts` 避免复制
+- [x] 3.1 `web/app/api/ai/insight/route.ts` + `web/test/ai-insight-route.test.ts`：runtime=nodejs / maxDuration=60；顺序：限流(429) → raw byte 上限 32KB(400) → 形状校验(400) → 无 key（开发 mock 流 / 生产 503）→ DeepSeek 流式（55s AbortController，客户端断开中止上游）→ SSE 帧；mock 客户端断言帧序列与全部错误路径
+- [x] 3.2 `web/app/api/ai/brief/route.ts` + `web/test/ai-brief-route.test.ts`：同 3.1，市场快照形状；与 3.1 共享的校验/流式逻辑提取 `web/lib/ai/routeShared.ts` 避免复制
 
 ## 4. 客户端（codex，TDD）
 

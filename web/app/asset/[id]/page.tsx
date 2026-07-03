@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { AssetProfile } from "@/components/asset/AssetProfile";
 import { BuyPanel } from "@/components/asset/BuyPanel";
 import { ListingsTable } from "@/components/asset/ListingsTable";
+import { PriceChart } from "@/components/asset/PriceChart";
 import { glowButtonClassName } from "@/components/ui/GlowButton";
 import { Skeleton } from "@/components/ui/Skeleton";
 import type { TradeEvent } from "@/lib/events";
@@ -17,9 +18,7 @@ import {
   eventExplorerUrl,
   formatApyBps,
   latestPriceForAsset,
-  priceSeriesForAsset,
   relativeTime,
-  tradeEventsForAsset,
 } from "@/lib/marketMetrics";
 import type { AssetView } from "@/lib/mappers";
 import { unitPriceToSharePrice } from "@/lib/shares";
@@ -146,67 +145,6 @@ function AssetPriceHeader({
           <dd className="mt-2 text-sm text-text">{formatShares(asset.totalShares)}</dd>
         </div>
       </dl>
-    </section>
-  );
-}
-
-function PriceChart({
-  asset,
-  events,
-}: {
-  asset: AssetView;
-  events: TradeEvent[];
-}) {
-  const series = priceSeriesForAsset(asset, events);
-  const trades = tradeEventsForAsset(events, asset.tokenId);
-  const prices = series.map((point) => Number(point.price));
-  const min = Math.min(...prices);
-  const max = Math.max(...prices);
-  const span = max - min || 1;
-  const points = series
-    .map((point, index) => {
-      const x = series.length === 1 ? 0 : (index / (series.length - 1)) * 640;
-      const y = 140 - ((Number(point.price) - min) / span) * 120;
-
-      return `${x.toFixed(2)},${y.toFixed(2)}`;
-    })
-    .join(" ");
-  const latest = series.at(-1);
-  const latestY = latest ? 140 - ((Number(latest.price) - min) / span) * 120 : 80;
-  const first = series[0]?.price ?? 0n;
-  const last = latest?.price ?? first;
-  const stroke = last > first ? "var(--up)" : last < first ? "var(--down)" : "var(--muted)";
-
-  return (
-    <section className="border border-border bg-panel p-5 sm:p-6">
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="font-mono text-[11px] uppercase tracking-[0.2em] text-text">PRICE TREND</h2>
-        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
-          {trades.length} TRADES
-        </p>
-      </div>
-      <svg className="mt-5 h-40 w-full" preserveAspectRatio="none" viewBox="0 0 640 160">
-        <line
-          stroke="var(--border-glow)"
-          strokeDasharray="4 6"
-          strokeWidth="1"
-          x1="0"
-          x2="640"
-          y1={latestY}
-          y2={latestY}
-        />
-        <polyline
-          fill="none"
-          points={points}
-          stroke={stroke}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2.5"
-        />
-      </svg>
-      {trades.length < 2 ? (
-        <p className="mt-3 text-sm text-muted">Awaiting secondary trades for richer price history</p>
-      ) : null}
     </section>
   );
 }

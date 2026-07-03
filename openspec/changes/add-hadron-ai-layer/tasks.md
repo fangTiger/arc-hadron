@@ -10,11 +10,11 @@
 
 ## 2. 纯函数层（codex，TDD：每步先 RED）
 
-- [ ] 2.1 `web/lib/ai/snapshot.ts` + `web/test/ai-snapshot.test.ts`：buildAssetSnapshot / buildMarketSnapshot（bigint→string、SHARE_SCALE 换算、成交截断 20/挂单截断 10、空市场/无成交合法输出、14 资产最坏情况 ≤ 24KB 实证用例）
-- [ ] 2.2 `web/lib/ai/fingerprint.ts` + `web/test/ai-fingerprint.test.ts`：规范化完整快照稳定哈希（键序无关、内容级变化敏感）
-- [ ] 2.3 `web/lib/ai/prompts.ts` + `web/test/ai-prompts.test.ts`：insight/brief 两模板（英文、三节结构指令、免责尾注指令、禁编造指令均可断言存在）
-- [ ] 2.4 `web/lib/ai/sse.ts` + `web/test/ai-sse.test.ts`：encodeSseEvent / createSseFrameParser（chunk/done/error 三型；分片、半包、多行 data: 用例）
-- [ ] 2.5 `web/lib/ai/rateLimit.ts` + `web/test/ai-rate-limit.test.ts`：滑动窗口（每 IP + 全局），窗口滑出恢复、超限判定边界；注释注明多实例部署需换共享存储
+- [x] 2.1 `web/lib/ai/snapshot.ts` + `web/test/ai-snapshot.test.ts`：buildAssetSnapshot / buildMarketSnapshot（bigint→string、SHARE_SCALE 换算、成交截断 20/挂单截断 10、空市场/无成交合法输出、14 资产最坏情况 ≤ 24KB 实证用例）
+- [x] 2.2 `web/lib/ai/fingerprint.ts` + `web/test/ai-fingerprint.test.ts`：规范化完整快照稳定哈希（键序无关、内容级变化敏感）
+- [x] 2.3 `web/lib/ai/prompts.ts` + `web/test/ai-prompts.test.ts`：insight/brief 两模板（英文、三节结构指令、免责尾注指令、禁编造指令均可断言存在）
+- [x] 2.4 `web/lib/ai/sse.ts` + `web/test/ai-sse.test.ts`：encodeSseEvent / createSseFrameParser（chunk/done/error 三型；分片、半包、多行 data: 用例）
+- [x] 2.5 `web/lib/ai/rateLimit.ts` + `web/test/ai-rate-limit.test.ts`：滑动窗口（每 IP + 全局），窗口滑出恢复、超限判定边界；注释注明多实例部署需换共享存储
 
 ## 3. API 路由（codex，TDD）
 

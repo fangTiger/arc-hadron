@@ -39,4 +39,4 @@
 - [x] 5.1 （可选）3D 首屏英雄元素 — **决策：跳过**（可选项；性能与交易所审美风险大于收益，用户未要求）
 - [x] 5.2 Vercel 部署 + README — **范围变更：部署排除**（2026-07-03 用户明确指示"排除 vercel 部署"）；README 已完成（530ef2a，品牌叙事 + explorer 可查证清单）
 - [x] 5.3 verification-before-completion：最终取证（2026-07-03）——forge 42 用例全绿、vitest 27 文件/151 用例全绿、eslint 0 问题、next build 通过、//portfolio//asset/15//asset/19 均 200；用户真实钱包 6 笔验收交易（一级/二级购买、挂单×3、撤单）cast 事件解码核对，哈希见 deployments/arc-testnet.json
-- [ ] 5.4 归档：delta specs 合并至 `openspec/specs/`、design.md 同步、完整性 6 项检查
+- [x] 5.4 归档：delta specs 已合并至 `openspec/specs/`（7 能力 + trading-flow 补 SHARE_SCALE 演进需求）、design.md 同步、完整性 6 项检查通过（2026-07-03）

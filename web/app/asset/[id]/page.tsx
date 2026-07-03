@@ -8,6 +8,7 @@ import { BuyPanel } from "@/components/asset/BuyPanel";
 import { ListingsTable } from "@/components/asset/ListingsTable";
 import { PlaceBidPanel } from "@/components/asset/PlaceBidPanel";
 import { PriceChart } from "@/components/asset/PriceChart";
+import { YieldPanel } from "@/components/asset/YieldPanel";
 import { InsightPanel } from "@/components/ai/InsightPanel";
 import { glowButtonClassName } from "@/components/ui/GlowButton";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -360,6 +361,7 @@ export function AssetDetailView({
         <ListingsTable tokenId={asset.tokenId} />
         <BidsTable tokenId={asset.tokenId} />
         <PlaceBidPanel asset={asset} />
+        <YieldPanel asset={asset} events={events} nowMs={nowMs} />
         <TradeHistoryTable
           asset={asset}
           events={events}

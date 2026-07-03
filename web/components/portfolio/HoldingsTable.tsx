@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 import { WalletButton } from "@/components/layout/WalletButton";
 import { BidsTable } from "@/components/asset/BidsTable";
@@ -13,6 +14,8 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { categoryDisplay } from "@/lib/categories";
 import { formatShares, formatUsdc } from "@/lib/format";
 import { usePortfolio } from "@/lib/hooks/usePortfolio";
+import { useClaimYield, usePendingYield } from "@/lib/hooks/useYield";
+import { useNetworkGuard } from "@/lib/hooks/useNetworkGuard";
 import type { Holding } from "@/lib/mappers";
 import { unitPriceToSharePrice } from "@/lib/shares";
 import {
@@ -21,17 +24,34 @@ import {
   stopRowNavigation,
 } from "@/lib/rowNavigation";
 
-const tableHeaders = ["ASSET", "SHARES", "MARKET VALUE", "AVG COST", "COST BASIS", "ACTIONS"];
+const tableHeaders = [
+  "ASSET",
+  "SHARES",
+  "MARKET VALUE",
+  "AVG COST",
+  "COST BASIS",
+  "PENDING YIELD",
+  "ACTIONS",
+];
+
+type YieldClaimStatus = "idle" | "signing" | "pending" | "success" | "error";
 
 interface HoldingsTableViewProps {
+  activeClaimTokenId?: bigint | null;
+  claimStatus?: YieldClaimStatus;
   connectAction?: ReactNode;
   errorZh?: string;
   holdings: Holding[];
+  isCorrectChain?: boolean;
   isConnected: boolean;
   isLoading: boolean;
+  onClaimYield?: (holding: Holding) => void;
   onListForSale?: (holding: Holding) => void;
   onSellToBid?: (holding: Holding) => void;
   onNavigate?: (href: string) => void;
+  onSwitchNetwork?: () => void;
+  pendingYieldByTokenId?: Map<bigint, bigint>;
+  totalPendingYield?: bigint;
 }
 
 function labelClassName() {
@@ -66,6 +86,10 @@ function LoadingRows() {
           </td>
           <td className="px-5 py-5">
             <Skeleton className="h-6 w-32" tone="soft" />
+          </td>
+          <td className="px-5 py-5">
+            <Skeleton className="h-6 w-28" tone="soft" />
+            <Skeleton className="mt-3 h-8 w-20" tone="soft" />
           </td>
           <td className="py-5 pl-5">
             <Skeleton className="h-9 w-28" tone="soft" />
@@ -131,17 +155,49 @@ function CategoryBadge({ category }: { category: string }) {
 }
 
 function HoldingRow({
+  activeClaimTokenId = null,
+  claimStatus = "idle",
   holding,
+  isCorrectChain = true,
+  onClaimYield,
   onListForSale,
   onSellToBid,
   onNavigate = navigateToHref,
+  onSwitchNetwork,
+  pendingYield = 0n,
 }: {
+  activeClaimTokenId?: bigint | null;
+  claimStatus?: YieldClaimStatus;
   holding: Holding;
+  isCorrectChain?: boolean;
+  onClaimYield?: (holding: Holding) => void;
   onListForSale?: (holding: Holding) => void;
   onSellToBid?: (holding: Holding) => void;
   onNavigate?: (href: string) => void;
+  onSwitchNetwork?: () => void;
+  pendingYield?: bigint;
 }) {
   const assetHref = `/asset/${holding.asset.tokenId.toString()}`;
+  const isActiveClaim = activeClaimTokenId === holding.asset.tokenId;
+  const isClaimBusy =
+    claimStatus === "signing" || claimStatus === "pending";
+  const isClaimDisabled =
+    pendingYield === 0n ||
+    isClaimBusy ||
+    (isActiveClaim && claimStatus === "success");
+  let claimLabel = "Claim";
+
+  if (!isCorrectChain && pendingYield > 0n) {
+    claimLabel = "Switch network";
+  } else if (isActiveClaim && claimStatus === "signing") {
+    claimLabel = "Confirm...";
+  } else if (isActiveClaim && claimStatus === "pending") {
+    claimLabel = "Claiming...";
+  } else if (isActiveClaim && claimStatus === "success") {
+    claimLabel = "Claimed";
+  } else if (isActiveClaim && claimStatus === "error") {
+    claimLabel = "Retry claim";
+  }
 
   return (
     <tr
@@ -173,6 +229,35 @@ function HoldingRow({
       <td className="px-5 py-5 font-mono text-sm tabular-nums text-text-dim">
         {formatMaybeUsdc(holding.costBasis)}
       </td>
+      <td className="px-5 py-5">
+        <div className="flex min-w-36 flex-col items-start gap-2">
+          <p
+            className={[
+              "font-mono text-sm tabular-nums",
+              pendingYield > 0n ? "text-gold" : "text-text-dim",
+            ].join(" ")}
+          >
+            {formatUsdc(pendingYield)} USDC
+          </p>
+          <button
+            className="h-8 border border-border bg-bg/50 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-text-dim transition-colors duration-200 hover:border-border-glow hover:text-text disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-muted"
+            disabled={isClaimDisabled}
+            onClick={(event) => {
+              stopRowNavigation(event);
+
+              if (!isCorrectChain) {
+                onSwitchNetwork?.();
+                return;
+              }
+
+              onClaimYield?.(holding);
+            }}
+            type="button"
+          >
+            {claimLabel}
+          </button>
+        </div>
+      </td>
       <td className="py-5 pl-5">
         <div className="flex flex-wrap gap-2">
           <button
@@ -202,20 +287,37 @@ function HoldingRow({
 }
 
 export function HoldingsTableView({
+  activeClaimTokenId = null,
+  claimStatus = "idle",
   connectAction,
   errorZh,
   holdings,
+  isCorrectChain = true,
   isConnected,
   isLoading,
+  onClaimYield,
   onListForSale,
   onSellToBid,
   onNavigate,
+  onSwitchNetwork,
+  pendingYieldByTokenId = new Map(),
+  totalPendingYield,
 }: HoldingsTableViewProps) {
   const totalMarketValue = useMemo(
     () => holdings.reduce((total, holding) => total + holding.marketValue, 0n),
     [holdings],
   );
   const totalMarketValueText = `${formatUsdc(totalMarketValue)} USDC`;
+  const pendingTotal = useMemo(
+    () =>
+      totalPendingYield ??
+      holdings.reduce(
+        (total, holding) => total + (pendingYieldByTokenId.get(holding.asset.tokenId) ?? 0n),
+        0n,
+      ),
+    [holdings, pendingYieldByTokenId, totalPendingYield],
+  );
+  const pendingTotalText = `${formatUsdc(pendingTotal)} USDC`;
 
   if (!isConnected) {
     return <DisconnectedState connectAction={connectAction} />;
@@ -231,8 +333,17 @@ export function HoldingsTableView({
 
   return (
     <section className="border border-border bg-panel/80">
+      <div className="flex flex-col gap-2 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className={labelClassName()}>TOTAL PENDING YIELD</p>
+        <p
+          aria-label={`Total pending yield ${pendingTotalText}`}
+          className="font-mono text-xl font-semibold tabular-nums text-gold"
+        >
+          {pendingTotalText}
+        </p>
+      </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[960px] border-collapse">
+        <table className="w-full min-w-[1080px] border-collapse">
           <thead>
             <tr>
               {tableHeaders.map((header, index) => (
@@ -258,9 +369,15 @@ export function HoldingsTableView({
                 <HoldingRow
                   holding={holding}
                   key={holding.asset.tokenId.toString()}
+                  activeClaimTokenId={activeClaimTokenId}
+                  claimStatus={claimStatus}
+                  isCorrectChain={isCorrectChain}
+                  onClaimYield={onClaimYield}
                   onListForSale={onListForSale}
                   onSellToBid={onSellToBid}
                   onNavigate={onNavigate}
+                  onSwitchNetwork={onSwitchNetwork}
+                  pendingYield={pendingYieldByTokenId.get(holding.asset.tokenId) ?? 0n}
                 />
               ))
             )}
@@ -273,7 +390,7 @@ export function HoldingsTableView({
               <td
                 aria-label={`Total market value ${totalMarketValueText}`}
                 className="px-5 py-5 font-mono text-xl font-semibold tabular-nums text-up"
-                colSpan={4}
+                colSpan={5}
               >
                 <AnimatedNumber value={totalMarketValueText} />
               </td>
@@ -329,21 +446,62 @@ function SellToBidModal({
 export function HoldingsTable() {
   const router = useRouter();
   const { isConnected } = useAccount();
+  const { isCorrectChain, switchToArc } = useNetworkGuard();
   const { errorZh, holdings, isLoading } = usePortfolio();
+  const tokenIds = useMemo(
+    () => holdings.map((holding) => holding.asset.tokenId),
+    [holdings],
+  );
+  const pendingYield = usePendingYield(tokenIds);
+  const {
+    claim,
+    status: claimStatus,
+    txHash: claimTxHash,
+  } = useClaimYield();
+  const queryClient = useQueryClient();
   const [listingHolding, setListingHolding] = useState<Holding | null>(null);
   const [bidHolding, setBidHolding] = useState<Holding | null>(null);
+  const [activeClaimTokenId, setActiveClaimTokenId] = useState<bigint | null>(null);
+  const lastClaimRefreshKey = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (claimStatus !== "success" || !claimTxHash) {
+      return;
+    }
+
+    const key = `claim:${claimTxHash}`;
+
+    if (lastClaimRefreshKey.current === key) {
+      return;
+    }
+
+    lastClaimRefreshKey.current = key;
+    void queryClient.invalidateQueries().catch(() => undefined);
+  }, [claimStatus, claimTxHash, queryClient]);
+
+  function claimHolding(holding: Holding) {
+    setActiveClaimTokenId(holding.asset.tokenId);
+    claim(holding.asset.tokenId);
+  }
 
   return (
     <>
       <HoldingsTableView
+        activeClaimTokenId={activeClaimTokenId}
+        claimStatus={claimStatus}
         connectAction={<WalletButton />}
         errorZh={errorZh}
         holdings={holdings}
+        isCorrectChain={isCorrectChain}
         isConnected={isConnected}
         isLoading={isConnected ? isLoading : false}
+        onClaimYield={claimHolding}
         onListForSale={setListingHolding}
         onSellToBid={setBidHolding}
         onNavigate={(href) => router.push(href)}
+        onSwitchNetwork={switchToArc}
+        pendingYieldByTokenId={pendingYield.pendingByTokenId}
+        totalPendingYield={pendingYield.totalPending}
       />
       {listingHolding ? (
         <ListForSaleModal

@@ -14,6 +14,25 @@ import type { TradeEvent } from "../lib/events";
 import type { AssetView } from "../lib/mappers";
 
 const USDC = 10n ** 18n;
+const YIELD_PENDING = 325n * (USDC / 100n);
+
+const yieldMockState = vi.hoisted(() => ({
+  address: "0x1111111111111111111111111111111111111111" as `0x${string}`,
+  balance: 1_000n * 10n ** 18n,
+  claim: vi.fn(),
+  claimErrorText: undefined as string | undefined,
+  claimStatus: "idle",
+  connect: vi.fn(),
+  deposit: vi.fn(),
+  depositErrorText: undefined as string | undefined,
+  depositStatus: "idle",
+  invalidateQueries: vi.fn(),
+  isConnected: true,
+  isCorrectChain: true,
+  refetchBalance: vi.fn(),
+  switchToArc: vi.fn(),
+  totalPending: 325n * 10n ** 16n,
+}));
 
 vi.mock("../components/asset/BuyPanel", () => ({
   BuyPanel: () => <aside>BUY PANEL</aside>,
@@ -29,6 +48,65 @@ vi.mock("../components/asset/BidsTable", () => ({
 
 vi.mock("../components/asset/PlaceBidPanel", () => ({
   PlaceBidPanel: () => <section>PLACE BID</section>,
+}));
+
+vi.mock("@tanstack/react-query", () => ({
+  useQueryClient: () => ({
+    invalidateQueries: yieldMockState.invalidateQueries,
+  }),
+}));
+
+vi.mock("wagmi", () => ({
+  useAccount: () => ({
+    address: yieldMockState.address,
+    isConnected: yieldMockState.isConnected,
+  }),
+  useBalance: () => ({
+    data: { value: yieldMockState.balance },
+    isLoading: false,
+    refetch: yieldMockState.refetchBalance,
+  }),
+  useConnect: () => ({
+    connect: yieldMockState.connect,
+    connectors: [{ id: "injected", type: "injected" }],
+    isPending: false,
+  }),
+}));
+
+vi.mock("@/lib/hooks/useNetworkGuard", () => ({
+  useNetworkGuard: () => ({
+    isCorrectChain: yieldMockState.isCorrectChain,
+    switchToArc: yieldMockState.switchToArc,
+  }),
+}));
+
+vi.mock("@/lib/hooks/useYield", () => ({
+  useClaimYield: () => ({
+    claim: yieldMockState.claim,
+    claimBatch: vi.fn(),
+    errorText: yieldMockState.claimErrorText,
+    reset: vi.fn(),
+    status: yieldMockState.claimStatus,
+    txHash: undefined,
+  }),
+  useDepositYield: () => ({
+    deposit: yieldMockState.deposit,
+    errorText: yieldMockState.depositErrorText,
+    reset: vi.fn(),
+    status: yieldMockState.depositStatus,
+    txHash: undefined,
+  }),
+  usePendingYield: (tokenIds: bigint[]) => ({
+    isLoading: false,
+    pending: tokenIds.map((tokenId) => ({
+      amount: tokenId === 15n ? yieldMockState.totalPending : 0n,
+      tokenId,
+    })),
+    pendingByTokenId: new Map(
+      tokenIds.map((tokenId) => [tokenId, tokenId === 15n ? yieldMockState.totalPending : 0n]),
+    ),
+    totalPending: yieldMockState.totalPending,
+  }),
 }));
 
 function assetView(overrides: Partial<AssetView> = {}): AssetView {
@@ -218,7 +296,7 @@ describe("on-chain asset read state", () => {
     );
 
     expect(html).toContain("Trade history lands here after on-chain activity.");
-    expect(html).not.toContain("0x0000…00ff");
+    expect(html.slice(html.indexOf("TRADE HISTORY"))).not.toContain("0x0000…00ff");
   });
 
   test("mounts buy orders and place bid controls between sell orders and trade history", () => {
@@ -235,6 +313,71 @@ describe("on-chain asset read state", () => {
     expect(html.indexOf("SELL ORDERS")).toBeLessThan(html.indexOf("BUY ORDERS"));
     expect(html.indexOf("BUY ORDERS")).toBeLessThan(html.indexOf("PLACE BID"));
     expect(html.indexOf("PLACE BID")).toBeLessThan(html.indexOf("TRADE HISTORY"));
+  });
+
+  test("renders asset yield panel with pending claim, distribution records, and deposit entry before trade history", () => {
+    yieldMockState.totalPending = YIELD_PENDING;
+
+    const html = renderToStaticMarkup(
+      <AssetDetailView
+        assets={[assetView()]}
+        events={[
+          tradeEvent(),
+          tradeEvent({
+            account: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            amount: undefined,
+            blockNumber: 104n,
+            logIndex: 4,
+            pricePerShare: undefined,
+            timestamp: Date.UTC(2026, 6, 2, 11),
+            totalPaid: undefined,
+            txHash: "0x00000000000000000000000000000000000000000000000000000000000000aa",
+            type: "yield-deposited",
+            yieldAmount: 12n * USDC,
+          }),
+          tradeEvent({
+            account: "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            amount: undefined,
+            blockNumber: 105n,
+            logIndex: 5,
+            pricePerShare: undefined,
+            timestamp: Date.UTC(2026, 6, 2, 11, 30),
+            totalPaid: undefined,
+            txHash: "0x00000000000000000000000000000000000000000000000000000000000000bb",
+            type: "yield-deposited",
+            yieldAmount: 35n * (USDC / 10n),
+          }),
+          tradeEvent({
+            account: "0xcccccccccccccccccccccccccccccccccccccccc",
+            amount: undefined,
+            blockNumber: 106n,
+            logIndex: 6,
+            pricePerShare: undefined,
+            timestamp: Date.UTC(2026, 6, 2, 12),
+            tokenId: 1n,
+            totalPaid: undefined,
+            txHash: "0x00000000000000000000000000000000000000000000000000000000000000cc",
+            type: "yield-deposited",
+            yieldAmount: 99n * USDC,
+          }),
+        ]}
+        id="15"
+        isLoading={false}
+        nowMs={Date.UTC(2026, 6, 2, 12)}
+      />,
+    );
+
+    expect(html).toContain("Pending yield: 3.25 USDC");
+    expect(html).toContain("TOTAL DISTRIBUTED");
+    expect(html).toContain("15.50 USDC");
+    expect(html).toContain("RECENT DISTRIBUTIONS");
+    expect(html).toContain("YIELD DEPOSIT");
+    expect(html).toContain("12.00 USDC");
+    expect(html).toContain("3.50 USDC");
+    expect(html).not.toContain("99.00 USDC");
+    expect(html).toContain("Distribute");
+    expect(html.indexOf("PLACE BID")).toBeLessThan(html.indexOf("Pending yield: 3.25 USDC"));
+    expect(html.indexOf("Pending yield: 3.25 USDC")).toBeLessThan(html.indexOf("TRADE HISTORY"));
   });
 
   test("caps remaining ratio in bigint space before converting to number", () => {

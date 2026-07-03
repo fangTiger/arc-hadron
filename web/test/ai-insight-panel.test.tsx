@@ -26,6 +26,10 @@ vi.mock("../components/asset/PlaceBidPanel", () => ({
   PlaceBidPanel: () => <section>PLACE BID</section>,
 }));
 
+vi.mock("../components/asset/YieldPanel", () => ({
+  YieldPanel: () => <section>YIELD PANEL</section>,
+}));
+
 import { AssetDetailView } from "../app/asset/[id]/page";
 import { InsightPanel, InsightPanelView } from "../components/ai/InsightPanel";
 

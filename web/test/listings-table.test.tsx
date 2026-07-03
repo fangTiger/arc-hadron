@@ -7,6 +7,10 @@ import type { AssetView } from "../lib/mappers";
 
 const USDC = 10n ** 18n;
 
+function unitPriceFromSharePriceCents(cents: bigint): bigint {
+  return (cents * USDC) / 10_000n;
+}
+
 const mockState = vi.hoisted(() => ({
   address: "0x1111111111111111111111111111111111111111" as `0x${string}`,
   balance: 1_000n * 10n ** 18n,
@@ -112,12 +116,12 @@ function assetView(overrides: Partial<AssetView> = {}): AssetView {
     offering: {
       active: true,
       id: 1n,
-      pricePerShare: 100n * USDC,
-      remaining: 6_000n,
+      pricePerShare: unitPriceFromSharePriceCents(10_000n),
+      remaining: 600_000n,
       tokenId: 1n,
     },
     tokenId: 1n,
-    totalShares: 10_000n,
+    totalShares: 1_000_000n,
     ...overrides,
   };
 }
@@ -133,16 +137,16 @@ describe("secondary listings detail surface", () => {
       {
         id: 7n,
         isMine: false,
-        pricePerShare: 99n * USDC,
-        remaining: 7n,
+        pricePerShare: unitPriceFromSharePriceCents(9_900n),
+        remaining: 700n,
         seller: "0x2222222222222222222222222222222222222222",
         tokenId: 1n,
       },
       {
         id: 3n,
         isMine: true,
-        pricePerShare: 98n * USDC,
-        remaining: 5n,
+        pricePerShare: unitPriceFromSharePriceCents(9_800n),
+        remaining: 500n,
         seller: "0x1111111111111111111111111111111111111111",
         tokenId: 1n,
       },
@@ -171,8 +175,8 @@ describe("secondary listings detail surface", () => {
       {
         id: 9n,
         isMine: false,
-        pricePerShare: 98_250000000000000000n,
-        remaining: 3n,
+        pricePerShare: unitPriceFromSharePriceCents(9_825n),
+        remaining: 300n,
         seller: "0x2222222222222222222222222222222222222222",
         tokenId: 1n,
       },
@@ -186,6 +190,8 @@ describe("secondary listings detail surface", () => {
     );
 
     expect(fullAmountHtml).toContain("value=\"3\"");
+    expect(fullAmountHtml).toContain("inputMode=\"decimal\"");
+    expect(fullAmountHtml).toContain("3.00 SHARES");
     expect(fullAmountHtml).toContain("294.75 USDC");
     expect(fullAmountHtml).toContain("CONFIRM BUY");
     expect(invalidAmountHtml).toContain("Exceeds available supply");
@@ -196,8 +202,8 @@ describe("secondary listings detail surface", () => {
       {
         id: 12n,
         isMine: false,
-        pricePerShare: 88n * USDC,
-        remaining: 2n,
+        pricePerShare: unitPriceFromSharePriceCents(8_800n),
+        remaining: 200n,
         seller: "0x3333333333333333333333333333333333333333",
         tokenId: 1n,
       },

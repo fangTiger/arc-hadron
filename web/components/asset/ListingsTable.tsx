@@ -11,6 +11,7 @@ import { useListings, type ListingView } from "@/lib/hooks/useListings";
 import { useNetworkGuard } from "@/lib/hooks/useNetworkGuard";
 import { validateListingPurchase } from "@/lib/listing";
 import { stopRowNavigation } from "@/lib/rowNavigation";
+import { sharesInputFromUnits, unitPriceToSharePrice } from "@/lib/shares";
 import type { BuyPrimaryStatus } from "@/lib/hooks/useBuyPrimary";
 import { GlowButton } from "@/components/ui/GlowButton";
 import { buildTxExplorerUrl, useToast } from "@/components/ui/TxToast";
@@ -196,7 +197,9 @@ export function ListingsTable({
 
   const sortedListings = useMemo(() => [...listings].sort(compareListings), [listings]);
   const expandedListing = sortedListings.find((listing) => listing.id === expandedListingId) ?? null;
-  const currentAmountInput = expandedListing ? (amountInput ?? expandedListing.remaining.toString()) : "";
+  const currentAmountInput = expandedListing
+    ? (amountInput ?? sharesInputFromUnits(expandedListing.remaining))
+    : "";
   const injectedConnector = useMemo(
     () => connectors.find((connector) => connector.type === "injected" || connector.id === "injected"),
     [connectors],
@@ -324,7 +327,7 @@ export function ListingsTable({
 
   function openBuy(listing: ListingView) {
     setExpandedListingId((current) => (current === listing.id ? null : listing.id));
-    setAmountInput(listing.remaining.toString());
+    setAmountInput(sharesInputFromUnits(listing.remaining));
     setConfirmCancelId(null);
     resetBuy();
   }
@@ -447,7 +450,9 @@ export function ListingsTable({
                     tabIndex={listing.isMine ? undefined : 0}
                   >
                     <td className="px-4 py-4 align-middle">
-                      <p className="font-mono text-sm text-text">{formatUsdc(listing.pricePerShare)}</p>
+                      <p className="font-mono text-sm text-text">
+                        {formatUsdc(unitPriceToSharePrice(listing.pricePerShare))}
+                      </p>
                       <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
                         USDC / SHARE
                       </p>
@@ -526,9 +531,8 @@ export function ListingsTable({
                               <input
                                 className="mt-3 h-11 w-full border border-border bg-bg px-4 font-mono text-base text-text outline-none transition-colors placeholder:text-muted focus:border-neon disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-text-dim"
                                 disabled={isBusy(buyStatus)}
-                                inputMode="numeric"
+                                inputMode="decimal"
                                 onChange={(event) => setAmountInput(event.target.value)}
-                                pattern="[0-9]*"
                                 value={currentAmountInput}
                               />
                             </label>

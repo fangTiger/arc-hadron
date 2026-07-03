@@ -33,13 +33,13 @@ function holding(overrides: Partial<Holding> = {}): Holding {
       offering: {
         id: 1n,
         tokenId: 7n,
-        pricePerShare: parseUsdc("2"),
-        remaining: 80_000n,
+        pricePerShare: parseUsdc("0.02"),
+        remaining: 8_000_000n,
         active: true,
       },
     },
-    avgCost: parseUsdc("1.80"),
-    balance: 12n,
+    avgCost: parseUsdc("0.018"),
+    balance: 1_200n,
     costBasis: parseUsdc("21.60"),
     marketValue: parseUsdc("24"),
     ...overrides,
@@ -50,8 +50,8 @@ function listing(overrides: Partial<ListingView> = {}): ListingView {
   return {
     id: 3n,
     isMine: true,
-    pricePerShare: parseUsdc("2.50"),
-    remaining: 4n,
+    pricePerShare: parseUsdc("0.025"),
+    remaining: 400n,
     seller: "0x1111111111111111111111111111111111111111",
     tokenId: 7n,
     ...overrides,
@@ -96,7 +96,8 @@ describe("ListForSaleModalView", () => {
 
     expect(html).toContain("LIST FOR SALE");
     expect(html).toContain("US T-Bill 2026-Q3");
-    expect(html).toContain("BALANCE 12");
+    expect(html).toContain("BALANCE 12.00");
+    expect(html).toContain("inputMode=\"decimal\"");
     expect(html).toContain("7.50 USDC");
     expect(html).toContain("7.46 USDC");
     expect(html).toContain("0.5% protocol fee");
@@ -135,9 +136,9 @@ describe("ListForSaleModalView", () => {
   });
 
   test("formats default price inputs without losing USDC wei precision", () => {
-    expect(formatListingPriceInput(parseUsdc("2"))).toBe("2");
-    expect(formatListingPriceInput(parseUsdc("2.123456789123456789"))).toBe(
-      "2.123456789123456789",
+    expect(formatListingPriceInput(parseUsdc("0.02"))).toBe("2");
+    expect(formatListingPriceInput(parseUsdc("0.021234567891234567"))).toBe(
+      "2.1234567891234567",
     );
   });
 });
@@ -159,7 +160,7 @@ describe("MyListingsView", () => {
     expect(html).toContain("cursor-pointer");
     expect(html).toContain("hover:bg-border/20");
     expect(html).toContain("2.50 USDC");
-    expect(html).toContain("4");
+    expect(html).toContain("4.00");
     expect(html).toContain("Cancel");
   });
 

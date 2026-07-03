@@ -1,3 +1,5 @@
+import { SHARE_SCALE } from "@/lib/shares";
+
 const USDC_DECIMALS = BigInt(18);
 const USDC_SCALE = BigInt(10) ** USDC_DECIMALS;
 
@@ -79,10 +81,10 @@ export function shortAddress(addr: string): string {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
-export function formatShares(n: bigint): string {
-  if (n < BigInt(0)) {
+export function formatShares(units: bigint): string {
+  if (units < BigInt(0)) {
     throw new Error("Shares cannot be negative.");
   }
 
-  return groupThousands(n.toString());
+  return formatFixed(units, SHARE_SCALE, 2, true);
 }

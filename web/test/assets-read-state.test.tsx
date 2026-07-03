@@ -6,6 +6,7 @@ import { AssetGridView } from "../components/market/AssetGrid";
 import { StatsBarView } from "../components/market/StatsBar";
 import {
   ASSETS_READ_ERROR_ZH,
+  activeTokenIdsForCount,
   assetReadErrorZh,
   readContractCount,
 } from "../lib/hooks/useAssets";
@@ -38,26 +39,26 @@ function assetView(overrides: Partial<AssetView> = {}): AssetView {
     offering: {
       active: true,
       id: 1n,
-      pricePerShare: 1n * USDC,
-      remaining: 50n,
-      tokenId: 1n,
+      pricePerShare: USDC / 100n,
+      remaining: 5_000n,
+      tokenId: 15n,
     },
-    tokenId: 1n,
-    totalShares: 100n,
+    tokenId: 15n,
+    totalShares: 10_000n,
     ...overrides,
   };
 }
 
 function tradeEvent(overrides: Partial<TradeEvent> = {}): TradeEvent {
   return {
-    amount: 2n,
+    amount: 200n,
     blockNumber: 100n,
     buyer: "0x1000000000000000000000000000000000000001",
     logIndex: 1,
-    pricePerShare: 2n * USDC,
+    pricePerShare: 2n * USDC / 100n,
     seller: "0x2000000000000000000000000000000000000002",
     timestamp: Date.UTC(2026, 6, 2, 10),
-    tokenId: 1n,
+    tokenId: 15n,
     totalPaid: 4n * USDC,
     txHash: "0x0000000000000000000000000000000000000000000000000000000000000002",
     type: "primary-sale",
@@ -66,6 +67,11 @@ function tradeEvent(overrides: Partial<TradeEvent> = {}): TradeEvent {
 }
 
 describe("on-chain asset read state", () => {
+  test("starts active catalog reads at the V3 reissued token range", () => {
+    expect(activeTokenIdsForCount(14)).toEqual([]);
+    expect(activeTokenIdsForCount(16)).toEqual([15n, 16n]);
+  });
+
   test("assetCount=0 is a real empty set, not a loading state", () => {
     expect(readContractCount(undefined)).toBe(0);
     expect(readContractCount(0n)).toBe(0);
@@ -126,7 +132,7 @@ describe("on-chain asset read state", () => {
       <AssetDetailView
         assets={[assetView()]}
         events={[tradeEvent()]}
-        id="1"
+        id="15"
         isLoading={false}
         nowMs={Date.UTC(2026, 6, 2, 12)}
       />,
@@ -149,7 +155,7 @@ describe("on-chain asset read state", () => {
       <AssetDetailView
         assets={[assetView()]}
         events={[tradeEvent({ type: "purchased" })]}
-        id="1"
+        id="15"
         isLoading={false}
         nowMs={Date.UTC(2026, 6, 2, 12)}
       />,
@@ -171,7 +177,7 @@ describe("on-chain asset read state", () => {
             id: 1n,
             pricePerShare: 1n,
             remaining: BigInt(Number.MAX_SAFE_INTEGER) + 1n,
-            tokenId: 1n,
+            tokenId: 15n,
           },
           totalShares: 1n,
         }),

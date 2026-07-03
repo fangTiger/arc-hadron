@@ -6,32 +6,32 @@ import { GAS_BUFFER, mapWagmiError, validatePurchase } from "../lib/purchase";
 const USDC = 10n ** 18n;
 
 describe("validatePurchase", () => {
-  test("returns amount and total value for a valid integer amount", () => {
+  test("returns chain units and total value for a valid display share amount", () => {
     const result = validatePurchase({
-      amountInput: "2",
-      remaining: 10n,
+      amountInput: "1.5",
+      remaining: 1_000n,
       balance: 100n * USDC,
-      pricePerShare: 3n * USDC,
+      pricePerShare: 3n * USDC / 100n,
     });
 
     expect(result).toEqual({
       ok: true,
-      amount: 2n,
-      totalValue: 6n * USDC,
+      amount: 150n,
+      totalValue: 4500000000000000000n,
     });
   });
 
   test("accepts a balance that exactly covers total value and gas buffer", () => {
     const result = validatePurchase({
       amountInput: "1",
-      remaining: 10n,
+      remaining: 1_000n,
       balance: 2n * USDC + GAS_BUFFER,
-      pricePerShare: 2n * USDC,
+      pricePerShare: 2n * USDC / 100n,
     });
 
     expect(result).toEqual({
       ok: true,
-      amount: 1n,
+      amount: 100n,
       totalValue: 2n * USDC,
     });
   });
@@ -40,21 +40,21 @@ describe("validatePurchase", () => {
     expect(
       validatePurchase({
         amountInput: "   ",
-        remaining: 10n,
+        remaining: 1_000n,
         balance: 100n * USDC,
-        pricePerShare: USDC,
+        pricePerShare: USDC / 100n,
       }),
     ).toEqual({ ok: false, errorText: "Enter a valid amount" });
   });
 
-  test("returns a valid amount error for non-integer input", () => {
-    for (const amountInput of ["1.5", "abc", "-1"]) {
+  test("returns a valid amount error for malformed display share input", () => {
+    for (const amountInput of ["1.001", "abc", "-1"]) {
       expect(
         validatePurchase({
           amountInput,
-          remaining: 10n,
+          remaining: 1_000n,
           balance: 100n * USDC,
-          pricePerShare: USDC,
+          pricePerShare: USDC / 100n,
         }),
       ).toEqual({ ok: false, errorText: "Enter a valid amount" });
     }
@@ -64,9 +64,9 @@ describe("validatePurchase", () => {
     expect(
       validatePurchase({
         amountInput: "0",
-        remaining: 10n,
+        remaining: 1_000n,
         balance: 100n * USDC,
-        pricePerShare: USDC,
+        pricePerShare: USDC / 100n,
       }),
     ).toEqual({ ok: false, errorText: "Enter a valid amount" });
   });
@@ -75,9 +75,9 @@ describe("validatePurchase", () => {
     expect(
       validatePurchase({
         amountInput: "11",
-        remaining: 10n,
+        remaining: 1_000n,
         balance: 100n * USDC,
-        pricePerShare: USDC,
+        pricePerShare: USDC / 100n,
       }),
     ).toEqual({ ok: false, errorText: "Exceeds available supply" });
   });
@@ -86,9 +86,9 @@ describe("validatePurchase", () => {
     expect(
       validatePurchase({
         amountInput: "1",
-        remaining: 10n,
+        remaining: 1_000n,
         balance: USDC + GAS_BUFFER - 1n,
-        pricePerShare: USDC,
+        pricePerShare: USDC / 100n,
       }),
     ).toEqual({ ok: false, errorText: "Insufficient USDC balance" });
   });

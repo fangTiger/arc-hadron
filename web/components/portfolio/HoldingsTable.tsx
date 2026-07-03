@@ -13,6 +13,7 @@ import { categoryDisplay } from "@/lib/categories";
 import { formatShares, formatUsdc } from "@/lib/format";
 import { usePortfolio } from "@/lib/hooks/usePortfolio";
 import type { Holding } from "@/lib/mappers";
+import { unitPriceToSharePrice } from "@/lib/shares";
 import {
   handleRowNavigationKeyDown,
   navigateToHref,
@@ -37,6 +38,10 @@ function labelClassName() {
 
 function formatMaybeUsdc(value: bigint | null) {
   return value === null ? "—" : `${formatUsdc(value)} USDC`;
+}
+
+function formatMaybeSharePrice(value: bigint | null) {
+  return value === null ? "—" : `${formatUsdc(unitPriceToSharePrice(value))} USDC`;
 }
 
 function LoadingRows() {
@@ -159,7 +164,7 @@ function HoldingRow({
         {formatUsdc(holding.marketValue)} USDC
       </td>
       <td className="px-5 py-5 font-mono text-sm tabular-nums text-text-dim">
-        {formatMaybeUsdc(holding.avgCost)}
+        {formatMaybeSharePrice(holding.avgCost)}
       </td>
       <td className="px-5 py-5 font-mono text-sm tabular-nums text-text-dim">
         {formatMaybeUsdc(holding.costBasis)}

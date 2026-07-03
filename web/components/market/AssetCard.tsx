@@ -2,6 +2,7 @@ import Link from "next/link";
 import { categoryDisplay } from "@/lib/categories";
 import { formatShares, formatUsdc } from "@/lib/format";
 import type { AssetView } from "@/lib/mappers";
+import { unitPriceToSharePrice } from "@/lib/shares";
 import { glowButtonClassName } from "@/components/ui/GlowButton";
 
 function apyText(apyBps: number | null) {
@@ -60,7 +61,7 @@ export function AssetCard({ asset, featured = false }: { asset: AssetView; featu
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">PRICE</p>
             <p className="mt-2 font-mono text-lg text-text">
-              {offering ? `${formatUsdc(offering.pricePerShare)} USDC` : "—"}
+              {offering ? `${formatUsdc(unitPriceToSharePrice(offering.pricePerShare))} USDC` : "—"}
             </p>
           </div>
           <div className="text-right">

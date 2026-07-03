@@ -23,15 +23,15 @@ function holding(overrides: Partial<Holding> = {}): Holding {
       offering: {
         id: 1n,
         tokenId: 1n,
-        pricePerShare: parseUsdc("2"),
-        remaining: 80_000n,
+        pricePerShare: parseUsdc("0.02"),
+        remaining: 8_000_000n,
         active: true,
       },
     },
-    avgCost: parseUsdc("1.80"),
+    avgCost: parseUsdc("0.018"),
     balance: 12_345n,
-    costBasis: parseUsdc("22221"),
-    marketValue: parseUsdc("24690"),
+    costBasis: parseUsdc("222.21"),
+    marketValue: parseUsdc("246.90"),
     ...overrides,
   };
 }
@@ -51,13 +51,13 @@ describe("HoldingsTableView", () => {
     expect(html).toContain("role=\"link\"");
     expect(html).toContain("cursor-pointer");
     expect(html).toContain("TREASURIES");
-    expect(html).toContain("12,345");
-    expect(html).toContain("24,690.00 USDC");
+    expect(html).toContain("123.45");
+    expect(html).toContain("246.90 USDC");
     expect(html).toContain("1.80 USDC");
-    expect(html).toContain("22,221.00 USDC");
+    expect(html).toContain("222.21 USDC");
     expect(html).toContain("List for sale");
     expect(html).not.toContain("title=\"Secondary market opens in M3\"");
-    expect(html).toContain("aria-label=\"Total market value 24,690.00 USDC\"");
+    expect(html).toContain("aria-label=\"Total market value 246.90 USDC\"");
   });
 
   test("renders a dash placeholder when cost is unknown", () => {

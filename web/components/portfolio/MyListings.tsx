@@ -9,6 +9,7 @@ import { useAssets } from "@/lib/hooks/useAssets";
 import { useCancelListing } from "@/lib/hooks/useCancelListing";
 import { type ListingView, useMyListings } from "@/lib/hooks/useListings";
 import { useNetworkGuard } from "@/lib/hooks/useNetworkGuard";
+import { unitPriceToSharePrice } from "@/lib/shares";
 import {
   handleRowNavigationKeyDown,
   navigateToHref,
@@ -131,7 +132,7 @@ export function MyListingsView({
                       </p>
                     </td>
                     <td className="px-4 py-5 font-mono text-sm tabular-nums text-text">
-                      {formatUsdc(listing.pricePerShare)} USDC
+                      {formatUsdc(unitPriceToSharePrice(listing.pricePerShare))} USDC
                     </td>
                     <td className="px-4 py-5 font-mono text-sm tabular-nums text-text-dim">
                       {formatShares(listing.remaining)}

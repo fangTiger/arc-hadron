@@ -8,6 +8,7 @@ import { useListForSale, type ListForSaleStatus } from "@/lib/hooks/useListForSa
 import { useNetworkGuard } from "@/lib/hooks/useNetworkGuard";
 import { validateListing } from "@/lib/listing";
 import type { Holding } from "@/lib/mappers";
+import { unitPriceToSharePrice } from "@/lib/shares";
 
 const PROTOCOL_FEE_BPS = 50n;
 const BPS_DENOMINATOR = 10_000n;
@@ -18,8 +19,9 @@ export function listingProceeds(totalValue: bigint): bigint {
 }
 
 export function formatListingPriceInput(value: bigint): string {
-  const whole = value / USDC_SCALE;
-  const fractional = value % USDC_SCALE;
+  const sharePrice = unitPriceToSharePrice(value);
+  const whole = sharePrice / USDC_SCALE;
+  const fractional = sharePrice % USDC_SCALE;
 
   if (fractional === 0n) {
     return whole.toString();
@@ -186,9 +188,8 @@ export function ListForSaleModalView({
             <input
               className="mt-3 h-12 w-full border border-border bg-bg px-4 font-mono text-lg text-text outline-none transition-colors placeholder:text-muted focus:border-neon disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-text-dim"
               disabled={isBusy}
-              inputMode="numeric"
+              inputMode="decimal"
               onChange={(event) => onAmountChange(event.target.value)}
-              pattern="[0-9]*"
               value={amountInput}
             />
           </label>

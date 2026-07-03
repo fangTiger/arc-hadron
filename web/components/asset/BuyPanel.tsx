@@ -10,6 +10,7 @@ import { useListings } from "@/lib/hooks/useListings";
 import { useNetworkGuard } from "@/lib/hooks/useNetworkGuard";
 import type { AssetView } from "@/lib/mappers";
 import { validatePurchase } from "@/lib/purchase";
+import { unitPriceToSharePrice } from "@/lib/shares";
 import { GlowButton } from "@/components/ui/GlowButton";
 import { buildTxExplorerUrl, useToast } from "@/components/ui/TxToast";
 
@@ -207,7 +208,9 @@ export function BuyPanel({ asset }: { asset: AssetView }) {
         <div className="mb-5 border-b border-border pb-5">
           <div className="flex items-center justify-between gap-4">
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">BEST ASK</p>
-            <p className="font-mono text-sm text-text">{formatUsdc(bestAsk.pricePerShare)} USDC</p>
+            <p className="font-mono text-sm text-text">
+              {formatUsdc(unitPriceToSharePrice(bestAsk.pricePerShare))} USDC
+            </p>
           </div>
           <p className="mt-2 text-right font-mono text-[10px] uppercase tracking-[0.18em] text-text-dim">
             {formatShares(bestAsk.remaining)} SHARES
@@ -218,7 +221,7 @@ export function BuyPanel({ asset }: { asset: AssetView }) {
       <div>
         <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">PRIMARY OFFERING</p>
         <p className="mt-4 font-mono text-4xl font-semibold leading-none text-text">
-          {offering ? formatUsdc(offering.pricePerShare) : "—"}
+          {offering ? formatUsdc(unitPriceToSharePrice(offering.pricePerShare)) : "—"}
         </p>
         <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.2em] text-text-dim">USDC / SHARE</p>
         <p className="mt-5 font-mono text-[10px] uppercase tracking-[0.2em] text-neon-dim">
@@ -231,9 +234,8 @@ export function BuyPanel({ asset }: { asset: AssetView }) {
         <input
           className="mt-3 h-12 w-full border border-border bg-bg px-4 font-mono text-lg text-text outline-none transition-colors placeholder:text-muted focus:border-neon disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-text-dim"
           disabled={status === "signing" || status === "pending"}
-          inputMode="numeric"
+          inputMode="decimal"
           onChange={(event) => setAmountInput(event.target.value)}
-          pattern="[0-9]*"
           placeholder="1"
           value={amountInput}
         />

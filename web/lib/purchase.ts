@@ -1,3 +1,5 @@
+import { unitsFromSharesInput } from "@/lib/shares";
+
 export const GAS_BUFFER = 10_000_000_000_000_000n;
 
 export interface ValidatePurchaseInput {
@@ -17,15 +19,11 @@ export function validatePurchase({
   balance,
   pricePerShare,
 }: ValidatePurchaseInput): PurchaseValidationResult {
-  const normalized = amountInput.trim();
+  let amount: bigint;
 
-  if (!/^\d+$/.test(normalized)) {
-    return { ok: false, errorText: "Enter a valid amount" };
-  }
-
-  const amount = BigInt(normalized);
-
-  if (amount === 0n) {
+  try {
+    amount = unitsFromSharesInput(amountInput);
+  } catch {
     return { ok: false, errorText: "Enter a valid amount" };
   }
 

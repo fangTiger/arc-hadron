@@ -1,6 +1,7 @@
 import { buildPriceSeries, compute24h, type PricePoint, type TradeEvent } from "@/lib/events";
 import { formatShares, formatUsdc } from "@/lib/format";
 import type { AssetView } from "@/lib/mappers";
+import { unitPriceToSharePrice } from "@/lib/shares";
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const TRADE_TYPES = new Set<TradeEvent["type"]>(["primary-sale", "purchased"]);
@@ -40,7 +41,10 @@ export function latestPriceForAsset(asset: AssetView, events: readonly TradeEven
 }
 
 export function priceSeriesForAsset(asset: AssetView, events: readonly TradeEvent[]): PricePoint[] {
-  return buildPriceSeries(events, asset.tokenId, fallbackPriceForAsset(asset));
+  return buildPriceSeries(events, asset.tokenId, fallbackPriceForAsset(asset)).map((point) => ({
+    ...point,
+    price: unitPriceToSharePrice(point.price),
+  }));
 }
 
 export function assetChange24h(
@@ -83,6 +87,15 @@ export function averageApyBps(assets: readonly AssetView[]): number | null {
   }
 
   return Math.floor(apys.reduce((sum, value) => sum + value, 0) / apys.length);
+}
+
+export function eventsForAssets(
+  events: readonly TradeEvent[],
+  assets: readonly AssetView[],
+): TradeEvent[] {
+  const activeTokenIds = new Set(assets.map((asset) => asset.tokenId));
+
+  return events.filter((event) => activeTokenIds.has(event.tokenId));
 }
 
 function explorerUrlFor(path: "address" | "tx", value: string): string {
@@ -128,7 +141,10 @@ export function relativeTime(timestamp: number | undefined, nowMs: number): stri
 export function eventSentence(event: TradeEvent, asset?: AssetView): string {
   const ticker = asset?.meta.ticker ?? `#${event.tokenId.toString()}`;
   const amount = event.amount === undefined ? "" : ` ${formatShares(event.amount)}`;
-  const price = event.pricePerShare === undefined ? "" : ` @ ${formatUsdc(event.pricePerShare)}`;
+  const price =
+    event.pricePerShare === undefined
+      ? ""
+      : ` @ ${formatUsdc(unitPriceToSharePrice(event.pricePerShare))}`;
 
   if (event.type === "primary-sale" || event.type === "purchased") {
     return `BUY${amount} ${ticker}${price}`;

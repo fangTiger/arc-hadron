@@ -3,11 +3,15 @@ import { describe, expect, test } from "vitest";
 import { ActivityPanel } from "../components/market/ActivityPanel";
 import { LiveTicker } from "../components/market/LiveTicker";
 import { MarketTableView } from "../components/market/MarketTable";
-import { StatsStripView } from "../components/market/StatsStrip";
+import { StatsStrip, StatsStripView } from "../components/market/StatsStrip";
 import type { TradeEvent } from "../lib/events";
 import type { AssetView } from "../lib/mappers";
 
 const USDC = 10n ** 18n;
+
+function unitPriceFromSharePriceCents(cents: bigint): bigint {
+  return (cents * USDC) / 10_000n;
+}
 
 function assetView(overrides: Partial<AssetView> = {}): AssetView {
   return {
@@ -25,26 +29,26 @@ function assetView(overrides: Partial<AssetView> = {}): AssetView {
     offering: {
       active: true,
       id: 1n,
-      pricePerShare: 100n * USDC,
-      remaining: 6_000n,
-      tokenId: 1n,
+      pricePerShare: unitPriceFromSharePriceCents(10_000n),
+      remaining: 600_000n,
+      tokenId: 15n,
     },
-    tokenId: 1n,
-    totalShares: 10_000n,
+    tokenId: 15n,
+    totalShares: 1_000_000n,
     ...overrides,
   };
 }
 
 function tradeEvent(overrides: Partial<TradeEvent> = {}): TradeEvent {
   return {
-    amount: 3n,
+    amount: 300n,
     blockNumber: 100n,
     buyer: "0x1000000000000000000000000000000000000001",
     logIndex: 1,
-    pricePerShare: 110n * USDC,
+    pricePerShare: unitPriceFromSharePriceCents(11_000n),
     seller: "0x2000000000000000000000000000000000000002",
     timestamp: Date.UTC(2026, 6, 2, 10),
-    tokenId: 1n,
+    tokenId: 15n,
     totalPaid: 330n * USDC,
     txHash: "0x0000000000000000000000000000000000000000000000000000000000000001",
     type: "primary-sale",
@@ -94,8 +98,31 @@ describe("market redesign components", () => {
     expect(html).toContain("cursor-pointer");
     expect(html).toContain("110.00");
     expect(html).toContain("10.00%");
-    expect(html).toContain("href=\"/asset/1\"");
+    expect(html).toContain("href=\"/asset/15\"");
     expect(html).toContain("Trade");
+  });
+
+  test("filters market stats to the active asset set", () => {
+    const html = renderToStaticMarkup(
+      <StatsStrip
+        assets={[assetView()]}
+        events={[
+          tradeEvent(),
+          tradeEvent({
+            amount: 999n,
+            logIndex: 2,
+            tokenId: 1n,
+            totalPaid: 999n * USDC,
+          }),
+        ]}
+        isLoading={false}
+        nowMs={Date.UTC(2026, 6, 2, 12)}
+      />,
+    );
+
+    expect(html).toContain("330.00 USDC");
+    expect(html).not.toContain("999.00 USDC");
+    expect(html).toContain("TRADES</span><span class=\"text-text \">1</span>");
   });
 
   test("renders recent activity as English market tape sentences", () => {
@@ -104,10 +131,30 @@ describe("market redesign components", () => {
     );
 
     expect(html).toContain("ACTIVITY");
-    expect(html).toContain("BUY 3 TBILL @ 110.00");
+    expect(html).toContain("BUY 3.00 TBILL @ 110.00");
     expect(html).toContain("href=\"https://testnet.arcscan.app/tx/");
     expect(html).toContain("href=\"https://testnet.arcscan.app/address/0x1000000000000000000000000000000000000001\"");
     expect(html).toContain("0x1000…0001");
+  });
+
+  test("hides old token activity that is outside the active asset set", () => {
+    const html = renderToStaticMarkup(
+      <ActivityPanel
+        assets={[assetView()]}
+        events={[
+          tradeEvent(),
+          tradeEvent({
+            logIndex: 2,
+            tokenId: 1n,
+            txHash: "0x0000000000000000000000000000000000000000000000000000000000000002",
+          }),
+        ]}
+        nowMs={Date.UTC(2026, 6, 2, 12)}
+      />,
+    );
+
+    expect(html).toContain("BUY 3.00 TBILL @ 110.00");
+    expect(html).not.toContain("#1");
   });
 
   test("renders the live ticker marker and latest event copy", () => {
@@ -116,6 +163,6 @@ describe("market redesign components", () => {
     );
 
     expect(html).toContain("LIVE");
-    expect(html).toContain("BUY 3 TBILL @ 110.00");
+    expect(html).toContain("BUY 3.00 TBILL @ 110.00");
   });
 });

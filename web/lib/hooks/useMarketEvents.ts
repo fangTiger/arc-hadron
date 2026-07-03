@@ -5,7 +5,7 @@ import {
   HADRON_ASSETS_ADDRESS,
   HADRON_MARKET_ADDRESS,
 } from "@/lib/contracts";
-import { DEPLOY_BLOCK } from "@/lib/chain";
+import { DEPLOY_BLOCK, FIRST_ACTIVE_TOKEN_ID } from "@/lib/chain";
 import { fetchLogsInBlockRange } from "@/lib/eventLogs";
 import {
   mergeTradeEvents,
@@ -32,6 +32,10 @@ interface PopulateBlockTimestampCacheInput {
 }
 
 type MarketEventsQueryData = MarketEventsCacheData;
+
+export function filterActiveMarketEvents(events: readonly TradeEvent[]): TradeEvent[] {
+  return events.filter((event) => event.tokenId >= FIRST_ACTIVE_TOKEN_ID);
+}
 
 function eventQueryError(error: unknown): Error | undefined {
   if (!error) {
@@ -78,9 +82,16 @@ export function useMarketEvents(): {
     deployBlock: DEPLOY_BLOCK,
     marketAddress: HADRON_MARKET_ADDRESS,
   });
-  const [initialData] = useState<MarketEventsQueryData | null>(() =>
-    readMarketEventsCache(cacheKey),
-  );
+  const [initialData] = useState<MarketEventsQueryData | null>(() => {
+    const cached = readMarketEventsCache(cacheKey);
+
+    return cached
+      ? {
+          ...cached,
+          events: filterActiveMarketEvents(cached.events),
+        }
+      : null;
+  });
   const blockTimestampCache = useRef(
     new Map<bigint, number>(
       (initialData?.events ?? []).flatMap((event) =>
@@ -126,7 +137,9 @@ export function useMarketEvents(): {
         },
         toBlock: latestBlock,
       });
-      const events = mergeTradeEvents(previousData?.events ?? [], parseMarketLogs(logs));
+      const events = filterActiveMarketEvents(
+        mergeTradeEvents(previousData?.events ?? [], parseMarketLogs(logs)),
+      );
 
       await populateBlockTimestampCache({
         blockNumbers: events.map((event) => event.blockNumber),

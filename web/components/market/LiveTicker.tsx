@@ -1,7 +1,7 @@
 "use client";
 
 import type { TradeEvent } from "@/lib/events";
-import { eventSentence, eventToneClassName } from "@/lib/marketMetrics";
+import { eventsForAssets, eventSentence, eventToneClassName } from "@/lib/marketMetrics";
 import type { AssetView } from "@/lib/mappers";
 
 function recentEvents(events: readonly TradeEvent[]): TradeEvent[] {
@@ -28,7 +28,7 @@ export function LiveTicker({
   events: TradeEvent[];
 }) {
   const byTokenId = assetMap(assets);
-  const recent = recentEvents(events);
+  const recent = recentEvents(eventsForAssets(events, assets));
   const tape = recent.length === 0 ? ["No on-chain activity yet"] : recent.map((event) => eventSentence(event, byTokenId.get(event.tokenId)));
   const repeated = [...tape, ...tape];
 

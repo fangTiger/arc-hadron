@@ -22,6 +22,7 @@ import {
   tradeEventsForAsset,
 } from "@/lib/marketMetrics";
 import type { AssetView } from "@/lib/mappers";
+import { unitPriceToSharePrice } from "@/lib/shares";
 
 function AssetDetailSkeleton() {
   return (
@@ -120,7 +121,7 @@ function AssetPriceHeader({
 
       <div className="mt-6 flex flex-wrap items-end gap-x-4 gap-y-2">
         <p className="font-mono text-5xl font-semibold leading-none text-text sm:text-6xl">
-          {formatUsdc(price)}
+          {formatUsdc(unitPriceToSharePrice(price))}
         </p>
         <p className="pb-1 font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
           USDC / SHARE
@@ -330,7 +331,9 @@ function TradeHistoryTable({
                       {event.amount === undefined ? "—" : formatShares(event.amount)}
                     </td>
                     <td className="px-5 py-4 font-mono text-sm text-text">
-                      {event.pricePerShare === undefined ? "—" : formatUsdc(event.pricePerShare)}
+                      {event.pricePerShare === undefined
+                        ? "—"
+                        : formatUsdc(unitPriceToSharePrice(event.pricePerShare))}
                     </td>
                     <td className="px-5 py-4">
                       <CounterpartyCell event={event} />

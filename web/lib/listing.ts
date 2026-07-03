@@ -1,9 +1,9 @@
-import { parseUsdc } from "@/lib/format";
 import {
   validatePurchase,
   type PurchaseValidationResult,
   type ValidatePurchaseInput,
 } from "@/lib/purchase";
+import { sharePriceInputToUnitPrice, unitsFromSharesInput } from "@/lib/shares";
 
 export interface ListingView {
   id: bigint;
@@ -50,15 +50,11 @@ export function validateListing({
 }: ValidateListingInput):
   | { ok: true; amount: bigint; pricePerShare: bigint }
   | { ok: false; errorText: string } {
-  const normalizedAmount = amountInput.trim();
+  let amount: bigint;
 
-  if (!/^\d+$/.test(normalizedAmount)) {
-    return { ok: false, errorText: "Enter a valid amount" };
-  }
-
-  const amount = BigInt(normalizedAmount);
-
-  if (amount === 0n) {
+  try {
+    amount = unitsFromSharesInput(amountInput);
+  } catch {
     return { ok: false, errorText: "Enter a valid amount" };
   }
 
@@ -69,7 +65,7 @@ export function validateListing({
   let pricePerShare: bigint;
 
   try {
-    pricePerShare = parseUsdc(priceInput);
+    pricePerShare = sharePriceInputToUnitPrice(priceInput);
   } catch {
     return { ok: false, errorText: "Enter a valid price" };
   }

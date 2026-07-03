@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { formatUsdc } from "@/lib/format";
 import {
   averageApyBps,
+  eventsForAssets,
   formatApyBps,
   total24hVolume,
   totalValueLocked,
@@ -22,14 +23,16 @@ export function StatsStrip({
   isLoading: boolean;
   nowMs: number;
 }) {
+  const scopedEvents = eventsForAssets(events, assets);
+
   return (
     <StatsStripView
       assetCount={assets.length}
       avgApyBps={averageApyBps(assets)}
       isLoading={isLoading}
-      tradeCount={events.length}
-      tvl={totalValueLocked(assets, events)}
-      volume24h={total24hVolume(events, nowMs)}
+      tradeCount={scopedEvents.length}
+      tvl={totalValueLocked(assets, scopedEvents)}
+      volume24h={total24hVolume(scopedEvents, nowMs)}
     />
   );
 }

@@ -1,7 +1,7 @@
 import type { Address, Hex } from "viem";
 import type { TradeEvent } from "@/lib/events";
 
-export const MARKET_EVENTS_CACHE_VERSION = 1;
+export const MARKET_EVENTS_CACHE_VERSION = 2;
 
 export interface MarketEventsCacheData {
   events: TradeEvent[];

@@ -1,7 +1,25 @@
 import { describe, expect, test } from "vitest";
-import { populateBlockTimestampCache } from "../lib/hooks/useMarketEvents";
+import { filterActiveMarketEvents, populateBlockTimestampCache } from "../lib/hooks/useMarketEvents";
+import type { TradeEvent } from "../lib/events";
+
+function event(overrides: Partial<TradeEvent> = {}): TradeEvent {
+  return {
+    blockNumber: 1n,
+    logIndex: 0,
+    tokenId: 15n,
+    txHash: "0x0000000000000000000000000000000000000000000000000000000000000001",
+    type: "primary-sale",
+    ...overrides,
+  };
+}
 
 describe("market event timestamp queries", () => {
+  test("drops legacy token events before market activity is cached", () => {
+    expect(filterActiveMarketEvents([event({ tokenId: 14n }), event({ tokenId: 15n })])).toEqual([
+      event({ tokenId: 15n }),
+    ]);
+  });
+
   test("fills missing block timestamps with bounded concurrency", async () => {
     const cache = new Map<bigint, number>([[1n, 1_000]]);
     let active = 0;

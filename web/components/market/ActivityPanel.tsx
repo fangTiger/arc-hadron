@@ -4,6 +4,7 @@ import type { TradeEvent } from "@/lib/events";
 import { shortAddress } from "@/lib/format";
 import {
   addressExplorerUrl,
+  eventsForAssets,
   eventExplorerUrl,
   eventSentence,
   eventToneClassName,
@@ -60,7 +61,7 @@ export function ActivityPanel({
   nowMs?: number;
 }) {
   const byTokenId = assetMap(assets);
-  const recent = sortRecent(events).slice(0, limit);
+  const recent = sortRecent(eventsForAssets(events, assets)).slice(0, limit);
 
   return (
     <aside className="border border-border bg-panel/85 lg:sticky lg:top-24">

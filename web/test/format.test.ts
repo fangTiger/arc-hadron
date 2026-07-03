@@ -73,7 +73,9 @@ describe("address and share formatting", () => {
     );
   });
 
-  test("formatShares uses integer thousands separators", () => {
-    expect(formatShares(1234567890n)).toBe("1,234,567,890");
+  test("formatShares displays chain units as two-decimal shares", () => {
+    expect(formatShares(1n)).toBe("0.01");
+    expect(formatShares(100n)).toBe("1.00");
+    expect(formatShares(1234567890n)).toBe("12,345,678.90");
   });
 });

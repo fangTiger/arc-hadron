@@ -6,6 +6,7 @@ import {
   HADRON_MARKET_ABI,
   HADRON_MARKET_ADDRESS,
 } from "@/lib/contracts";
+import { FIRST_ACTIVE_TOKEN_ID } from "@/lib/chain";
 import {
   computeStats,
   joinAssetsWithOfferings,
@@ -56,6 +57,18 @@ export function assetReadErrorZh(queries: QueryErrorState[]): string | undefined
   return queries.some((query) => query.isError) ? ASSETS_READ_ERROR_ZH : undefined;
 }
 
+export function activeTokenIdsForCount(assetCount: number): bigint[] {
+  const first = Number(FIRST_ACTIVE_TOKEN_ID);
+
+  if (assetCount < first) {
+    return [];
+  }
+
+  return Array.from({ length: assetCount - first + 1 }, (_, index) =>
+    BigInt(first + index),
+  );
+}
+
 function normalizeAsset(tokenId: bigint, raw: unknown): ChainAsset {
   const asset = raw as RawAsset;
 
@@ -101,16 +114,17 @@ export function useAssets(): { assets: AssetView[]; errorZh?: string; isLoading:
 
   const assetCount = readContractCount(assetCountQuery.data);
   const offeringCount = readContractCount(offeringCountQuery.data);
+  const activeTokenIds = useMemo(() => activeTokenIdsForCount(assetCount), [assetCount]);
 
   const assetContracts = useMemo(
     () =>
-      Array.from({ length: assetCount }, (_, index) => ({
+      activeTokenIds.map((tokenId) => ({
         address: HADRON_ASSETS_ADDRESS,
         abi: HADRON_ASSETS_ABI,
         functionName: "getAsset",
-        args: [BigInt(index + 1)],
+        args: [tokenId],
       })),
-    [assetCount],
+    [activeTokenIds],
   );
 
   const offeringContracts = useMemo(
@@ -128,7 +142,7 @@ export function useAssets(): { assets: AssetView[]; errorZh?: string; isLoading:
     allowFailure: false,
     contracts: assetContracts,
     query: {
-      enabled: assetCount > 0,
+      enabled: assetContracts.length > 0,
       refetchInterval: REFETCH_INTERVAL_MS,
     },
   });
@@ -144,14 +158,14 @@ export function useAssets(): { assets: AssetView[]; errorZh?: string; isLoading:
 
   const assets = useMemo(() => {
     const chainAssets = (assetsQuery.data ?? []).map((asset, index) =>
-      normalizeAsset(BigInt(index + 1), asset),
+      normalizeAsset(activeTokenIds[index], asset),
     );
     const offerings = (offeringsQuery.data ?? []).map((offering, index) =>
       normalizeOffering(BigInt(index + 1), offering),
     );
 
     return joinAssetsWithOfferings(chainAssets, offerings, metaBySlug);
-  }, [assetsQuery.data, offeringsQuery.data]);
+  }, [activeTokenIds, assetsQuery.data, offeringsQuery.data]);
   const errorZh = assetReadErrorZh([
     assetCountQuery,
     offeringCountQuery,

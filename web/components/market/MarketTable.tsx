@@ -15,6 +15,7 @@ import {
   priceSeriesForAsset,
 } from "@/lib/marketMetrics";
 import type { AssetView } from "@/lib/mappers";
+import { unitPriceToSharePrice } from "@/lib/shares";
 import {
   handleRowNavigationKeyDown,
   navigateToHref,
@@ -339,7 +340,9 @@ export function MarketTableView({
                           <span className="truncate text-sm text-text">{row.asset.meta.displayName}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-4 font-mono text-sm text-text">{formatUsdc(row.price)}</td>
+                      <td className="px-4 py-4 font-mono text-sm text-text">
+                        {formatUsdc(unitPriceToSharePrice(row.price))}
+                      </td>
                       <td className={["px-4 py-4 font-mono text-sm", changeClassName(row.changePct)].join(" ")}>
                         {row.changePct.toFixed(2)}%
                       </td>

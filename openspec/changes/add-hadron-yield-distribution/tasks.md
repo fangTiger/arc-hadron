@@ -23,9 +23,9 @@
 
 ## 4. 部署与播种（V5，一次性完成）
 
-- [ ] 4.1 `DeployV5.s.sol`（Assets → Market → Yield(assets,[market,deployer]) → setYieldHook 锁定）+ `SeedV5.s.sol`（SeedV4 全职责 + 入金/领取样本，样本在流通份额形成后执行）
-- [ ] 4.2 Claude 部署广播（遵循 arc-testnet-broadcast-practice：一次性 SEED5 密钥 + --slow + FOUNDRY_OFFLINE）+ `contracts/deployments/arc-testnet.json` v5 记录 + web env 切换（三地址 + DEPLOY_BLOCK + NEXT_PUBLIC_HADRON_YIELD）
-- [ ] 4.3 E2E：生产构建三页 200 + 新地址进构建产物 + RPC 实证收益数据；买单深度 tasks 5.3 标注切换 V5 验收
+- [x] 4.1 `DeployV5.s.sol`（Assets → Market → Yield(assets,[market,deployer]) → setYieldHook 锁定）+ `SeedV5.s.sol`（SeedV4 全职责 + 入金/领取样本，样本在流通份额形成后执行）
+- [x] 4.2 Claude 部署广播（遵循 arc-testnet-broadcast-practice：一次性 SEED5 密钥 + --slow + FOUNDRY_OFFLINE）+ `contracts/deployments/arc-testnet.json` v5 记录 + web env 切换（三地址 + DEPLOY_BLOCK + NEXT_PUBLIC_HADRON_YIELD）
+- [x] 4.3 E2E：生产构建三页 200 + Yield 地址进构建产物 + RPC 实证（14 资产/41 买单/钩子锁定/收益池 10 USDC）；买单深度 5.3 已标注 V5
 
 ## 5. 验证 · 交叉检查 · 验收 · 归档
 

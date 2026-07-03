@@ -2,10 +2,11 @@
   "chainId": 5042002,
   "rpcUrl": "https://rpc.testnet.arc.network",
   "explorerUrl": "https://testnet.arcscan.app",
-  "deployBlock": 49992799,
+  "deployBlock": 50020755,
   "contracts": {
-    "HadronAssets": "0xe1F5E51D39944dA026c5030F4e1B18A82F681b42",
-    "HadronMarket": "0xa836C7EE67803D0227Df25e41F410a363BF13353"
+    "HadronAssets": "0x80aA33897bB99dDAFB936470cbeaFED9F919A835",
+    "HadronMarket": "0x928FfE154f80Ef86a2045cEB8Ec22504394c9378",
+    "HadronYield": "0x923a7FA0ABD9f9d42d52925Bb6c28DcDa4f596ff"
   },
   "config": {
     "feeBps": 50,
@@ -48,6 +49,14 @@
     "conclusion": "用户真实钱包全流程验收通过：① 0.01 份额一级购买（tokenId 19，费 4.92e15 = 精确 50bps，block 49914376）② 二级购买 listing 17（费 5e15 = 精确 50bps）③ 挂单 ×3（listing 41/42/43，M4 SELL tab 两步流）④ 撤单 listing 43（1 单位退回，block 49933923）。全部经 Claude cast 解码事件核对（PrimarySale/Purchased/Listed/Cancelled）"
   },
   "deprecatedDeployments": [
+    {
+      "reason": "V4 买单深度部署（未及用户验收即被 V5 收益分配重部署合并；41 买单托管已撤销回收）",
+      "deployBlock": 49992799,
+      "contracts": {
+        "HadronAssets": "0xe1F5E51D39944dA026c5030F4e1B18A82F681b42",
+        "HadronMarket": "0xa836C7EE67803D0227Df25e41F410a363BF13353"
+      }
+    },
     {
       "reason": "审计修复前的首次部署（未拒绝 1155 直接转入；目录含冒烟测试脏数据）",
       "deployBlock": 49769440,
@@ -148,5 +157,26 @@
       }
     }
   },
-  "legacySeedAssetsV1Note": "V1 首播样例（历史记录）；当前目录见 v4BuyDepth 与 SeedV4.s.sol"
+  "legacySeedAssetsV1Note": "V1 首播样例（历史记录）；当前目录见 v4BuyDepth 与 SeedV4.s.sol",
+  "v5YieldDistribution": {
+    "date": "2026-07-04",
+    "reason": "收益分配（add-hadron-yield-distribution）：HadronYield 累积器 + HadronAssets 一次性钩子；V5 与买单深度合并验收",
+    "seedDeployer": "0xF26927F9c37D7a3F675Bd501006705E1Ab17dE8a",
+    "seedDeployerNote": "复用 SEED4 密钥（contracts/.env SEED4_DEPLOYER_PRIVATE_KEY）；V4 41 个买单已全部撤销回收托管；SEED_BIDDER_PRIVATE_KEYS 两个 bidder 密钥在 contracts/.env",
+    "excludedAccounts": [
+      "HadronMarket",
+      "0xF26927F9c37D7a3F675Bd501006705E1Ab17dE8a"
+    ],
+    "yieldHookLocked": true,
+    "counts": {
+      "assets": 14,
+      "offerings": 14,
+      "listings": 35,
+      "bids": 41,
+      "bidFills": 7,
+      "yieldDeposits": 3,
+      "yieldClaims": 1
+    },
+    "firstActiveTokenId": 1
+  }
 }

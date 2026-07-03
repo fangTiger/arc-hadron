@@ -61,9 +61,10 @@ describe("market events cache serialization", () => {
         assetsAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         deployBlock: 123n,
         marketAddress: "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        yieldAddress: "0xcccccccccccccccccccccccccccccccccccccccc",
       }),
     ).toBe(
-      "hadron:market-events:v2:0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb:123",
+      "hadron:market-events:v2:0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb:0xcccccccccccccccccccccccccccccccccccccccc:123",
     );
   });
 });

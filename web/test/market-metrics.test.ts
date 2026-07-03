@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  eventToneClassName,
   eventSentence,
   priceSeriesForAsset,
   total24hVolume,
@@ -91,5 +92,33 @@ describe("market metrics display prices", () => {
     expect(eventSentence(event({ type: "bid-cancelled" }), assetView())).toBe(
       "BID CANCEL 2.50 TBILL @ 1.25",
     );
+  });
+
+  test("keeps yield events out of trade metrics while rendering activity copy", () => {
+    const nowMs = Date.UTC(2026, 6, 3, 12);
+    const deposited = event({
+      amount: undefined,
+      pricePerShare: undefined,
+      timestamp: nowMs - 1_000,
+      totalPaid: 99n * USDC,
+      type: "yield-deposited",
+      yieldAmount: 12n * USDC,
+    });
+    const claimed = event({
+      amount: undefined,
+      pricePerShare: undefined,
+      type: "yield-claimed",
+      yieldAmount: 320n * 10n ** 16n,
+    });
+
+    expect(priceSeriesForAsset(assetView(), [deposited])).toEqual([
+      { price: USDC, t: 0 },
+      { price: USDC, t: 1 },
+    ]);
+    expect(total24hVolume([deposited], nowMs)).toBe(0n);
+    expect(eventSentence(deposited, assetView())).toBe("YIELD +12.00 TBILL");
+    expect(eventSentence(claimed, assetView())).toBe("CLAIM 3.20 TBILL");
+    expect(eventToneClassName("yield-deposited")).toBe("text-up");
+    expect(eventToneClassName("yield-claimed")).toBe("text-neon-dim");
   });
 });

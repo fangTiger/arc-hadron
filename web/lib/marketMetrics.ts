@@ -141,10 +141,19 @@ export function relativeTime(timestamp: number | undefined, nowMs: number): stri
 export function eventSentence(event: TradeEvent, asset?: AssetView): string {
   const ticker = asset?.meta.ticker ?? `#${event.tokenId.toString()}`;
   const amount = event.amount === undefined ? "" : ` ${formatShares(event.amount)}`;
+  const yieldAmount = formatUsdc(event.yieldAmount ?? 0n);
   const price =
     event.pricePerShare === undefined
       ? ""
       : ` @ ${formatUsdc(unitPriceToSharePrice(event.pricePerShare))}`;
+
+  if (event.type === "yield-deposited") {
+    return `YIELD +${yieldAmount} ${ticker}`;
+  }
+
+  if (event.type === "yield-claimed") {
+    return `CLAIM ${yieldAmount} ${ticker}`;
+  }
 
   if (event.type === "primary-sale" || event.type === "purchased") {
     return `BUY${amount} ${ticker}${price}`;
@@ -182,6 +191,14 @@ export function eventSentence(event: TradeEvent, asset?: AssetView): string {
 }
 
 export function eventToneClassName(type: TradeEvent["type"]): string {
+  if (type === "yield-deposited") {
+    return "text-up";
+  }
+
+  if (type === "yield-claimed") {
+    return "text-neon-dim";
+  }
+
   if (type === "primary-sale" || type === "purchased" || type === "bid-filled") {
     return "text-up";
   }

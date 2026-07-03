@@ -12,9 +12,9 @@
 
 ## 2. 前端事件层与数据（web TDD，无需链上）
 
-- [ ] 2.1 HadronYield ABI + `events.ts` 解码 `yield-deposited`/`yield-claimed`（独立 yieldAmount/account 字段）；`useMarketEvents`/`marketEventCache` 扫描地址集与缓存 key 加入 Yield 地址
-- [ ] 2.2 口径隔离：yield 事件不进 TRADE_TYPES（四处均不）；TradeHistoryTable 过滤 yield；活动流英文文案（USDC 格式化）+ 一致性测试
-- [ ] 2.3 `useYield.ts`：`usePendingYield(tokenIds[])` multicall + `useDepositYield`/`useClaimYield` 交易 hooks
+- [x] 2.1 HadronYield ABI + `events.ts` 解码 `yield-deposited`/`yield-claimed`（独立 yieldAmount/account 字段）；`useMarketEvents`/`marketEventCache` 扫描地址集与缓存 key 加入 Yield 地址
+- [x] 2.2 口径隔离：yield 事件不进 TRADE_TYPES（四处均不）；TradeHistoryTable 过滤 yield；活动流英文文案（USDC 格式化）+ 一致性测试
+- [x] 2.3 `useYield.ts`：`usePendingYield(tokenIds[])` multicall + `useDepositYield`/`useClaimYield` 交易 hooks
 
 ## 3. 前端 UI（web TDD）
 

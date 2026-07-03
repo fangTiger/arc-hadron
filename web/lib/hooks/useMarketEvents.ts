@@ -4,6 +4,7 @@ import { usePublicClient } from "wagmi";
 import {
   HADRON_ASSETS_ADDRESS,
   HADRON_MARKET_ADDRESS,
+  HADRON_YIELD_ADDRESS,
 } from "@/lib/contracts";
 import { DEPLOY_BLOCK, FIRST_ACTIVE_TOKEN_ID } from "@/lib/chain";
 import { fetchLogsInBlockRange } from "@/lib/eventLogs";
@@ -32,6 +33,18 @@ interface PopulateBlockTimestampCacheInput {
 }
 
 type MarketEventsQueryData = MarketEventsCacheData;
+
+export function marketEventLogAddresses({
+  assetsAddress,
+  marketAddress,
+  yieldAddress,
+}: {
+  assetsAddress: typeof HADRON_ASSETS_ADDRESS;
+  marketAddress: typeof HADRON_MARKET_ADDRESS;
+  yieldAddress: typeof HADRON_YIELD_ADDRESS;
+}): [typeof HADRON_ASSETS_ADDRESS, typeof HADRON_MARKET_ADDRESS, typeof HADRON_YIELD_ADDRESS] {
+  return [assetsAddress, marketAddress, yieldAddress];
+}
 
 export function filterActiveMarketEvents(events: readonly TradeEvent[]): TradeEvent[] {
   return events.filter((event) => event.tokenId >= FIRST_ACTIVE_TOKEN_ID);
@@ -81,6 +94,7 @@ export function useMarketEvents(): {
     assetsAddress: HADRON_ASSETS_ADDRESS,
     deployBlock: DEPLOY_BLOCK,
     marketAddress: HADRON_MARKET_ADDRESS,
+    yieldAddress: HADRON_YIELD_ADDRESS,
   });
   const [initialData] = useState<MarketEventsQueryData | null>(() => {
     const cached = readMarketEventsCache(cacheKey);
@@ -128,7 +142,11 @@ export function useMarketEvents(): {
         fromBlock,
         getLogs: async (chunk) => {
           const logs = await publicClient.getLogs({
-            address: [HADRON_ASSETS_ADDRESS, HADRON_MARKET_ADDRESS],
+            address: marketEventLogAddresses({
+              assetsAddress: HADRON_ASSETS_ADDRESS,
+              marketAddress: HADRON_MARKET_ADDRESS,
+              yieldAddress: HADRON_YIELD_ADDRESS,
+            }),
             fromBlock: chunk.from,
             toBlock: chunk.to,
           });
@@ -164,6 +182,7 @@ export function useMarketEvents(): {
       "market-events",
       HADRON_ASSETS_ADDRESS,
       HADRON_MARKET_ADDRESS,
+      HADRON_YIELD_ADDRESS,
       DEPLOY_BLOCK,
     ],
     refetchInterval: EVENT_REFETCH_INTERVAL_MS,

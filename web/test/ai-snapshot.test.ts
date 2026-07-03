@@ -183,6 +183,43 @@ describe("AI snapshot builders", () => {
     });
   });
 
+  test("excludes yield events from AI trade snapshots and market volume", () => {
+    const snapshot = buildAssetSnapshot({
+      asset: assetView(),
+      events: [
+        tradeEvent({
+          amount: undefined,
+          pricePerShare: undefined,
+          totalPaid: 99n * USDC,
+          type: "yield-deposited",
+          yieldAmount: 12n * USDC,
+        }),
+      ],
+      listings: [],
+      nowMs: Date.UTC(2026, 6, 3, 12),
+    });
+    const marketSnapshot = buildMarketSnapshot({
+      assets: [assetView()],
+      events: [
+        tradeEvent({
+          amount: undefined,
+          pricePerShare: undefined,
+          totalPaid: 99n * USDC,
+          type: "yield-claimed",
+          yieldAmount: 12n * USDC,
+        }),
+      ],
+      listings: [],
+      nowMs: Date.UTC(2026, 6, 3, 12),
+    });
+
+    expect(snapshot.asset.latestSharePrice).toBe("1.25");
+    expect(snapshot.asset.volume24h).toBe("0.00");
+    expect(snapshot.recentTrades).toEqual([]);
+    expect(marketSnapshot.summary.total24hVolume).toBe("0.00");
+    expect(marketSnapshot.recentTrades).toEqual([]);
+  });
+
   test("keeps a 14-asset worst-case market snapshot under the 24 KiB route budget", () => {
     const assets = Array.from({ length: 14 }, (_, index) =>
       assetView({

@@ -47,6 +47,12 @@ const offeringCreatedAbi = parseAbiItem(
 const offeringClosedAbi = parseAbiItem(
   "event OfferingClosed(uint256 indexed offeringId, uint256 returnedAmount)",
 ) as AbiEvent;
+const yieldDepositedAbi = parseAbiItem(
+  "event YieldDeposited(uint256 indexed tokenId, address indexed depositor, uint256 amount, uint256 accPerShareAfter)",
+) as AbiEvent;
+const yieldClaimedAbi = parseAbiItem(
+  "event YieldClaimed(uint256 indexed tokenId, address indexed account, uint256 amount)",
+) as AbiEvent;
 
 const buyer = "0x1000000000000000000000000000000000000001";
 const seller = "0x2000000000000000000000000000000000000002";
@@ -252,6 +258,40 @@ describe("parseMarketLogs", () => {
     });
   });
 
+  test("parses yield logs with isolated USDC amount and account fields", () => {
+    const parsed = parseMarketLogs([
+      rawLog({
+        abi: yieldDepositedAbi,
+        args: [15n, seller, 12n * 10n ** 18n, 30n],
+        logIndex: 0,
+      }),
+      rawLog({
+        abi: yieldClaimedAbi,
+        args: [15n, buyer, 320n * 10n ** 16n],
+        logIndex: 1,
+      }),
+    ]);
+
+    expect(parsed).toMatchObject([
+      {
+        account: seller,
+        amount: undefined,
+        pricePerShare: undefined,
+        tokenId: 15n,
+        type: "yield-deposited",
+        yieldAmount: 12n * 10n ** 18n,
+      },
+      {
+        account: buyer,
+        amount: undefined,
+        pricePerShare: undefined,
+        tokenId: 15n,
+        type: "yield-claimed",
+        yieldAmount: 320n * 10n ** 16n,
+      },
+    ]);
+  });
+
   test("infers Cancelled tokenId from the matching Listed event", () => {
     const parsed = parseMarketLogs([
       rawLog({
@@ -356,6 +396,34 @@ describe("buildPriceSeries", () => {
       { price: 130n, t: 2_500 },
     ]);
   });
+
+  test("ignores yield events even if they carry USDC amounts", () => {
+    expect(
+      buildPriceSeries(
+        [
+          event({
+            amount: undefined,
+            pricePerShare: undefined,
+            timestamp: 2_000,
+            type: "yield-deposited",
+            yieldAmount: 12n * 10n ** 18n,
+          }),
+          event({
+            amount: undefined,
+            pricePerShare: undefined,
+            timestamp: 3_000,
+            type: "yield-claimed",
+            yieldAmount: 320n * 10n ** 16n,
+          }),
+        ],
+        1n,
+        90n,
+      ),
+    ).toEqual([
+      { price: 90n, t: 0 },
+      { price: 90n, t: 1 },
+    ]);
+  });
 });
 
 describe("compute24h", () => {
@@ -382,6 +450,31 @@ describe("compute24h", () => {
 
   test("returns zero change and zero volume when an asset has no trades", () => {
     expect(compute24h([], 1n, 100n, Date.now())).toEqual({
+      changePct: 0,
+      volume: 0n,
+    });
+  });
+
+  test("excludes yield events from 24h price and volume metrics", () => {
+    const nowMs = 200_000_000;
+
+    expect(
+      compute24h(
+        [
+          event({
+            amount: undefined,
+            pricePerShare: undefined,
+            timestamp: nowMs - 1,
+            totalPaid: 99n * 10n ** 18n,
+            type: "yield-deposited",
+            yieldAmount: 99n * 10n ** 18n,
+          }),
+        ],
+        1n,
+        100n,
+        nowMs,
+      ),
+    ).toEqual({
       changePct: 0,
       volume: 0n,
     });

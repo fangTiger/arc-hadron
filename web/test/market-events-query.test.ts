@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { filterActiveMarketEvents, populateBlockTimestampCache } from "../lib/hooks/useMarketEvents";
+import {
+  filterActiveMarketEvents,
+  marketEventLogAddresses,
+  populateBlockTimestampCache,
+} from "../lib/hooks/useMarketEvents";
 import type { TradeEvent } from "../lib/events";
 
 function event(overrides: Partial<TradeEvent> = {}): TradeEvent {
@@ -45,5 +49,19 @@ describe("market event timestamp queries", () => {
     expect(requested).toEqual([2n, 3n, 4n, 5n]);
     expect(maxActive).toBeLessThanOrEqual(2);
     expect(cache.get(5n)).toBe(500_000);
+  });
+
+  test("scans assets, market, and yield contracts together", () => {
+    expect(
+      marketEventLogAddresses({
+        assetsAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        marketAddress: "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        yieldAddress: "0xcccccccccccccccccccccccccccccccccccccccc",
+      }),
+    ).toEqual([
+      "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "0xcccccccccccccccccccccccccccccccccccccccc",
+    ]);
   });
 });

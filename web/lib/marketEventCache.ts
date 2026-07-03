@@ -12,11 +12,13 @@ interface MarketEventsCacheKeyInput {
   assetsAddress: Address | string;
   deployBlock: bigint | number;
   marketAddress: Address | string;
+  yieldAddress: Address | string;
 }
 
 type SerializedTradeEvent = Omit<
   TradeEvent,
   | "amount"
+  | "yieldAmount"
   | "blockNumber"
   | "listingId"
   | "offeringId"
@@ -25,6 +27,7 @@ type SerializedTradeEvent = Omit<
   | "totalPaid"
 > & {
   amount?: string;
+  yieldAmount?: string;
   blockNumber: string;
   listingId?: string;
   offeringId?: string;
@@ -94,7 +97,9 @@ function serializeBigInt(value: bigint | undefined): string | undefined {
 function serializeEvent(event: TradeEvent): SerializedTradeEvent {
   return {
     amount: serializeBigInt(event.amount),
+    yieldAmount: serializeBigInt(event.yieldAmount),
     blockNumber: event.blockNumber.toString(),
+    account: event.account,
     buyer: event.buyer,
     listingId: serializeBigInt(event.listingId),
     logIndex: event.logIndex,
@@ -124,6 +129,8 @@ function deserializeEvent(raw: unknown): TradeEvent | null {
   }
 
   const amount = parseOptionalBigIntText(raw.amount);
+  const yieldAmount = parseOptionalBigIntText(raw.yieldAmount);
+  const account = parseOptionalHex(raw.account);
   const buyer = parseOptionalHex(raw.buyer);
   const listingId = parseOptionalBigIntText(raw.listingId);
   const offeringId = parseOptionalBigIntText(raw.offeringId);
@@ -134,6 +141,8 @@ function deserializeEvent(raw: unknown): TradeEvent | null {
 
   if (
     amount === null ||
+    yieldAmount === null ||
+    account === null ||
     buyer === null ||
     listingId === null ||
     offeringId === null ||
@@ -146,6 +155,7 @@ function deserializeEvent(raw: unknown): TradeEvent | null {
   }
 
   return {
+    account,
     amount,
     blockNumber,
     buyer,
@@ -159,6 +169,7 @@ function deserializeEvent(raw: unknown): TradeEvent | null {
     totalPaid,
     txHash,
     type: raw.type as TradeEvent["type"],
+    yieldAmount,
   };
 }
 
@@ -178,12 +189,14 @@ export function marketEventsCacheKey({
   assetsAddress,
   deployBlock,
   marketAddress,
+  yieldAddress,
 }: MarketEventsCacheKeyInput): string {
   return [
     "hadron:market-events",
     `v${MARKET_EVENTS_CACHE_VERSION}`,
     assetsAddress.toLowerCase(),
     marketAddress.toLowerCase(),
+    yieldAddress.toLowerCase(),
     deployBlock.toString(),
   ].join(":");
 }

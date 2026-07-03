@@ -196,6 +196,31 @@ describe("on-chain asset read state", () => {
     expect(html).toContain("BID CANCEL");
   });
 
+  test("filters yield events out of asset trade history", () => {
+    const html = renderToStaticMarkup(
+      <AssetDetailView
+        assets={[assetView()]}
+        events={[
+          tradeEvent({
+            amount: undefined,
+            logIndex: 4,
+            pricePerShare: undefined,
+            totalPaid: undefined,
+            txHash: "0x00000000000000000000000000000000000000000000000000000000000000ff",
+            type: "yield-deposited",
+            yieldAmount: 12n * USDC,
+          }),
+        ]}
+        id="15"
+        isLoading={false}
+        nowMs={Date.UTC(2026, 6, 2, 12)}
+      />,
+    );
+
+    expect(html).toContain("Trade history lands here after on-chain activity.");
+    expect(html).not.toContain("0x0000…00ff");
+  });
+
   test("mounts buy orders and place bid controls between sell orders and trade history", () => {
     const html = renderToStaticMarkup(
       <AssetDetailView

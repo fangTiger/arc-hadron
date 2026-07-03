@@ -1,6 +1,7 @@
 import { decodeEventLog, type Abi, type Hex } from "viem";
 import HadronAssetsAbi from "./abi/HadronAssets.json";
 import HadronMarketAbi from "./abi/HadronMarket.json";
+import HadronYieldAbi from "./abi/HadronYield.json";
 
 export type TradeEventType =
   | "primary-sale"
@@ -12,16 +13,20 @@ export type TradeEventType =
   | "cancelled"
   | "asset-issued"
   | "offering-created"
-  | "offering-closed";
+  | "offering-closed"
+  | "yield-deposited"
+  | "yield-claimed";
 
 export interface TradeEvent {
   type: TradeEventType;
   tokenId: bigint;
   amount?: bigint;
   buyer?: Hex;
+  account?: Hex;
   pricePerShare?: bigint;
   seller?: Hex;
   totalPaid?: bigint;
+  yieldAmount?: bigint;
   txHash: Hex;
   logIndex: number;
   blockNumber: bigint;
@@ -69,13 +74,17 @@ const EVENT_NAME_TO_TYPE: Record<string, TradeEventType> = {
   OfferingCreated: "offering-created",
   PrimarySale: "primary-sale",
   Purchased: "purchased",
+  YieldClaimed: "yield-claimed",
+  YieldDeposited: "yield-deposited",
 };
 
 function isTrackedEventAbiItem(item: { type?: string; name?: string }): boolean {
   return item.type === "event" && typeof item.name === "string" && item.name in EVENT_NAME_TO_TYPE;
 }
 
-const MARKET_EVENT_ABI = [...HadronAssetsAbi, ...HadronMarketAbi].filter(isTrackedEventAbiItem) as Abi;
+const MARKET_EVENT_ABI = [...HadronAssetsAbi, ...HadronMarketAbi, ...HadronYieldAbi].filter(
+  isTrackedEventAbiItem,
+) as Abi;
 
 const TRADE_TYPES = new Set<TradeEventType>(["primary-sale", "purchased", "bid-filled"]);
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
@@ -237,11 +246,18 @@ export function parseMarketLogs(logs: readonly RawMarketLog[]): TradeEvent[] {
     const bidId = toBigInt(args.bidId);
     const listingId = toBigInt(args.listingId);
     const offeringId = toBigInt(args.offeringId);
-    const amount = toBigInt(args.amount ?? args.totalShares ?? args.returnedAmount);
+    const isYieldEvent = type === "yield-deposited" || type === "yield-claimed";
+    const amount = isYieldEvent
+      ? undefined
+      : toBigInt(args.amount ?? args.totalShares ?? args.returnedAmount);
+    const yieldAmount = isYieldEvent ? toBigInt(args.amount) : undefined;
     const buyer = toAddress(args.buyer ?? args.bidder);
+    const account = toAddress(args.account ?? args.depositor);
     const seller = toAddress(args.seller);
     const totalPaid = toBigInt(args.totalPaid);
-    const pricePerShare = toBigInt(args.pricePerShare) ?? priceFromTotal(totalPaid, amount);
+    const pricePerShare = isYieldEvent
+      ? undefined
+      : toBigInt(args.pricePerShare) ?? priceFromTotal(totalPaid, amount);
     const tokenId =
       toBigInt(args.tokenId) ??
       (listingId !== undefined ? listingTokenIds.get(listingId) : undefined) ??
@@ -252,6 +268,7 @@ export function parseMarketLogs(logs: readonly RawMarketLog[]): TradeEvent[] {
     }
 
     events.push({
+      account,
       amount,
       bidId,
       blockNumber,
@@ -266,6 +283,7 @@ export function parseMarketLogs(logs: readonly RawMarketLog[]): TradeEvent[] {
       totalPaid,
       txHash,
       type,
+      yieldAmount,
     });
   }
 

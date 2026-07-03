@@ -165,9 +165,15 @@ function eventTypeLabel(type: TradeEvent["type"]): string {
     "offering-created": "OFFERING CREATED",
     "primary-sale": "PRIMARY SALE",
     purchased: "PURCHASED",
+    "yield-claimed": "CLAIM",
+    "yield-deposited": "YIELD",
   };
 
   return labels[type];
+}
+
+function isTradeHistoryEvent(event: TradeEvent): boolean {
+  return event.type !== "yield-deposited" && event.type !== "yield-claimed";
 }
 
 function eventCounterparties(event: TradeEvent): Array<{ address: `0x${string}`; label: string }> {
@@ -220,7 +226,7 @@ function TradeHistoryTable({
   nowMs: number;
 }) {
   const rows = events
-    .filter((event) => event.tokenId === asset.tokenId)
+    .filter((event) => event.tokenId === asset.tokenId && isTradeHistoryEvent(event))
     .sort((a, b) => {
       if (a.blockNumber === b.blockNumber) {
         return b.logIndex - a.logIndex;

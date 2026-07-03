@@ -39,6 +39,8 @@ describe("portfolio buy event mapping", () => {
     expect(events?.find((entry) => entry.event.name === "BidFilled")?.argsFor(bidder)).toEqual({
       bidder,
     });
+    expect(events?.map((entry) => entry.event.name)).not.toContain("YieldDeposited");
+    expect(events?.map((entry) => entry.event.name)).not.toContain("YieldClaimed");
   });
 
   test("maps bid-filled logs as buyer cost basis events for the bidder", () => {
@@ -63,5 +65,20 @@ describe("portfolio buy event mapping", () => {
         totalPaid: 3750000000000000000n,
       },
     ]);
+  });
+
+  test("does not map yield-shaped logs into portfolio cost basis", () => {
+    const mapper = (portfolio as PortfolioBuyEventsModule).portfolioBuyEventsFromLogs;
+
+    expect(
+      mapper?.([
+        {
+          args: {
+            amount: 12n * 10n ** 18n,
+            tokenId: 15n,
+          },
+        },
+      ]),
+    ).toEqual([]);
   });
 });

@@ -24,9 +24,9 @@
 
 ## 4. 部署与播种（一次性完成）
 
-- [ ] 4.1 `SeedV4.s.sol`（合并 SeedV3/SeedSecondary/SeedTrades 职责 + 各资产 2-4 档买单 + BidFilled 成交样本；可选 SEED_BIDDER_PRIVATE_KEYS + deployer 资助；输出 tokenId 范围；.env.example/README 同步）
-- [ ] 4.2 Claude 重部署 arc-testnet（执行前告知用户）+ SeedV4 dry-run 后广播 + 更新 `contracts/deployments/arc-testnet.json` + web env 切换（合约地址 / NEXT_PUBLIC_DEPLOY_BLOCK / **FIRST_ACTIVE_TOKEN_ID 按 SeedV4 输出起点更新** / .env.example / 测试常量）
-- [ ] 4.3 E2E：dev server 三页 200 + BUY ORDERS 档位与 BidFilled 成交可见
+- [x] 4.1 `SeedV4.s.sol`（合并 SeedV3/SeedSecondary/SeedTrades 职责 + 各资产 2-4 档买单 + BidFilled 成交样本；可选 SEED_BIDDER_PRIVATE_KEYS + deployer 资助；输出 tokenId 范围；.env.example/README 同步）
+- [x] 4.2 Claude 重部署 arc-testnet（执行前告知用户）+ SeedV4 dry-run 后广播 + 更新 `contracts/deployments/arc-testnet.json` + web env 切换（合约地址 / NEXT_PUBLIC_DEPLOY_BLOCK / **FIRST_ACTIVE_TOKEN_ID 按 SeedV4 输出起点更新** / .env.example / 测试常量）
+- [x] 4.3 E2E：生产构建 3001 端口三页 200 + 新地址/部署块进构建产物 + RPC 实证 41 买单/7 成交（BUY ORDERS 视觉确认待用户重启 dev server，并入 5.3）
 
 ## 5. 验证 · 交叉检查 · 验收 · 归档
 

@@ -21,8 +21,8 @@ export const DEPLOY_BLOCK = parsePublicIntEnv(
   process.env.NEXT_PUBLIC_DEPLOY_BLOCK,
 );
 
-// V3 为支持 0.01 份额粒度重发行资产；旧 tokenId 1-14 仅保留链上历史。
-export const FIRST_ACTIVE_TOKEN_ID = 15n;
+// V4（买单深度）全新部署 + SeedV4 一次性播种：目录自 tokenId 1 起（×100 粒度直接发行，无历史遗留）。
+export const FIRST_ACTIVE_TOKEN_ID = 1n;
 
 export const arcTestnet = defineChain({
   id: ARC_CHAIN_ID,

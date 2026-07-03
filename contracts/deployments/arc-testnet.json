@@ -2,10 +2,10 @@
   "chainId": 5042002,
   "rpcUrl": "https://rpc.testnet.arc.network",
   "explorerUrl": "https://testnet.arcscan.app",
-  "deployBlock": 49771985,
+  "deployBlock": 49992799,
   "contracts": {
-    "HadronAssets": "0x4D82b6e528D3c2E1a3592e14863ec95EAeF4Ff85",
-    "HadronMarket": "0x962aba0A590981cf9c5B336aC34922c82f203165"
+    "HadronAssets": "0xe1F5E51D39944dA026c5030F4e1B18A82F681b42",
+    "HadronMarket": "0xa836C7EE67803D0227Df25e41F410a363BF13353"
   },
   "config": {
     "feeBps": 50,
@@ -15,10 +15,46 @@
     "note": "链上原生计价单位为 18 位小数 wei（冒烟交易实证）；显示层 1 USDC = 1e18 wei"
   },
   "seedAssets": {
-    "1": { "name": "US T-BILL 2026-Q3", "category": "treasuries", "totalShares": 10000, "offering": { "id": 1, "pricePerShare": "100e18", "listed": 6000 } },
-    "2": { "name": "GOLD OUNCE VAULT #4", "category": "gold", "totalShares": 500, "offering": { "id": 2, "pricePerShare": "23.8e18", "listed": 300 } },
-    "3": { "name": "MARINA TOWER UNIT 12F", "category": "real-estate", "totalShares": 2000, "offering": { "id": 3, "pricePerShare": "55.5e18", "listed": 1200 } },
-    "4": { "name": "VERRA CARBON LOT-9", "category": "carbon", "totalShares": 8000, "offering": { "id": 4, "pricePerShare": "1.85e18", "listed": 4800 } }
+    "1": {
+      "name": "US T-BILL 2026-Q3",
+      "category": "treasuries",
+      "totalShares": 10000,
+      "offering": {
+        "id": 1,
+        "pricePerShare": "100e18",
+        "listed": 6000
+      }
+    },
+    "2": {
+      "name": "GOLD OUNCE VAULT #4",
+      "category": "gold",
+      "totalShares": 500,
+      "offering": {
+        "id": 2,
+        "pricePerShare": "23.8e18",
+        "listed": 300
+      }
+    },
+    "3": {
+      "name": "MARINA TOWER UNIT 12F",
+      "category": "real-estate",
+      "totalShares": 2000,
+      "offering": {
+        "id": 3,
+        "pricePerShare": "55.5e18",
+        "listed": 1200
+      }
+    },
+    "4": {
+      "name": "VERRA CARBON LOT-9",
+      "category": "carbon",
+      "totalShares": 8000,
+      "offering": {
+        "id": 4,
+        "pricePerShare": "1.85e18",
+        "listed": 4800
+      }
+    }
   },
   "smokeTest": {
     "date": "2026-07-02",
@@ -30,8 +66,14 @@
   "v3Reissue": {
     "date": "2026-07-03",
     "reason": "M3 验收反馈：支持 0.01 份额粒度。14 个资产按供应 ×100、单价 ÷100 重发行（1 显示份额 = 100 链上单位，SHARE_SCALE=100）；前端目录自 FIRST_ACTIVE_TOKEN_ID=15 起，旧 tokenId 1-14 隐藏",
-    "tokenIdRange": [15, 28],
-    "offeringIdRange": [15, 28],
+    "tokenIdRange": [
+      15,
+      28
+    ],
+    "offeringIdRange": [
+      15,
+      28
+    ],
     "secondarySeed": "listingCount 15→30，3 笔变价自成交（0.97/1.00/1.03 档）"
   },
   "userAcceptance": {
@@ -61,6 +103,49 @@
         "createPrimaryOffering": "0xa0ecf350f481a4f878880d3b5c529047c9aee6e5102cbc7ac3ed767edd725fe0",
         "buyPrimary": "0x34ce4a6eff91e79ee756efd0b1476b990e0a8a02220399c9e9fdcdb3f2701d12"
       }
+    },
+    {
+      "reason": "买单深度首次重部署：SeedV4 广播遇 txpool is full，仅播入 6/14 资产后废弃",
+      "deployBlock": 49989186,
+      "contracts": {
+        "HadronAssets": "0x47885b802cee836b202254e3c9db39932c27e8af",
+        "HadronMarket": "0xcd4c690e2bce909aea8fcc3c861557e5ee0a0c63"
+      }
+    },
+    {
+      "reason": "买单深度二次重部署：滞留交易撞 nonce，market 部署失败/assets 只播 1 资产后废弃",
+      "deployBlock": 49991302,
+      "contracts": {
+        "HadronAssets": "0xbd26ace2B5bd74e2b7A628B65423562b22124157",
+        "HadronMarket": "0x8432C85Aa5243116694de9d921832c9D7cb3F28D"
+      }
+    },
+    {
+      "reason": "买单深度前的 V1-V3 主部署（AI 层/用户验收历史在此合约）",
+      "deployBlock": 49771985,
+      "contracts": {
+        "HadronAssets": "0x4D82b6e528D3c2E1a3592e14863ec95EAeF4Ff85",
+        "HadronMarket": "0x962aba0A590981cf9c5B336aC34922c82f203165"
+      }
     }
-  ]
+  ],
+  "v4BuyDepth": {
+    "date": "2026-07-03",
+    "reason": "买单深度（add-hadron-buy-depth）：HadronMarket 增 placeBid/fillBid/cancelBid，全新部署 + SeedV4 一次性播种",
+    "seedDeployer": "0xF26927F9c37D7a3F675Bd501006705E1Ab17dE8a",
+    "seedDeployerNote": "一次性播种密钥存 contracts/.env SEED4_DEPLOYER_PRIVATE_KEY（主 DEPLOYER 的 txpool 滞留交易反复撞 nonce，换新密钥获得干净 nonce 空间）",
+    "tokenIdRange": [
+      1,
+      14
+    ],
+    "counts": {
+      "assets": 14,
+      "offerings": 14,
+      "listings": 35,
+      "bids": 41,
+      "bidFills": 7
+    },
+    "firstActiveTokenId": 1,
+    "note": "SeedV4 直接按 ×100 粒度（SHARE_SCALE=100）自 tokenId 1 发行；买单档位按目标托管金额 0.5-1.6 USDC 定档"
+  }
 }

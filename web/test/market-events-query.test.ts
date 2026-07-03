@@ -14,9 +14,10 @@ function event(overrides: Partial<TradeEvent> = {}): TradeEvent {
 }
 
 describe("market event timestamp queries", () => {
-  test("drops legacy token events before market activity is cached", () => {
-    expect(filterActiveMarketEvents([event({ tokenId: 14n }), event({ tokenId: 15n })])).toEqual([
-      event({ tokenId: 15n }),
+  test("drops below-range token events before market activity is cached", () => {
+    // V4 目录自 tokenId 1 起；过滤语义保留（tokenId < FIRST_ACTIVE_TOKEN_ID 丢弃）
+    expect(filterActiveMarketEvents([event({ tokenId: 0n }), event({ tokenId: 1n })])).toEqual([
+      event({ tokenId: 1n }),
     ]);
   });
 

@@ -75,9 +75,9 @@ function tradeEvent(overrides: Partial<TradeEvent> = {}): TradeEvent {
 }
 
 describe("on-chain asset read state", () => {
-  test("starts active catalog reads at the V3 reissued token range", () => {
-    expect(activeTokenIdsForCount(14)).toEqual([]);
-    expect(activeTokenIdsForCount(16)).toEqual([15n, 16n]);
+  test("starts active catalog reads at the V4 fresh-deployment token range", () => {
+    expect(activeTokenIdsForCount(0)).toEqual([]);
+    expect(activeTokenIdsForCount(2)).toEqual([1n, 2n]);
   });
 
   test("assetCount=0 is a real empty set, not a loading state", () => {

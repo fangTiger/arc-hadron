@@ -395,11 +395,12 @@ contract SeedV4 is Script {
         uint256 targetBidCount = _targetBidCount(planIndex);
         uint256 targetFillCount = _targetBidFillCount(planIndex);
         for (uint256 bidIndex = 0; bidIndex < targetBidCount; bidIndex++) {
-            uint256 amount = plannedBidAmount(planIndex, bidIndex);
+            uint256 pricePerShare = issuePrice * _bidBps(bidIndex) / BPS_DENOMINATOR;
+            uint256 amount = plannedBidAmount(planIndex, bidIndex, pricePerShare);
             bidSeeds[bidSeedCount] = BidSeed({
                 tokenId: tokenId,
                 amount: amount,
-                pricePerShare: issuePrice * _bidBps(bidIndex) / BPS_DENOMINATOR,
+                pricePerShare: pricePerShare,
                 fillAmount: bidIndex < targetFillCount ? plannedBidFillAmount(amount, bidIndex) : 0,
                 bidId: 0
             });
@@ -566,19 +567,29 @@ contract SeedV4 is Script {
         return targetValue;
     }
 
-    function plannedBidAmount(uint256 planIndex, uint256 bidIndex) public pure returns (uint256) {
+    /// @dev 按目标托管金额定档（而非固定份额数）：deployer 测试网余额有限（≈130 USDC），
+    ///      买单托管会长期锁定资金，固定份额在高价资产上单档即可击穿预算。
+    ///      目标金额 0.5-1.6 USDC/档，14 资产 × 2-4 档总托管 ≤ ~45 USDC；amount 向下取整最低 1 单位。
+    function plannedBidAmount(uint256 planIndex, uint256 bidIndex, uint256 pricePerShare)
+        public
+        pure
+        returns (uint256)
+    {
         uint256 variant = (planIndex + bidIndex) % 4;
+        uint256 targetValue;
         if (variant == 0) {
-            return 120;
-        }
-        if (variant == 1) {
-            return 90;
-        }
-        if (variant == 2) {
-            return 150;
+            targetValue = 1.2e18;
+        } else if (variant == 1) {
+            targetValue = 0.8e18;
+        } else if (variant == 2) {
+            targetValue = 1.6e18;
+        } else {
+            targetValue = 0.5e18;
         }
 
-        return 60;
+        uint256 amount = targetValue / pricePerShare;
+
+        return amount == 0 ? 1 : amount;
     }
 
     function plannedBidFillAmount(uint256 bidAmount, uint256 fillIndex) public pure returns (uint256) {

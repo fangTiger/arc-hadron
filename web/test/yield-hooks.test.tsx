@@ -252,6 +252,40 @@ describe("yield hooks", () => {
     });
   });
 
+  test("allows a new submission after a successful receipt without an explicit reset", async () => {
+    const mod = await import("../lib/hooks/useYield");
+    const mounted = await mountHook(() => mod.useClaimYield());
+    root = mounted.root;
+
+    await act(async () => {
+      mounted.current.claim(15n);
+      await flushEffects();
+    });
+    const callbacks = mockState.writeContract.mock.calls[0][1] as {
+      onSuccess: (hash: `0x${string}`) => void;
+    };
+    await act(async () => {
+      callbacks.onSuccess(TX_HASH);
+      mockState.receiptStatus = "success";
+      await flushEffects();
+    });
+
+    expect(mounted.current.status).toBe("success");
+
+    // 成功态下再次提交视为新会话，不应被静默拦截
+    await act(async () => {
+      mounted.current.claim(16n);
+      await flushEffects();
+    });
+
+    expect(mockState.writeContract).toHaveBeenCalledTimes(2);
+    expect(mockState.writeContract).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ args: [16n], functionName: "claimYield" }),
+      expect.anything(),
+    );
+  });
+
   test("useDepositYield writes depositYield with native USDC value and maps cancellation", async () => {
     const mod = await import("../lib/hooks/useYield");
     const mounted = await mountHook(() => mod.useDepositYield());

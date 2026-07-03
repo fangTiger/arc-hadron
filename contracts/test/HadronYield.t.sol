@@ -272,6 +272,29 @@ contract HadronYieldTest is Test, ERC1155Holder {
         hookedAssets.setYieldHook(address(hook));
     }
 
+    function test_YieldHook_RejectsDuplicateTokenIdInBatch() public {
+        HadronAssets hookedAssets = new HadronAssets();
+        address[] memory excluded = new address[](1);
+        excluded[0] = issuer;
+        HadronYield hookedYield = new HadronYield(hookedAssets, excluded);
+        hookedAssets.setYieldHook(address(hookedYield));
+
+        uint256 hookedTokenId = hookedAssets.createAsset("HOOKED DUP", "test", 100, "ipfs://dup");
+        hookedAssets.safeTransferFrom(issuer, alice, hookedTokenId, 100, "");
+
+        // 重复 tokenId 的批量转账会让钩子两次读到同一份转账前余额，凭空多计提——必须拒绝
+        uint256[] memory ids = new uint256[](2);
+        ids[0] = hookedTokenId;
+        ids[1] = hookedTokenId;
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = 10;
+        amounts[1] = 10;
+
+        vm.prank(alice);
+        vm.expectRevert(HadronAssets.DuplicateBatchTokenId.selector);
+        hookedAssets.safeBatchTransferFrom(alice, bob, ids, amounts, "");
+    }
+
     function test_YieldHook_AutoSettlesSingleAndBatchTransfers() public {
         HadronAssets hookedAssets = new HadronAssets();
         address[] memory excluded = new address[](1);

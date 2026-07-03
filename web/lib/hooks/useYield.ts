@@ -89,7 +89,11 @@ function useYieldTransaction() {
 
   const submit = useCallback(
     ({ args, functionName, value }: YieldWriteRequest) => {
-      if ((busyRef.current && status === "idle") || (status !== "idle" && status !== "error")) {
+      // success 态视为上一会话已结束，允许直接开启新提交（否则一次成功后按钮被静默拦截）
+      if (
+        (busyRef.current && status === "idle") ||
+        (status !== "idle" && status !== "error" && status !== "success")
+      ) {
         return;
       }
 

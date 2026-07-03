@@ -32,6 +32,7 @@ contract HadronAssets is ERC1155, Ownable2Step {
     error UnknownAsset();
     error ZeroAddress();
     error HookAlreadySet();
+    error DuplicateBatchTokenId();
 
     constructor() ERC1155("") Ownable(msg.sender) {}
 
@@ -90,6 +91,16 @@ contract HadronAssets is ERC1155, Ownable2Step {
     function _update(address from, address to, uint256[] memory ids, uint256[] memory values) internal override {
         address hook = yieldHook;
         if (hook != address(0)) {
+            // 重复 tokenId 的批量会让钩子多次读到同一份转账前余额，破坏收益守恒——直接拒绝
+            // （批量规模小，O(n²) 检查成本可忽略；重复 id 批量在本系统无正当用途）
+            for (uint256 index = 1; index < ids.length; index++) {
+                for (uint256 prior; prior < index; prior++) {
+                    if (ids[prior] == ids[index]) {
+                        revert DuplicateBatchTokenId();
+                    }
+                }
+            }
+
             for (uint256 index; index < ids.length; index++) {
                 IHadronYieldHook(hook).notifyTransfer(from, to, ids[index], values[index]);
             }

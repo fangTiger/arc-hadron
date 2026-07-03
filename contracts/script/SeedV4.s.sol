@@ -1,0 +1,786 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {Script, console2} from "forge-std/Script.sol";
+import {HadronAssets} from "../src/HadronAssets.sol";
+import {HadronMarket} from "../src/HadronMarket.sol";
+
+/// @notice 全新部署后一次性播种 14 个 0.01 份额资产、双边订单簿与成交样本。
+/// @dev 该脚本只面向 ARC 测试网。买单账户私钥可通过 SEED_BIDDER_PRIVATE_KEYS 传入，缺省回退部署者。
+contract SeedV4 is Script {
+    uint256 private constant ARC_TESTNET_CHAIN_ID = 5042002;
+    uint256 private constant ASSET_COUNT = 14;
+    uint256 private constant MAX_BIDS_PER_ASSET = 4;
+    uint256 private constant MAX_TOTAL_BIDS = ASSET_COUNT * MAX_BIDS_PER_ASSET;
+    uint256 private constant BPS_DENOMINATOR = 10_000;
+    uint256 private constant SMALL_TRADE_VALUE_0 = 5e18;
+    uint256 private constant SMALL_TRADE_VALUE_1 = 8e18;
+    uint256 private constant SMALL_TRADE_VALUE_2 = 12e18;
+    uint256 private constant SMALL_TRADE_VALUE_3 = 15e18;
+    uint256 private constant MIN_SINGLE_TRADE_VALUE = 30e18;
+    uint256 private constant MAX_SINGLE_TRADE_VALUE = 130e18;
+    uint256 private constant MIN_DEPLOYER_RESERVE = 80e18;
+    uint256 private constant BIDDER_GAS_BUFFER = 3e18;
+
+    struct SeedAsset {
+        string name;
+        string category;
+        uint256 totalShares;
+        uint256 offeringAmount;
+        uint256 pricePerShare;
+        string metadataURI;
+    }
+
+    struct BidSeed {
+        uint256 tokenId;
+        uint256 amount;
+        uint256 pricePerShare;
+        uint256 fillAmount;
+        uint256 bidId;
+    }
+
+    struct SeedStats {
+        uint256 firstTokenId;
+        uint256 lastTokenId;
+        uint256 firstOfferingId;
+        uint256 lastOfferingId;
+        uint256 offeringCount;
+        uint256 listingCount;
+        uint256 primaryTradeCount;
+        uint256 secondarySelfBuyCount;
+        uint256 bidCount;
+        uint256 bidFillCount;
+    }
+
+    struct SeedContext {
+        HadronAssets assets;
+        HadronMarket market;
+        address deployer;
+        uint256 bidderCount;
+    }
+
+    function run() external {
+        require(block.chainid == ARC_TESTNET_CHAIN_ID, "SeedV4: ARC testnet only");
+
+        uint256 deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
+        address deployer = vm.addr(deployerPrivateKey);
+        uint256[] memory bidderPrivateKeys = _bidderPrivateKeys(deployerPrivateKey);
+        SeedContext memory context = SeedContext({
+            assets: HadronAssets(vm.envAddress("HADRON_ASSETS")),
+            market: HadronMarket(vm.envAddress("HADRON_MARKET")),
+            deployer: deployer,
+            bidderCount: bidderPrivateKeys.length
+        });
+
+        uint256 currentAssetCount = context.assets.assetCount();
+        console2.log("Current assetCount:", currentAssetCount);
+        if (currentAssetCount != 0) {
+            revert("SEED_V4_REQUIRES_FRESH_DEPLOYMENT");
+        }
+
+        vm.startBroadcast(deployerPrivateKey);
+        (BidSeed[] memory bidSeeds, uint256 bidSeedCount, SeedStats memory stats) =
+            _seedSellerSide(context, bidderPrivateKeys);
+        vm.stopBroadcast();
+
+        stats.bidCount = _placeBids(context.market, bidderPrivateKeys, bidSeeds, bidSeedCount);
+
+        vm.startBroadcast(deployerPrivateKey);
+        stats.bidFillCount = _fillBids(context.market, bidSeeds, bidSeedCount);
+        vm.stopBroadcast();
+
+        console2.log("Seed V4 tokenId range start:", stats.firstTokenId);
+        console2.log("Seed V4 tokenId range end:", stats.lastTokenId);
+        console2.log("FIRST_ACTIVE_TOKEN_ID:", stats.firstTokenId);
+        console2.log("Seed V4 offering count:", stats.offeringCount);
+        console2.log("Seed V4 listing count:", stats.listingCount);
+        console2.log("Seed V4 bid count:", stats.bidCount);
+        console2.log("Seed V4 primary trade count:", stats.primaryTradeCount);
+        console2.log("Seed V4 secondary self-buy count:", stats.secondarySelfBuyCount);
+        console2.log("Seed V4 bid fill count:", stats.bidFillCount);
+        console2.log("Seed V4 deployer:", deployer);
+    }
+
+    function _seedSellerSide(SeedContext memory context, uint256[] memory bidderPrivateKeys)
+        private
+        returns (BidSeed[] memory bidSeeds, uint256 bidSeedCount, SeedStats memory stats)
+    {
+        SeedAsset[] memory seeds = seedAssets();
+        bidSeeds = new BidSeed[](MAX_TOTAL_BIDS);
+
+        _ensureApproval(context.assets, context.market, context.deployer);
+        for (uint256 index = 0; index < seeds.length; index++) {
+            (bidSeedCount, stats) = _seedOneAsset(context, seeds[index], index, bidSeeds, bidSeedCount, stats);
+        }
+
+        _fundBidders(context.deployer, bidderPrivateKeys, _bidderFunding(bidSeeds, bidSeedCount, context.bidderCount));
+    }
+
+    function _seedOneAsset(
+        SeedContext memory context,
+        SeedAsset memory seedAsset,
+        uint256 planIndex,
+        BidSeed[] memory bidSeeds,
+        uint256 bidSeedCount,
+        SeedStats memory stats
+    ) private returns (uint256, SeedStats memory) {
+        (uint256 tokenId, uint256 offeringId) = _seedAsset(context.assets, context.market, seedAsset);
+        if (stats.firstTokenId == 0) {
+            stats.firstTokenId = tokenId;
+            stats.firstOfferingId = offeringId;
+        }
+        stats.lastTokenId = tokenId;
+        stats.lastOfferingId = offeringId;
+        stats.offeringCount++;
+
+        stats.primaryTradeCount += _seedPrimaryTrades(context.market, context.deployer, offeringId);
+        (uint256 listed, uint256 secondaryBuys) =
+            _seedSecondaryListings(context, tokenId, seedAsset.pricePerShare, planIndex);
+        stats.listingCount += listed;
+        stats.secondarySelfBuyCount += secondaryBuys;
+
+        bidSeedCount = _appendBidSeeds(bidSeeds, bidSeedCount, tokenId, seedAsset.pricePerShare, planIndex);
+
+        return (bidSeedCount, stats);
+    }
+
+    function seedAssets() public pure returns (SeedAsset[] memory seeds) {
+        seeds = new SeedAsset[](14);
+        seeds[0] = SeedAsset({
+            name: "US T-BILL 2026-Q3",
+            category: "treasuries",
+            totalShares: 1_000_000,
+            offeringAmount: 600_000,
+            pricePerShare: 100e16,
+            metadataURI: "hadron://assets/t-bill-2026-q3"
+        });
+        seeds[1] = SeedAsset({
+            name: "GOLD OUNCE VAULT #4",
+            category: "gold",
+            totalShares: 50_000,
+            offeringAmount: 30_000,
+            pricePerShare: 23.8e16,
+            metadataURI: "hadron://assets/gold-ounce-4"
+        });
+        seeds[2] = SeedAsset({
+            name: "MARINA TOWER UNIT 12F",
+            category: "real-estate",
+            totalShares: 200_000,
+            offeringAmount: 120_000,
+            pricePerShare: 55.5e16,
+            metadataURI: "hadron://assets/marina-tower-12f"
+        });
+        seeds[3] = SeedAsset({
+            name: "VERRA CARBON LOT-9",
+            category: "carbon",
+            totalShares: 800_000,
+            offeringAmount: 480_000,
+            pricePerShare: 1.85e16,
+            metadataURI: "hadron://assets/verra-carbon-9"
+        });
+        seeds[4] = SeedAsset({
+            name: "US T-Note 2028",
+            category: "treasuries",
+            totalShares: 1_000_000,
+            offeringAmount: 600_000,
+            pricePerShare: 98.4e16,
+            metadataURI: "hadron://assets/us-t-note-2028"
+        });
+        seeds[5] = SeedAsset({
+            name: "Meridian SME Credit Pool A",
+            category: "private-credit",
+            totalShares: 500_000,
+            offeringAmount: 300_000,
+            pricePerShare: 50e16,
+            metadataURI: "hadron://assets/meridian-sme-credit-a"
+        });
+        seeds[6] = SeedAsset({
+            name: "Atlas Trade Receivables B",
+            category: "private-credit",
+            totalShares: 600_000,
+            offeringAmount: 360_000,
+            pricePerShare: 25e16,
+            metadataURI: "hadron://assets/atlas-trade-receivables-b"
+        });
+        seeds[7] = SeedAsset({
+            name: "Dockside Logistics Park",
+            category: "real-estate",
+            totalShares: 300_000,
+            offeringAmount: 180_000,
+            pricePerShare: 42.75e16,
+            metadataURI: "hadron://assets/dockside-logistics-park"
+        });
+        seeds[8] = SeedAsset({
+            name: "Silver Bullion Vault #2",
+            category: "commodities",
+            totalShares: 200_000,
+            offeringAmount: 120_000,
+            pricePerShare: 29.4e16,
+            metadataURI: "hadron://assets/silver-bullion-vault-2"
+        });
+        seeds[9] = SeedAsset({
+            name: "Gold Standard Offset Bundle",
+            category: "carbon",
+            totalShares: 600_000,
+            offeringAmount: 360_000,
+            pricePerShare: 2.4e16,
+            metadataURI: "hadron://assets/gold-standard-offset-bundle"
+        });
+        seeds[10] = SeedAsset({
+            name: "Solar Farm Basin-2 Notes",
+            category: "infrastructure",
+            totalShares: 500_000,
+            offeringAmount: 300_000,
+            pricePerShare: 78.2e16,
+            metadataURI: "hadron://assets/solar-farm-basin-2"
+        });
+        seeds[11] = SeedAsset({
+            name: "Fiber Grid Metro Loop",
+            category: "infrastructure",
+            totalShares: 250_000,
+            offeringAmount: 150_000,
+            pricePerShare: 64e16,
+            metadataURI: "hadron://assets/fiber-grid-metro-loop"
+        });
+        seeds[12] = SeedAsset({
+            name: "Blue-Chip Art Fraction #7",
+            category: "art-collectibles",
+            totalShares: 80_000,
+            offeringAmount: 48_000,
+            pricePerShare: 120e16,
+            metadataURI: "hadron://assets/blue-chip-art-fraction-7"
+        });
+        seeds[13] = SeedAsset({
+            name: "Nexus Invoice Pool 2026-07",
+            category: "invoice-financing",
+            totalShares: 1_200_000,
+            offeringAmount: 720_000,
+            pricePerShare: 10e16,
+            metadataURI: "hadron://assets/nexus-invoice-pool-2026-07"
+        });
+    }
+
+    function _seedAsset(HadronAssets assets, HadronMarket market, SeedAsset memory seedAsset)
+        private
+        returns (uint256 tokenId, uint256 offeringId)
+    {
+        tokenId = assets.createAsset(seedAsset.name, seedAsset.category, seedAsset.totalShares, seedAsset.metadataURI);
+        offeringId = market.createPrimaryOffering(tokenId, seedAsset.pricePerShare, seedAsset.offeringAmount);
+
+        console2.log("Seed V4 asset tokenId:", tokenId);
+        console2.log("Seed V4 primary offeringId:", offeringId);
+    }
+
+    function _seedPrimaryTrades(HadronMarket market, address deployer, uint256 offeringId)
+        private
+        returns (uint256 tradeCount)
+    {
+        uint256 targetTradeCount = _targetTradeCount(offeringId);
+        for (uint256 tradeIndex = 0; tradeIndex < targetTradeCount; tradeIndex++) {
+            HadronMarket.Offering memory offering = market.getOffering(offeringId);
+            if (!offering.active || offering.remaining == 0) {
+                break;
+            }
+
+            uint256 targetValue =
+                _targetValueForBalance(offeringId, tradeIndex, offering.pricePerShare, deployer.balance);
+            uint256 shares = plannedPrimaryAmount(offeringId, tradeIndex, offering.pricePerShare, offering.remaining);
+            uint256 largeValueShares = _amountForTargetValue(targetValue, offering.pricePerShare, offering.remaining);
+            if (largeValueShares > 0) {
+                shares = largeValueShares;
+            }
+            if (shares == 0) {
+                console2.log("Skip Seed V4 primary trade with zero shares offeringId:", offeringId);
+                break;
+            }
+
+            uint256 value = offering.pricePerShare * shares;
+            if (value > MAX_SINGLE_TRADE_VALUE) {
+                console2.log("Skip Seed V4 primary trade over max value offeringId:", offeringId);
+                console2.log("Seed V4 primary value:", value);
+                break;
+            }
+            if (!_hasReserveForValue(deployer.balance, value)) {
+                console2.log("Stop Seed V4 primary trades below reserve offeringId:", offeringId);
+                console2.log("Deployer balance:", deployer.balance);
+                break;
+            }
+
+            console2.log("Seed V4 primary trade offeringId:", offeringId);
+            console2.log("Seed V4 primary trade shares:", shares);
+            console2.log("Seed V4 primary trade value:", value);
+            market.buyPrimary{value: value}(offeringId, shares);
+            tradeCount++;
+        }
+    }
+
+    function _seedSecondaryListings(SeedContext memory context, uint256 tokenId, uint256 issuePrice, uint256 planIndex)
+        private
+        returns (uint256 listed, uint256 bought)
+    {
+        uint256 targetListCount = _capListCountByBalance(
+            planIndex, _planListCount(planIndex), context.assets.balanceOf(context.deployer, tokenId)
+        );
+        uint256[] memory listingIds = new uint256[](targetListCount);
+        uint256[] memory prices = new uint256[](targetListCount);
+        uint256[] memory amounts = new uint256[](targetListCount);
+
+        for (uint256 listingIndex = 0; listingIndex < targetListCount; listingIndex++) {
+            uint256 bps = _planBps(planIndex, listingIndex);
+            uint256 pricePerShare = issuePrice * bps / BPS_DENOMINATOR;
+            uint256 amount = plannedListingAmount(planIndex, listingIndex);
+            uint256 listingId = context.market.list(tokenId, amount, pricePerShare);
+
+            listingIds[listed] = listingId;
+            prices[listed] = pricePerShare;
+            amounts[listed] = amount;
+            listed++;
+
+            console2.log("Seed V4 listingId:", listingId);
+            console2.log("Seed V4 listing tokenId:", tokenId);
+            console2.log("Seed V4 listing amount:", amount);
+            console2.log("Seed V4 listing pricePerShare:", pricePerShare);
+            console2.log("Seed V4 listing bps:", bps);
+        }
+
+        if (_shouldSelfBuy(planIndex) && listed > 1) {
+            uint256 buyIndex = _selfBuyIndex(planIndex, listed);
+            bool didBuy = _buySecondaryListing(
+                context.market, context.deployer, tokenId, listingIds[buyIndex], prices[buyIndex], amounts[buyIndex]
+            );
+            if (didBuy) {
+                bought = 1;
+            }
+        }
+    }
+
+    function _buySecondaryListing(
+        HadronMarket market,
+        address deployer,
+        uint256 tokenId,
+        uint256 listingId,
+        uint256 pricePerShare,
+        uint256 listingAmount
+    ) private returns (bool) {
+        uint256 amount = plannedSelfBuyAmount(pricePerShare, listingAmount);
+        if (amount == 0) {
+            console2.log("Skip Seed V4 secondary self-buy value cap listingId:", listingId);
+            return false;
+        }
+
+        uint256 value = pricePerShare * amount;
+        if (value > MAX_SINGLE_TRADE_VALUE || deployer.balance < value) {
+            console2.log("Skip Seed V4 secondary self-buy listingId:", listingId);
+            console2.log("Seed V4 secondary self-buy value:", value);
+            return false;
+        }
+
+        market.buy{value: value}(listingId, amount);
+        uint256 fee = value * market.feeBps() / BPS_DENOMINATOR;
+        console2.log("Seed V4 secondary self-buy listingId:", listingId);
+        console2.log("Seed V4 secondary self-buy tokenId:", tokenId);
+        console2.log("Seed V4 secondary self-buy amount:", amount);
+        console2.log("Seed V4 secondary self-buy value:", value);
+        console2.log("Seed V4 secondary self-buy fee:", fee);
+        return true;
+    }
+
+    function _appendBidSeeds(
+        BidSeed[] memory bidSeeds,
+        uint256 bidSeedCount,
+        uint256 tokenId,
+        uint256 issuePrice,
+        uint256 planIndex
+    ) private pure returns (uint256) {
+        uint256 targetBidCount = _targetBidCount(planIndex);
+        uint256 targetFillCount = _targetBidFillCount(planIndex);
+        for (uint256 bidIndex = 0; bidIndex < targetBidCount; bidIndex++) {
+            uint256 amount = plannedBidAmount(planIndex, bidIndex);
+            bidSeeds[bidSeedCount] = BidSeed({
+                tokenId: tokenId,
+                amount: amount,
+                pricePerShare: issuePrice * _bidBps(bidIndex) / BPS_DENOMINATOR,
+                fillAmount: bidIndex < targetFillCount ? plannedBidFillAmount(amount, bidIndex) : 0,
+                bidId: 0
+            });
+            bidSeedCount++;
+        }
+
+        return bidSeedCount;
+    }
+
+    function _bidderFunding(BidSeed[] memory bidSeeds, uint256 bidSeedCount, uint256 bidderCount)
+        private
+        pure
+        returns (uint256[] memory funding)
+    {
+        funding = new uint256[](bidderCount);
+        for (uint256 index = 0; index < bidSeedCount; index++) {
+            funding[index % bidderCount] += bidSeeds[index].pricePerShare * bidSeeds[index].amount;
+        }
+    }
+
+    function _fundBidders(address deployer, uint256[] memory bidderPrivateKeys, uint256[] memory funding) private {
+        for (uint256 index = 0; index < bidderPrivateKeys.length; index++) {
+            address bidder = vm.addr(bidderPrivateKeys[index]);
+            if (bidder == deployer || funding[index] == 0) {
+                continue;
+            }
+
+            uint256 transferAmount = funding[index] + BIDDER_GAS_BUFFER;
+            payable(bidder).transfer(transferAmount);
+            console2.log("Seed V4 funded bidder:", bidder);
+            console2.log("Seed V4 bidder funding:", transferAmount);
+        }
+    }
+
+    function _placeBids(
+        HadronMarket market,
+        uint256[] memory bidderPrivateKeys,
+        BidSeed[] memory bidSeeds,
+        uint256 bidSeedCount
+    ) private returns (uint256 bidCount) {
+        for (uint256 index = 0; index < bidSeedCount; index++) {
+            BidSeed memory bidSeed = bidSeeds[index];
+            uint256 bidderPrivateKey = bidderPrivateKeys[index % bidderPrivateKeys.length];
+            uint256 value = bidSeed.pricePerShare * bidSeed.amount;
+
+            vm.startBroadcast(bidderPrivateKey);
+            uint256 bidId = market.placeBid{value: value}(bidSeed.tokenId, bidSeed.amount, bidSeed.pricePerShare);
+            vm.stopBroadcast();
+
+            bidSeeds[index].bidId = bidId;
+            bidCount++;
+            console2.log("Seed V4 bidId:", bidId);
+            console2.log("Seed V4 bid tokenId:", bidSeed.tokenId);
+            console2.log("Seed V4 bid amount:", bidSeed.amount);
+            console2.log("Seed V4 bid pricePerShare:", bidSeed.pricePerShare);
+            console2.log("Seed V4 bidder:", vm.addr(bidderPrivateKey));
+        }
+    }
+
+    function _fillBids(HadronMarket market, BidSeed[] memory bidSeeds, uint256 bidSeedCount)
+        private
+        returns (uint256 fillCount)
+    {
+        for (uint256 index = 0; index < bidSeedCount; index++) {
+            if (bidSeeds[index].fillAmount == 0) {
+                continue;
+            }
+
+            market.fillBid(bidSeeds[index].bidId, bidSeeds[index].fillAmount);
+            fillCount++;
+            console2.log("Seed V4 bid fill bidId:", bidSeeds[index].bidId);
+            console2.log("Seed V4 bid fill tokenId:", bidSeeds[index].tokenId);
+            console2.log("Seed V4 bid fill amount:", bidSeeds[index].fillAmount);
+        }
+    }
+
+    function _bidderPrivateKeys(uint256 deployerPrivateKey) private view returns (uint256[] memory bidderPrivateKeys) {
+        string memory raw = vm.envOr("SEED_BIDDER_PRIVATE_KEYS", string(""));
+        raw = vm.replace(raw, " ", "");
+        raw = vm.replace(raw, "\n", "");
+        raw = vm.replace(raw, "\t", "");
+        if (bytes(raw).length == 0) {
+            bidderPrivateKeys = new uint256[](1);
+            bidderPrivateKeys[0] = deployerPrivateKey;
+            console2.log("Seed V4 bidder count:", uint256(1));
+            return bidderPrivateKeys;
+        }
+
+        string[] memory parts = vm.split(raw, ",");
+        bidderPrivateKeys = new uint256[](parts.length);
+        for (uint256 index = 0; index < parts.length; index++) {
+            uint256 privateKey = vm.parseUint(parts[index]);
+            if (privateKey == 0) {
+                revert("SEED_V4_ZERO_BIDDER_KEY");
+            }
+            bidderPrivateKeys[index] = privateKey;
+        }
+        console2.log("Seed V4 bidder count:", bidderPrivateKeys.length);
+    }
+
+    function _ensureApproval(HadronAssets assets, HadronMarket market, address owner) private {
+        if (!assets.isApprovedForAll(owner, address(market))) {
+            assets.setApprovalForAll(address(market), true);
+            console2.log("Approved market:", address(market));
+        }
+    }
+
+    function plannedListingAmount(uint256 planIndex, uint256 listingIndex) public pure returns (uint256) {
+        uint256 variant = (planIndex + listingIndex) % 3;
+        if (variant == 0) {
+            return 100;
+        }
+        if (variant == 1) {
+            return 200;
+        }
+
+        return 300;
+    }
+
+    function plannedSelfBuyAmount(uint256 pricePerShare, uint256 listingAmount) public pure returns (uint256) {
+        if (pricePerShare == 0 || listingAmount == 0) {
+            return 0;
+        }
+
+        uint256 maxAmount = MAX_SINGLE_TRADE_VALUE / pricePerShare;
+        if (maxAmount == 0) {
+            return 0;
+        }
+        if (listingAmount < maxAmount) {
+            return listingAmount;
+        }
+
+        return maxAmount;
+    }
+
+    function plannedPrimaryAmount(uint256 offeringId, uint256 tradeIndex, uint256 pricePerShare, uint256 remaining)
+        public
+        pure
+        returns (uint256)
+    {
+        if (pricePerShare == 0 || remaining == 0) {
+            return 0;
+        }
+
+        return _amountForTargetValue(
+            plannedPrimaryTargetValue(offeringId, tradeIndex, pricePerShare), pricePerShare, remaining
+        );
+    }
+
+    function plannedPrimaryTargetValue(uint256 offeringId, uint256 tradeIndex, uint256 pricePerShare)
+        public
+        pure
+        returns (uint256)
+    {
+        if (pricePerShare == 0) {
+            return 0;
+        }
+
+        uint256 targetValue = _smallTargetValueByIndex((offeringId + tradeIndex) % 4);
+        if (targetValue / pricePerShare == 0) {
+            return MAX_SINGLE_TRADE_VALUE;
+        }
+
+        return targetValue;
+    }
+
+    function plannedBidAmount(uint256 planIndex, uint256 bidIndex) public pure returns (uint256) {
+        uint256 variant = (planIndex + bidIndex) % 4;
+        if (variant == 0) {
+            return 120;
+        }
+        if (variant == 1) {
+            return 90;
+        }
+        if (variant == 2) {
+            return 150;
+        }
+
+        return 60;
+    }
+
+    function plannedBidFillAmount(uint256 bidAmount, uint256 fillIndex) public pure returns (uint256) {
+        uint256 fillAmount = fillIndex == 0 ? bidAmount / 3 : bidAmount / 4;
+        if (fillAmount >= bidAmount) {
+            return bidAmount - 1;
+        }
+
+        return fillAmount;
+    }
+
+    function _targetValueForBalance(
+        uint256 offeringId,
+        uint256 tradeIndex,
+        uint256 pricePerShare,
+        uint256 deployerBalance
+    ) private pure returns (uint256) {
+        uint256 index = (offeringId + tradeIndex) % 4;
+        uint256 largeTargetValue = _largeTargetValueByIndex(index);
+        if (
+            pricePerShare > 0 && largeTargetValue / pricePerShare > 0
+                && _hasReserveForValue(deployerBalance, largeTargetValue)
+        ) {
+            return largeTargetValue;
+        }
+
+        return plannedPrimaryTargetValue(offeringId, tradeIndex, pricePerShare);
+    }
+
+    function _amountForTargetValue(uint256 targetValue, uint256 pricePerShare, uint256 remaining)
+        private
+        pure
+        returns (uint256)
+    {
+        if (pricePerShare == 0 || remaining == 0) {
+            return 0;
+        }
+
+        uint256 amount = targetValue / pricePerShare;
+        if (amount > remaining) {
+            return remaining;
+        }
+
+        return amount;
+    }
+
+    function _capListCountByBalance(uint256 planIndex, uint256 targetListCount, uint256 deployerBalance)
+        private
+        pure
+        returns (uint256)
+    {
+        while (targetListCount > 0 && _plannedListingTotal(planIndex, targetListCount) > deployerBalance) {
+            targetListCount--;
+        }
+
+        return targetListCount;
+    }
+
+    function _plannedListingTotal(uint256 planIndex, uint256 targetListCount) private pure returns (uint256 total) {
+        for (uint256 listingIndex = 0; listingIndex < targetListCount; listingIndex++) {
+            total += plannedListingAmount(planIndex, listingIndex);
+        }
+    }
+
+    /// @dev 偶数序资产创建 3 笔并自成交 1 笔，最终通常保留 2 个活跃卖单；奇数序资产直接留 2 笔。
+    function _planListCount(uint256 planIndex) private pure returns (uint256) {
+        if (planIndex % 2 == 0) {
+            return 3;
+        }
+
+        return 2;
+    }
+
+    /// @dev 复刻 SeedSecondary 的 9400-10800 bps 卖单变价档位。
+    function _planBps(uint256 planIndex, uint256 listingIndex) private pure returns (uint256) {
+        uint256 variant = planIndex % 10;
+        if (variant == 0) {
+            if (listingIndex == 0) return 9_400;
+            if (listingIndex == 1) return 10_000;
+            return 10_800;
+        }
+        if (variant == 1) {
+            if (listingIndex == 0) return 9_700;
+            return 10_600;
+        }
+        if (variant == 2) {
+            if (listingIndex == 0) return 9_400;
+            if (listingIndex == 1) return 10_300;
+            return 10_600;
+        }
+        if (variant == 3) {
+            if (listingIndex == 0) return 10_000;
+            return 10_800;
+        }
+        if (variant == 4) {
+            if (listingIndex == 0) return 9_700;
+            if (listingIndex == 1) return 10_000;
+            return 10_800;
+        }
+        if (variant == 5) {
+            if (listingIndex == 0) return 9_400;
+            return 10_600;
+        }
+        if (variant == 6) {
+            if (listingIndex == 0) return 9_400;
+            if (listingIndex == 1) return 9_700;
+            return 10_300;
+        }
+        if (variant == 7) {
+            if (listingIndex == 0) return 10_000;
+            return 10_600;
+        }
+        if (variant == 8) {
+            if (listingIndex == 0) return 9_700;
+            if (listingIndex == 1) return 10_300;
+            return 10_800;
+        }
+
+        if (listingIndex == 0) return 9_400;
+        return 10_000;
+    }
+
+    function _shouldSelfBuy(uint256 planIndex) private pure returns (bool) {
+        return planIndex % 2 == 0;
+    }
+
+    function _selfBuyIndex(uint256 planIndex, uint256 listed) private pure returns (uint256) {
+        uint256 variant = planIndex % 10;
+        if ((variant == 2 || variant == 6 || variant == 8) && listed > 1) {
+            return 1;
+        }
+        if (variant == 4) {
+            return listed > 2 ? 2 : listed - 1;
+        }
+
+        return 0;
+    }
+
+    function _targetTradeCount(uint256 offeringId) private pure returns (uint256) {
+        if (offeringId % 2 == 0) {
+            return 2;
+        }
+
+        return 1;
+    }
+
+    function _targetBidCount(uint256 planIndex) private pure returns (uint256) {
+        return 2 + (planIndex % 3);
+    }
+
+    function _targetBidFillCount(uint256 planIndex) private pure returns (uint256) {
+        if (planIndex % 2 == 0) {
+            return 2;
+        }
+
+        return 1;
+    }
+
+    /// @dev 买单价全部低于最低卖单 9400 bps，并按档位递减。
+    function _bidBps(uint256 bidIndex) private pure returns (uint256) {
+        if (bidIndex == 0) {
+            return 9_000;
+        }
+        if (bidIndex == 1) {
+            return 8_700;
+        }
+        if (bidIndex == 2) {
+            return 8_400;
+        }
+
+        return 8_100;
+    }
+
+    function _hasReserveForValue(uint256 balance, uint256 value) private pure returns (bool) {
+        return balance >= value + MIN_DEPLOYER_RESERVE;
+    }
+
+    function _smallTargetValueByIndex(uint256 index) private pure returns (uint256) {
+        if (index == 0) {
+            return SMALL_TRADE_VALUE_0;
+        }
+        if (index == 1) {
+            return SMALL_TRADE_VALUE_1;
+        }
+        if (index == 2) {
+            return SMALL_TRADE_VALUE_2;
+        }
+
+        return SMALL_TRADE_VALUE_3;
+    }
+
+    function _largeTargetValueByIndex(uint256 index) private pure returns (uint256) {
+        if (index == 0) {
+            return MIN_SINGLE_TRADE_VALUE;
+        }
+        if (index == 1) {
+            return 55e18;
+        }
+        if (index == 2) {
+            return 90e18;
+        }
+
+        return MAX_SINGLE_TRADE_VALUE;
+    }
+}

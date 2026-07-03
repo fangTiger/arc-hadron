@@ -29,7 +29,7 @@
 
 ## 5. 验证 · 交叉检查 · 验收 · 归档
 
-- [ ] 5.1 Claude：forge + web 全量 test/lint/build 取证（零回归）
-- [ ] 5.2 Codex 只读交叉检查（记账数学/钩子安全/口径隔离/中文残留/spec 符合性）；阻塞项修复后重验
+- [x] 5.1 Claude：forge 86/86 + web 239/239 + lint 干净 + build 通过 + 生产三页 200（零回归）
+- [x] 5.2 Codex 只读交叉检查——2 阻塞已修复重验（批量重复 tokenId 守恒漏洞 → DuplicateBatchTokenId + 重部署 V6；yield hook success 后允许再提交）；其余维度通过（钩子安全/口径隔离/中文残留）
 - [ ] 5.3 用户合并验收（V5）：买单深度全流程（挂买单/Fill/撤单）+ 收益全流程（入金 → 两账户按比例领取 → 转让后再入金验证权益不串）
 - [ ] 5.4 归档：delta 合并 `openspec/specs/{yield-distribution,activity-feed}/`、design.md 同步、完整性 6 项检查（与买单深度归档一并处理）

@@ -5,8 +5,8 @@
 
 ## 1. 基建（Claude 亲自执行）
 
-- [ ] 1.1 `cd web && npm i openai`；从 arc-lepton/.env.local 复制 `DEEPSEEK_API_KEY/BASE_URL/MODEL` 到 `web/.env.local`（服务端专属段）；`web/.env.example` 补三个变量名（无值）
-- [ ] 1.2 移植 `web/lib/llm/deepseek.ts`（自 /Users/captain/python/arc-lepton/lib/llm/deepseek.ts，保留 mock 客户端语义，mock 内容换成 HADRON 洞察示例）+ `web/test/deepseek-client.test.ts`（无 key 返回 mock、有 key 返回真实客户端构造）
+- [x] 1.1 `cd web && npm i openai`；从 arc-lepton/.env.local 复制 `DEEPSEEK_API_KEY/BASE_URL/MODEL` 到 `web/.env.local`（服务端专属段）；`web/.env.example` 补三个变量名（无值）
+- [x] 1.2 移植 `web/lib/llm/deepseek.ts`（自 /Users/captain/python/arc-lepton/lib/llm/deepseek.ts，保留 mock 客户端语义，mock 内容换成 HADRON 洞察示例）+ `web/test/deepseek-client.test.ts`（无 key 返回 mock、有 key 返回真实客户端构造）
 
 ## 2. 纯函数层（codex，TDD：每步先 RED）
 

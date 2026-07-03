@@ -25,18 +25,18 @@
 
 - [x] 3.1 挂单转售流程（授权引导两步流 + 持仓弹窗 + 我的挂单管理）（9a7f8d0/65ecd90 + M3R 修复，Codex 交叉检查通过）
 - [x] 3.2 详情页二级挂单表与购买（含部分成交）（256bb70 + 小数份额层 df5cd0a）
-- [ ] 3.3 双钱包端到端验证：挂单 → 他人部分购买 → 撤单退回，协议费入账核对；Codex 交叉检查前端交易层
+- [x] 3.3 双钱包端到端验证：用户钱包挂单（listing 41/42/43，SELL tab 两步流）→ 购买 deployer 挂单（listing 17）→ 撤单退回（listing 43）；协议费精确 50bps cast 核对；Codex 交叉检查通过（1 BLOCKER + 1 SHOULD-FIX 已修 e389143）；全部哈希见 deployments/arc-testnet.json userAcceptance
 
 ## 4. M4 — 视觉与数据打磨
 
-- [ ] 4.1 链上动态流（activity-feed spec：分块扫描/去重/退避/explorer 链接）
-- [ ] 4.2 图表接入（lightweight-charts 走势图 + 卡片迷你走势线，真实成交数据 + 发行价基线兜底）
-- [ ] 4.3 微动效系统（数字滚动/悬停光晕/页面过渡/骨架屏微光）与 A+ 视觉终审
-- [ ] 4.4 种子交易脚本（多钱包制造真实链上成交，喂饱动态流与图表）
+- [x] 4.1 链上动态流（activity-feed spec：分块扫描/去重/localStorage 缓存/explorer 链接；M2R/M3R 提前实装，25e4518）
+- [x] 4.2 图表接入（lightweight-charts v5 走势图 + 发行价 ISSUE 基线 + 空态兜底，cd38996；表格迷你走势线沿用轻量 SVG）
+- [x] 4.3 微动效系统（shimmer/toast 进出场/页面淡入/hover 统一 + prefers-reduced-motion 降级）与 A+ 视觉终审（71d6eb6）
+- [x] 4.4 种子交易脚本（SeedV3 重发行 + SeedTrades/SeedSecondary 多轮：14 发行全覆盖、listingCount=40、变价自成交，1026783；另用户真实钱包成交 6 笔）
 
 ## 5. M5 — 可选增强与收尾
 
-- [ ] 5.1 （可选）3D 首屏英雄元素（react-three-fiber，惰性加载 + 静态降级，性能不劣化）
-- [ ] 5.2 Vercel 部署 + README（品牌叙事 + explorer 可查证清单）
-- [ ] 5.3 verification-before-completion：全部验收标准逐条取证（forge/vitest 输出 + 交易哈希）
+- [x] 5.1 （可选）3D 首屏英雄元素 — **决策：跳过**（可选项；性能与交易所审美风险大于收益，用户未要求）
+- [x] 5.2 Vercel 部署 + README — **范围变更：部署排除**（2026-07-03 用户明确指示"排除 vercel 部署"）；README 已完成（530ef2a，品牌叙事 + explorer 可查证清单）
+- [x] 5.3 verification-before-completion：最终取证（2026-07-03）——forge 42 用例全绿、vitest 27 文件/151 用例全绿、eslint 0 问题、next build 通过、//portfolio//asset/15//asset/19 均 200；用户真实钱包 6 笔验收交易（一级/二级购买、挂单×3、撤单）cast 事件解码核对，哈希见 deployments/arc-testnet.json
 - [ ] 5.4 归档：delta specs 合并至 `openspec/specs/`、design.md 同步、完整性 6 项检查

@@ -39,8 +39,10 @@ function tradeEvent(overrides: Partial<TradeEvent> = {}): TradeEvent {
   return {
     amount: 3n,
     blockNumber: 100n,
+    buyer: "0x1000000000000000000000000000000000000001",
     logIndex: 1,
     pricePerShare: 110n * USDC,
+    seller: "0x2000000000000000000000000000000000000002",
     timestamp: Date.UTC(2026, 6, 2, 10),
     tokenId: 1n,
     totalPaid: 330n * USDC,
@@ -87,6 +89,9 @@ describe("market redesign components", () => {
 
     expect(html).toContain("TBILL");
     expect(html).toContain("US T-Bill 2026-Q3");
+    expect(html).toContain("aria-label=\"Open US T-Bill 2026-Q3\"");
+    expect(html).toContain("role=\"link\"");
+    expect(html).toContain("cursor-pointer");
     expect(html).toContain("110.00");
     expect(html).toContain("10.00%");
     expect(html).toContain("href=\"/asset/1\"");
@@ -101,6 +106,8 @@ describe("market redesign components", () => {
     expect(html).toContain("ACTIVITY");
     expect(html).toContain("BUY 3 TBILL @ 110.00");
     expect(html).toContain("href=\"https://testnet.arcscan.app/tx/");
+    expect(html).toContain("href=\"https://testnet.arcscan.app/address/0x1000000000000000000000000000000000000001\"");
+    expect(html).toContain("0x1000…0001");
   });
 
   test("renders the live ticker marker and latest event copy", () => {

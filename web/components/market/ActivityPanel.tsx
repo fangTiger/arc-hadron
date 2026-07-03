@@ -1,7 +1,9 @@
 "use client";
 
 import type { TradeEvent } from "@/lib/events";
+import { shortAddress } from "@/lib/format";
 import {
+  addressExplorerUrl,
   eventExplorerUrl,
   eventSentence,
   eventToneClassName,
@@ -32,6 +34,20 @@ function ExternalLinkIcon() {
   );
 }
 
+function eventCounterparties(event: TradeEvent): Array<{ address: `0x${string}`; label: string }> {
+  const links: Array<{ address: `0x${string}`; label: string }> = [];
+
+  if (event.buyer) {
+    links.push({ address: event.buyer, label: "BUYER" });
+  }
+
+  if (event.seller) {
+    links.push({ address: event.seller, label: "SELLER" });
+  }
+
+  return links;
+}
+
 export function ActivityPanel({
   assets,
   events,
@@ -58,6 +74,7 @@ export function ActivityPanel({
         <ul className="divide-y divide-border">
           {recent.map((event) => {
             const asset = byTokenId.get(event.tokenId);
+            const counterparties = eventCounterparties(event);
 
             return (
               <li className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 px-4 py-3" key={`${event.txHash}:${event.logIndex}`}>
@@ -65,9 +82,20 @@ export function ActivityPanel({
                   <p className={["truncate font-mono text-[11px] uppercase tracking-[0.12em]", eventToneClassName(event.type)].join(" ")}>
                     {eventSentence(event, asset)}
                   </p>
-                  <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
-                    {relativeTime(event.timestamp, nowMs)}
-                  </p>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+                    <span>{relativeTime(event.timestamp, nowMs)}</span>
+                    {counterparties.map((counterparty) => (
+                      <a
+                        className="underline-offset-4 transition-colors hover:text-neon hover:underline"
+                        href={addressExplorerUrl(counterparty.address)}
+                        key={`${event.txHash}:${event.logIndex}:${counterparty.label}`}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        {counterparty.label} {shortAddress(counterparty.address)}
+                      </a>
+                    ))}
+                  </div>
                 </div>
                 <a
                   aria-label={`Open transaction ${event.txHash}`}

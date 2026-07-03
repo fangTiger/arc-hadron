@@ -156,6 +156,8 @@ describe("MyListingsView", () => {
     const html = renderToStaticMarkup(<MyListingsView {...myListingsProps()} />);
 
     expect(html).toContain("US T-Bill 2026-Q3");
+    expect(html).toContain("cursor-pointer");
+    expect(html).toContain("hover:bg-border/20");
     expect(html).toContain("2.50 USDC");
     expect(html).toContain("4");
     expect(html).toContain("Cancel");

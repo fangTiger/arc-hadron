@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAccount, useBalance, useConnect } from "wagmi";
 import { ARC_CHAIN_ID } from "@/lib/chain";
@@ -10,6 +10,7 @@ import { useCancelListing } from "@/lib/hooks/useCancelListing";
 import { useListings, type ListingView } from "@/lib/hooks/useListings";
 import { useNetworkGuard } from "@/lib/hooks/useNetworkGuard";
 import { validateListingPurchase } from "@/lib/listing";
+import { stopRowNavigation } from "@/lib/rowNavigation";
 import type { BuyPrimaryStatus } from "@/lib/hooks/useBuyPrimary";
 import { GlowButton } from "@/components/ui/GlowButton";
 import { buildTxExplorerUrl, useToast } from "@/components/ui/TxToast";
@@ -34,7 +35,10 @@ function SecondaryButton({
     <button
       className="h-8 border border-border bg-bg/50 px-3 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-text-dim transition-colors hover:border-border-glow hover:text-text disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-muted"
       disabled={disabled}
-      onClick={onClick}
+      onClick={(event) => {
+        stopRowNavigation(event);
+        onClick();
+      }}
       type="button"
     >
       {children}
@@ -325,6 +329,15 @@ export function ListingsTable({
     resetBuy();
   }
 
+  function handleListingRowKeyDown(event: KeyboardEvent<HTMLTableRowElement>, listing: ListingView) {
+    if (listing.isMine || (event.key !== "Enter" && event.key !== " ")) {
+      return;
+    }
+
+    event.preventDefault();
+    openBuy(listing);
+  }
+
   function submitBuy() {
     if (!expandedListing) {
       return;
@@ -417,7 +430,22 @@ export function ListingsTable({
 
               return (
                 <Fragment key={listing.id.toString()}>
-                  <tr className={isExpanded ? "bg-bg/40" : "bg-panel"}>
+                  <tr
+                    aria-label={listing.isMine ? undefined : `Open buy form for listing ${listing.id.toString()}`}
+                    className={[
+                      isExpanded ? "bg-bg/40" : "bg-panel",
+                      "transition-colors hover:bg-border/20",
+                      listing.isMine ? "" : "cursor-pointer",
+                    ].join(" ")}
+                    onClick={() => {
+                      if (!listing.isMine) {
+                        openBuy(listing);
+                      }
+                    }}
+                    onKeyDown={(event) => handleListingRowKeyDown(event, listing)}
+                    role={listing.isMine ? undefined : "button"}
+                    tabIndex={listing.isMine ? undefined : 0}
+                  >
                     <td className="px-4 py-4 align-middle">
                       <p className="font-mono text-sm text-text">{formatUsdc(listing.pricePerShare)}</p>
                       <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
@@ -474,7 +502,10 @@ export function ListingsTable({
                       ) : (
                         <GlowButton
                           disabled={isBusy(buyStatus)}
-                          onClick={() => openBuy(listing)}
+                          onClick={(event) => {
+                            stopRowNavigation(event);
+                            openBuy(listing);
+                          }}
                           size="sm"
                         >
                           Buy

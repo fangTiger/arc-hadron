@@ -52,8 +52,10 @@ function tradeEvent(overrides: Partial<TradeEvent> = {}): TradeEvent {
   return {
     amount: 2n,
     blockNumber: 100n,
+    buyer: "0x1000000000000000000000000000000000000001",
     logIndex: 1,
     pricePerShare: 2n * USDC,
+    seller: "0x2000000000000000000000000000000000000002",
     timestamp: Date.UTC(2026, 6, 2, 10),
     tokenId: 1n,
     totalPaid: 4n * USDC,
@@ -134,8 +136,30 @@ describe("on-chain asset read state", () => {
     expect(html).toContain("24H");
     expect(html).toContain("MARKET CAP");
     expect(html).toContain("TRADE HISTORY");
+    expect(html).toContain("COUNTERPARTY");
     expect(html).toContain("PRIMARY SALE");
+    expect(html).toContain("BUYER");
+    expect(html).toContain("0x1000…0001");
     expect(html).toContain("href=\"https://testnet.arcscan.app/tx/");
+    expect(html).toContain("href=\"https://testnet.arcscan.app/address/0x1000000000000000000000000000000000000001\"");
+  });
+
+  test("renders both buyer and seller address links for secondary purchases", () => {
+    const html = renderToStaticMarkup(
+      <AssetDetailView
+        assets={[assetView()]}
+        events={[tradeEvent({ type: "purchased" })]}
+        id="1"
+        isLoading={false}
+        nowMs={Date.UTC(2026, 6, 2, 12)}
+      />,
+    );
+
+    expect(html).toContain("PURCHASED");
+    expect(html).toContain("BUYER");
+    expect(html).toContain("SELLER");
+    expect(html).toContain("href=\"https://testnet.arcscan.app/address/0x1000000000000000000000000000000000000001\"");
+    expect(html).toContain("href=\"https://testnet.arcscan.app/address/0x2000000000000000000000000000000000000002\"");
   });
 
   test("caps remaining ratio in bigint space before converting to number", () => {

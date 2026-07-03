@@ -157,6 +157,8 @@ describe("secondary listings detail surface", () => {
     expect(html).toContain("AMOUNT");
     expect(html).toContain("SELLER");
     expect(html.indexOf("98.00")).toBeLessThan(html.indexOf("99.00"));
+    expect(html).toContain("cursor-pointer");
+    expect(html).toContain("hover:bg-border/20");
     expect(html).toContain("0x1111");
     expect(html).toContain("You");
     expect(html).toContain("Cancel");

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { buildTxExplorerUrl, useToast } from "@/components/ui/TxToast";
@@ -8,6 +9,11 @@ import { useAssets } from "@/lib/hooks/useAssets";
 import { useCancelListing } from "@/lib/hooks/useCancelListing";
 import { type ListingView, useMyListings } from "@/lib/hooks/useListings";
 import { useNetworkGuard } from "@/lib/hooks/useNetworkGuard";
+import {
+  handleRowNavigationKeyDown,
+  navigateToHref,
+  stopRowNavigation,
+} from "@/lib/rowNavigation";
 
 type TxHash = `0x${string}`;
 type CancelStatus = "idle" | "signing" | "pending" | "success" | "error";
@@ -22,6 +28,7 @@ export interface MyListingsViewProps {
   onAskCancel: (listingId: bigint) => void;
   onCancel: (listingId: bigint | null) => void;
   onDismissConfirm: () => void;
+  onNavigate?: (href: string) => void;
   status: CancelStatus;
   txHash?: TxHash;
 }
@@ -56,6 +63,7 @@ export function MyListingsView({
   onAskCancel,
   onCancel,
   onDismissConfirm,
+  onNavigate = navigateToHref,
   status,
   txHash,
 }: MyListingsViewProps) {
@@ -101,12 +109,22 @@ export function MyListingsView({
               {listings.map((listing) => {
                 const isConfirming = cancellingId === listing.id;
                 const showTxLink = isConfirming && txHash;
+                const assetHref = `/asset/${listing.tokenId.toString()}`;
+                const assetName = assetNameForListing(listing, assetNameByTokenId);
 
                 return (
-                  <tr className="border-t border-border align-middle" key={listing.id.toString()}>
+                  <tr
+                    aria-label={`Open ${assetName}`}
+                    className="cursor-pointer border-t border-border align-middle transition-colors hover:bg-border/20"
+                    key={listing.id.toString()}
+                    onClick={() => onNavigate(assetHref)}
+                    onKeyDown={(event) => handleRowNavigationKeyDown(event, assetHref, onNavigate)}
+                    role="link"
+                    tabIndex={0}
+                  >
                     <td className="py-5 pl-5 pr-4">
                       <p className="text-sm font-semibold text-text">
-                        {assetNameForListing(listing, assetNameByTokenId)}
+                        {assetName}
                       </p>
                       <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
                         #{listing.tokenId.toString()} / Listing {listing.id.toString()}
@@ -127,7 +145,10 @@ export function MyListingsView({
                           <button
                             className="h-8 border border-down/70 bg-down/10 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-down disabled:cursor-not-allowed disabled:opacity-60"
                             disabled={isBusy}
-                            onClick={() => onCancel(listing.id)}
+                            onClick={(event) => {
+                              stopRowNavigation(event);
+                              onCancel(listing.id);
+                            }}
                             type="button"
                           >
                             {cancelLabel(status)}
@@ -135,7 +156,10 @@ export function MyListingsView({
                           <button
                             className="h-8 border border-border bg-bg/50 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-text-dim disabled:cursor-not-allowed disabled:opacity-60"
                             disabled={isBusy}
-                            onClick={onDismissConfirm}
+                            onClick={(event) => {
+                              stopRowNavigation(event);
+                              onDismissConfirm();
+                            }}
                             type="button"
                           >
                             Keep
@@ -144,6 +168,7 @@ export function MyListingsView({
                             <a
                               className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-dim underline-offset-4 hover:text-neon hover:underline"
                               href={buildTxExplorerUrl(explorerUrl, txHash)}
+                              onClick={stopRowNavigation}
                               rel="noreferrer"
                               target="_blank"
                             >
@@ -155,7 +180,10 @@ export function MyListingsView({
                         <button
                           className="h-9 border border-border bg-bg/50 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-text-dim transition-colors hover:border-border-glow hover:text-text"
                           disabled={isBusy}
-                          onClick={() => onAskCancel(listing.id)}
+                          onClick={(event) => {
+                            stopRowNavigation(event);
+                            onAskCancel(listing.id);
+                          }}
                           type="button"
                         >
                           Cancel
@@ -180,6 +208,7 @@ export function MyListingsView({
 }
 
 export function MyListings() {
+  const router = useRouter();
   const [cancellingId, setCancellingId] = useState<bigint | null>(null);
   const { assets } = useAssets();
   const { listings, isLoading } = useMyListings();
@@ -245,6 +274,7 @@ export function MyListings() {
         cancel(listingId);
       }}
       onDismissConfirm={() => setCancellingId(null)}
+      onNavigate={(href) => router.push(href)}
       status={status}
       txHash={txHash}
     />

@@ -15,7 +15,9 @@ export interface TradeEvent {
   type: TradeEventType;
   tokenId: bigint;
   amount?: bigint;
+  buyer?: Hex;
   pricePerShare?: bigint;
+  seller?: Hex;
   totalPaid?: bigint;
   txHash: Hex;
   logIndex: number;
@@ -93,6 +95,12 @@ function toNumber(value: unknown): number | undefined {
   }
 
   return undefined;
+}
+
+function toAddress(value: unknown): Hex | undefined {
+  return typeof value === "string" && /^0x[a-fA-F0-9]{40}$/.test(value)
+    ? (value as Hex)
+    : undefined;
 }
 
 function txHashFor(log: RawMarketLog): Hex | undefined {
@@ -222,6 +230,8 @@ export function parseMarketLogs(logs: readonly RawMarketLog[]): TradeEvent[] {
     const listingId = toBigInt(args.listingId);
     const offeringId = toBigInt(args.offeringId);
     const amount = toBigInt(args.amount ?? args.totalShares ?? args.returnedAmount);
+    const buyer = toAddress(args.buyer);
+    const seller = toAddress(args.seller);
     const totalPaid = toBigInt(args.totalPaid);
     const pricePerShare = toBigInt(args.pricePerShare) ?? priceFromTotal(totalPaid, amount);
     const tokenId =
@@ -236,10 +246,12 @@ export function parseMarketLogs(logs: readonly RawMarketLog[]): TradeEvent[] {
     events.push({
       amount,
       blockNumber,
+      buyer,
       listingId,
       logIndex,
       offeringId,
       pricePerShare,
+      seller,
       timestamp: log.timestamp,
       tokenId,
       totalPaid,

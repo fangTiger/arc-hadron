@@ -85,11 +85,19 @@ export function averageApyBps(assets: readonly AssetView[]): number | null {
   return Math.floor(apys.reduce((sum, value) => sum + value, 0) / apys.length);
 }
 
-export function eventExplorerUrl(txHash: string): string {
+function explorerUrlFor(path: "address" | "tx", value: string): string {
   const explorerUrl = process.env.NEXT_PUBLIC_ARC_EXPLORER_URL ?? "";
   const base = explorerUrl.trim().replace(/\/+$/, "");
 
-  return `${base}/tx/${txHash}`;
+  return `${base}/${path}/${value}`;
+}
+
+export function addressExplorerUrl(address: string): string {
+  return explorerUrlFor("address", address);
+}
+
+export function eventExplorerUrl(txHash: string): string {
+  return explorerUrlFor("tx", txHash);
 }
 
 export function relativeTime(timestamp: number | undefined, nowMs: number): string {

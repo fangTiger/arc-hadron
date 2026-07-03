@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { categoryDisplay } from "@/lib/categories";
@@ -14,6 +15,11 @@ import {
   priceSeriesForAsset,
 } from "@/lib/marketMetrics";
 import type { AssetView } from "@/lib/mappers";
+import {
+  handleRowNavigationKeyDown,
+  navigateToHref,
+  stopRowNavigation,
+} from "@/lib/rowNavigation";
 
 type SortKey = "price" | "yield" | "available" | "mktcap";
 type SortDirection = "asc" | "desc";
@@ -179,6 +185,7 @@ export function MarketTable({
   isLoading: boolean;
   nowMs: number;
 }) {
+  const router = useRouter();
   const [sortKey, setSortKey] = useState<SortKey>("mktcap");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
@@ -199,6 +206,7 @@ export function MarketTable({
       events={events}
       isLoading={isLoading}
       nowMs={nowMs}
+      onNavigate={(href) => router.push(href)}
       onSort={updateSort}
       sortDirection={sortDirection}
       sortKey={sortKey}
@@ -213,6 +221,7 @@ export function MarketTableView({
   isLoading,
   nowMs,
   onSort = () => undefined,
+  onNavigate = navigateToHref,
   sortDirection = "desc",
   sortKey = "mktcap",
 }: {
@@ -221,6 +230,7 @@ export function MarketTableView({
   events: TradeEvent[];
   isLoading: boolean;
   nowMs: number;
+  onNavigate?: (href: string) => void;
   onSort?: (key: SortKey) => void;
   sortDirection?: SortDirection;
   sortKey?: SortKey;
@@ -304,11 +314,17 @@ export function MarketTableView({
             {!isLoading && !errorText
               ? rows.map((row) => {
                   const category = categoryDisplay(row.asset.category);
+                  const assetHref = `/asset/${row.asset.tokenId.toString()}`;
 
                   return (
                     <tr
-                      className="border-b border-border/80 transition-colors last:border-b-0 hover:bg-border-glow/18"
+                      aria-label={`Open ${row.asset.meta.displayName}`}
+                      className="cursor-pointer border-b border-border/80 transition-colors last:border-b-0 hover:bg-border-glow/18"
                       key={row.asset.tokenId.toString()}
+                      onClick={() => onNavigate(assetHref)}
+                      onKeyDown={(event) => handleRowNavigationKeyDown(event, assetHref, onNavigate)}
+                      role="link"
+                      tabIndex={0}
                     >
                       <td className="px-4 py-4">
                         <div className="flex min-w-0 items-center gap-3">
@@ -342,7 +358,8 @@ export function MarketTableView({
                       <td className="px-4 py-4 text-right">
                         <Link
                           className="inline-flex h-8 items-center justify-center bg-[#0e7490] px-3 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-[#155e75]"
-                          href={`/asset/${row.asset.tokenId.toString()}`}
+                          href={assetHref}
+                          onClick={stopRowNavigation}
                         >
                           Trade
                         </Link>

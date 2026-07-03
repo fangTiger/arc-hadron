@@ -8,6 +8,7 @@ import {
   HADRON_ASSETS_ADDRESS,
   HADRON_MARKET_ADDRESS,
 } from "@/lib/contracts";
+import { fetchLogsInBlockRange } from "@/lib/eventLogs";
 import { toHoldings, type BuyEvent, type Holding, type TokenBalance } from "@/lib/mappers";
 import { useAssets } from "./useAssets";
 
@@ -45,13 +46,20 @@ export function usePortfolio(): { errorZh?: string; holdings: Holding[]; isLoadi
         return [];
       }
 
-      const logs = await publicClient.getLogs({
-        address: HADRON_MARKET_ADDRESS,
-        event: PRIMARY_SALE_EVENT,
-        args: {
-          buyer: address,
-        },
+      const latestBlock = await publicClient.getBlockNumber();
+      const logs = await fetchLogsInBlockRange({
         fromBlock: BigInt(DEPLOY_BLOCK),
+        getLogs: (chunk) =>
+          publicClient.getLogs({
+            address: HADRON_MARKET_ADDRESS,
+            args: {
+              buyer: address,
+            },
+            event: PRIMARY_SALE_EVENT,
+            fromBlock: chunk.from,
+            toBlock: chunk.to,
+          }),
+        toBlock: latestBlock,
       });
 
       return logs.flatMap((log) => {

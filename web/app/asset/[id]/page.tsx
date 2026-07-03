@@ -12,6 +12,7 @@ import { formatShares, formatUsdc, shortAddress } from "@/lib/format";
 import { useAssets } from "@/lib/hooks/useAssets";
 import { useMarketEvents } from "@/lib/hooks/useMarketEvents";
 import {
+  addressExplorerUrl,
   assetChange24h,
   eventExplorerUrl,
   formatApyBps,
@@ -223,6 +224,44 @@ function eventTypeLabel(type: TradeEvent["type"]): string {
   return labels[type];
 }
 
+function eventCounterparties(event: TradeEvent): Array<{ address: `0x${string}`; label: string }> {
+  const counterparties: Array<{ address: `0x${string}`; label: string }> = [];
+
+  if (event.buyer) {
+    counterparties.push({ address: event.buyer, label: "BUYER" });
+  }
+
+  if (event.seller) {
+    counterparties.push({ address: event.seller, label: "SELLER" });
+  }
+
+  return counterparties;
+}
+
+function CounterpartyCell({ event }: { event: TradeEvent }) {
+  const counterparties = eventCounterparties(event);
+
+  if (counterparties.length === 0) {
+    return <span className="font-mono text-sm text-muted">—</span>;
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      {counterparties.map((counterparty) => (
+        <a
+          className="font-mono text-[11px] uppercase tracking-[0.14em] text-neon-dim underline-offset-4 hover:text-neon hover:underline"
+          href={addressExplorerUrl(counterparty.address)}
+          key={`${event.txHash}:${event.logIndex}:${counterparty.label}`}
+          rel="noreferrer"
+          target="_blank"
+        >
+          {counterparty.label} {shortAddress(counterparty.address)}
+        </a>
+      ))}
+    </div>
+  );
+}
+
 function TradeHistoryTable({
   asset,
   events,
@@ -250,10 +289,10 @@ function TradeHistoryTable({
         <h2 className="font-mono text-[11px] uppercase tracking-[0.2em] text-text">TRADE HISTORY</h2>
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-[720px] w-full border-collapse">
+        <table className="min-w-[860px] w-full border-collapse">
           <thead className="border-b border-border bg-bg/70">
             <tr>
-              {["TIME", "TYPE", "QTY", "PRICE", "TX"].map((label) => (
+              {["TIME", "TYPE", "QTY", "PRICE", "COUNTERPARTY", "TX"].map((label) => (
                 <th
                   className="px-5 py-3 text-left font-mono text-[10px] uppercase tracking-[0.16em] text-muted"
                   key={label}
@@ -273,7 +312,7 @@ function TradeHistoryTable({
             ) : null}
             {!isLoading && rows.length === 0 ? (
               <tr>
-                <td className="px-5 py-8 text-sm text-muted" colSpan={5}>
+                <td className="px-5 py-8 text-sm text-muted" colSpan={6}>
                   Trade history lands here after on-chain activity.
                 </td>
               </tr>
@@ -292,6 +331,9 @@ function TradeHistoryTable({
                     </td>
                     <td className="px-5 py-4 font-mono text-sm text-text">
                       {event.pricePerShare === undefined ? "—" : formatUsdc(event.pricePerShare)}
+                    </td>
+                    <td className="px-5 py-4">
+                      <CounterpartyCell event={event} />
                     </td>
                     <td className="px-5 py-4">
                       <a

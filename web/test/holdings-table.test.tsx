@@ -47,6 +47,9 @@ describe("HoldingsTableView", () => {
     }
 
     expect(html).toContain("US T-Bill 2026-Q3");
+    expect(html).toContain("aria-label=\"Open US T-Bill 2026-Q3\"");
+    expect(html).toContain("role=\"link\"");
+    expect(html).toContain("cursor-pointer");
     expect(html).toContain("TREASURIES");
     expect(html).toContain("12,345");
     expect(html).toContain("24,690.00 USDC");

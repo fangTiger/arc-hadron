@@ -105,6 +105,7 @@ describe("parseMarketLogs", () => {
     expect(parsed).toMatchObject({
       amount: 3n,
       blockNumber: 100n,
+      buyer,
       logIndex: 2,
       pricePerShare: 185n,
       tokenId: 4n,
@@ -125,7 +126,9 @@ describe("parseMarketLogs", () => {
 
     expect(parsed).toMatchObject({
       amount: 5n,
+      buyer,
       pricePerShare: 250n,
+      seller,
       tokenId: 2n,
       totalPaid: 1250n,
       type: "purchased",

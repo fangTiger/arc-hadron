@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import { useAccount } from "wagmi";
 import { WalletButton } from "@/components/layout/WalletButton";
@@ -12,6 +13,11 @@ import { categoryDisplay } from "@/lib/categories";
 import { formatShares, formatUsdc } from "@/lib/format";
 import { usePortfolio } from "@/lib/hooks/usePortfolio";
 import type { Holding } from "@/lib/mappers";
+import {
+  handleRowNavigationKeyDown,
+  navigateToHref,
+  stopRowNavigation,
+} from "@/lib/rowNavigation";
 
 const tableHeaders = ["ASSET", "SHARES", "MARKET VALUE", "AVG COST", "COST BASIS", "ACTIONS"];
 
@@ -22,6 +28,7 @@ interface HoldingsTableViewProps {
   isConnected: boolean;
   isLoading: boolean;
   onListForSale?: (holding: Holding) => void;
+  onNavigate?: (href: string) => void;
 }
 
 function labelClassName() {
@@ -119,12 +126,23 @@ function CategoryBadge({ category }: { category: string }) {
 function HoldingRow({
   holding,
   onListForSale,
+  onNavigate = navigateToHref,
 }: {
   holding: Holding;
   onListForSale?: (holding: Holding) => void;
+  onNavigate?: (href: string) => void;
 }) {
+  const assetHref = `/asset/${holding.asset.tokenId.toString()}`;
+
   return (
-    <tr className="border-t border-border align-middle transition-colors hover:bg-border/20">
+    <tr
+      aria-label={`Open ${holding.asset.meta.displayName}`}
+      className="cursor-pointer border-t border-border align-middle transition-colors hover:bg-border/20"
+      onClick={() => onNavigate(assetHref)}
+      onKeyDown={(event) => handleRowNavigationKeyDown(event, assetHref, onNavigate)}
+      role="link"
+      tabIndex={0}
+    >
       <td className="min-w-72 py-5 pr-5">
         <div className="flex flex-col gap-3">
           <p className="text-base font-semibold text-text">{holding.asset.meta.displayName}</p>
@@ -149,7 +167,10 @@ function HoldingRow({
       <td className="py-5 pl-5">
         <button
           className="h-9 border border-border bg-bg/50 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-text-dim transition-colors hover:border-border-glow hover:text-text"
-          onClick={() => onListForSale?.(holding)}
+          onClick={(event) => {
+            stopRowNavigation(event);
+            onListForSale?.(holding);
+          }}
           type="button"
         >
           List for sale
@@ -166,6 +187,7 @@ export function HoldingsTableView({
   isConnected,
   isLoading,
   onListForSale,
+  onNavigate,
 }: HoldingsTableViewProps) {
   const totalMarketValue = useMemo(
     () => holdings.reduce((total, holding) => total + holding.marketValue, 0n),
@@ -215,6 +237,7 @@ export function HoldingsTableView({
                   holding={holding}
                   key={holding.asset.tokenId.toString()}
                   onListForSale={onListForSale}
+                  onNavigate={onNavigate}
                 />
               ))
             )}
@@ -240,6 +263,7 @@ export function HoldingsTableView({
 }
 
 export function HoldingsTable() {
+  const router = useRouter();
   const { isConnected } = useAccount();
   const { errorZh, holdings, isLoading } = usePortfolio();
   const [listingHolding, setListingHolding] = useState<Holding | null>(null);
@@ -253,6 +277,7 @@ export function HoldingsTable() {
         isConnected={isConnected}
         isLoading={isConnected ? isLoading : false}
         onListForSale={setListingHolding}
+        onNavigate={(href) => router.push(href)}
       />
       {listingHolding ? (
         <ListForSaleModal

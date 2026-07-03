@@ -5,10 +5,10 @@
 
 ## 1. 合约（forge TDD）
 
-- [ ] 1.1 `HadronYield.sol`（scaled 累积器 + 构造器固定排除名单 + deposit/claim/claimBatch/pending/notifyTransfer）+ `HadronYield.t.sol` 全场景（比例/转账结算/自转账/batch/多 token/dust/微额/幂等/排除四组合）
-- [ ] 1.2 `HadronAssets.sol` 增 `setYieldHook` 一次性锁定 + `_update` 头部钩子；hook 未设置转账正常 + 二次设置 revert 用例
-- [ ] 1.3 对抗与不变量：claim 重入/拒收领取/非 assets 调 notifyTransfer；等式口径 invariant/fuzz（累计入金 == 已支付 + Σpending + 可解释余数）
-- [ ] 1.4 forge test 全绿取证（Claude 亲自跑，现有 67 用例零回归）
+- [x] 1.1 `HadronYield.sol`（scaled 累积器 + 构造器固定排除名单 + deposit/claim/claimBatch/pending/notifyTransfer）+ `HadronYield.t.sol` 全场景（比例/转账结算/自转账/batch/多 token/dust/微额/幂等/排除四组合）
+- [x] 1.2 `HadronAssets.sol` 增 `setYieldHook` 一次性锁定 + `_update` 头部钩子；hook 未设置转账正常 + 二次设置 revert 用例
+- [x] 1.3 对抗与不变量：claim 重入/拒收领取/非 assets 调 notifyTransfer；等式口径 invariant/fuzz（累计入金 == 已支付 + Σpending + 可解释余数）
+- [x] 1.4 forge test 全绿取证（Claude 亲自跑）——86/86 通过（HadronYield 19 用例，零回归）
 
 ## 2. 前端事件层与数据（web TDD，无需链上）
 

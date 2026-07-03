@@ -18,3 +18,4 @@ contracts/lib/
 contracts/cache/
 contracts/out/
 graphify-out/
+contracts/broadcast/Seed*

@@ -13,12 +13,34 @@ const MOCK_INSIGHT_CHUNKS = [
   "---\nAI-generated · testnet demo data · not financial advice\n",
 ];
 
+/** mock 流内容：Market Brief 变体，让无 key 演示时简报也呈现正确的三节结构。 */
+const MOCK_BRIEF_CHUNKS = [
+  "## Movers\nSeeded treasuries lead turnover; price drift stays within the issue band. ",
+  "Thin books amplify single-trade moves.\n\n",
+  "## New listings\nA handful of secondary listings sit just above the primary offering price.\n\n",
+  "## Notable trades\n- Primary-sale absorption dominates volume\n- Secondary crossings remain sporadic\n\n",
+  "---\nAI-generated · testnet demo data · not financial advice\n",
+];
+
 interface MockStreamChunk {
   choices: Array<{ delta: { content?: string } }>;
 }
 
-async function* mockCompletionStream(): AsyncGenerator<MockStreamChunk> {
-  for (const content of MOCK_INSIGHT_CHUNKS) {
+/** 依据 system 提示选择 mock 形态：包含 Movers 的按 Market Brief 输出，否则按 Asset Insight。 */
+function mockChunksFor(messages: unknown): readonly string[] {
+  const wantsBrief =
+    Array.isArray(messages) &&
+    messages.some(
+      (message) =>
+        typeof (message as { content?: unknown })?.content === "string" &&
+        ((message as { content: string }).content.includes("Movers")),
+    );
+
+  return wantsBrief ? MOCK_BRIEF_CHUNKS : MOCK_INSIGHT_CHUNKS;
+}
+
+async function* mockCompletionStream(chunks: readonly string[]): AsyncGenerator<MockStreamChunk> {
+  for (const content of chunks) {
     yield { choices: [{ delta: { content } }] };
   }
 }
@@ -41,8 +63,8 @@ function createMockDeepSeekClient(): MockDeepSeekClient {
     isMock: true,
     chat: {
       completions: {
-        async create() {
-          return mockCompletionStream();
+        async create(params: { messages: unknown }) {
+          return mockCompletionStream(mockChunksFor(params.messages));
         },
       },
     },

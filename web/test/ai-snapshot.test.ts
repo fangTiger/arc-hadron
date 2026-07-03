@@ -215,4 +215,27 @@ describe("AI snapshot builders", () => {
     expect(byteLength).toBeLessThanOrEqual(24_576);
     expectJsonRoundTrip(snapshot);
   });
+
+  test("caps the asset price series to the latest points within the route budget", () => {
+    const lastTradeTs = Date.UTC(2026, 5, 1) + 599 * 60_000;
+    const events = Array.from({ length: 600 }, (_, index) =>
+      tradeEvent({
+        blockNumber: BigInt(index + 1),
+        logIndex: index,
+        pricePerShare: 25000000000000000n + BigInt(index) * 1000000000000n,
+        timestamp: Date.UTC(2026, 5, 1) + index * 60_000,
+        txHash: hash(index + 1),
+      }),
+    );
+
+    const snapshot = buildAssetSnapshot({
+      asset: assetView(),
+      events,
+      listings: [],
+      nowMs: Date.UTC(2026, 6, 3, 12),
+    });
+
+    expect(snapshot.priceSeries.length).toBeLessThanOrEqual(300);
+    expect(snapshot.priceSeries.at(-1)?.t).toBeGreaterThanOrEqual(lastTradeTs);
+  });
 });

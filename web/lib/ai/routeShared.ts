@@ -71,6 +71,9 @@ function jsonError(message: string, status: number, headers?: HeadersInit): Resp
   return Response.json({ error: message }, { status, headers });
 }
 
+// 信任边界说明：Next.js 路由处理器拿不到 socket 地址，x-forwarded-for 是唯一来源信号，
+// 直接暴露公网时该头可伪造以绕过每 IP 配额（全局配额仍兜底）。仅应部署在可信代理之后，
+// 由代理覆写该头；本项目为 testnet 演示，不做公网直连部署。
 function clientIp(request: Request): string {
   const forwardedFor = request.headers.get("x-forwarded-for");
   const firstForwardedIp = forwardedFor?.split(",")[0]?.trim();
@@ -146,8 +149,38 @@ function createSseResponse(prompt: AiPrompt, requestSignal: AbortSignal): Respon
 
   requestSignal.addEventListener("abort", abortUpstream, { once: true });
 
+  // 客户端断开/超时/上游异常可能交叠，controller 取消后 enqueue/close 会抛
+  // TypeError；用显式标志做幂等守卫，避免依赖流机制吞掉异常。
+  let streamClosed = false;
+
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
+      const safeEnqueue = (text: string) => {
+        if (streamClosed) {
+          return;
+        }
+
+        try {
+          enqueueText(controller, text);
+        } catch {
+          streamClosed = true;
+        }
+      };
+
+      const safeClose = () => {
+        if (streamClosed) {
+          return;
+        }
+
+        streamClosed = true;
+
+        try {
+          controller.close();
+        } catch {
+          // controller 已被 cancel，忽略。
+        }
+      };
+
       const timeout = setTimeout(() => {
         timedOut = true;
         upstreamAbort.abort();
@@ -164,29 +197,34 @@ function createSseResponse(prompt: AiPrompt, requestSignal: AbortSignal): Respon
         );
 
         for await (const chunk of completionStream) {
+          if (clientAborted || timedOut || upstreamAbort.signal.aborted) {
+            break;
+          }
+
           const delta = chunk.choices?.[0]?.delta?.content;
 
           if (delta) {
-            enqueueText(controller, encodeSseEvent("chunk", { delta }));
+            safeEnqueue(encodeSseEvent("chunk", { delta }));
           }
         }
 
         if (!clientAborted && !timedOut) {
-          enqueueText(controller, encodeSseEvent("done", { ok: true }));
+          safeEnqueue(encodeSseEvent("done", { ok: true }));
         } else if (!clientAborted && timedOut) {
-          enqueueText(controller, encodeSseEvent("error", { message: abortErrorMessage(timedOut) }));
+          safeEnqueue(encodeSseEvent("error", { message: abortErrorMessage(timedOut) }));
         }
       } catch {
         if (!clientAborted) {
-          enqueueText(controller, encodeSseEvent("error", { message: abortErrorMessage(timedOut) }));
+          safeEnqueue(encodeSseEvent("error", { message: abortErrorMessage(timedOut) }));
         }
       } finally {
         clearTimeout(timeout);
         requestSignal.removeEventListener("abort", abortUpstream);
-        controller.close();
+        safeClose();
       }
     },
     cancel() {
+      streamClosed = true;
       clientAborted = true;
       upstreamAbort.abort();
       requestSignal.removeEventListener("abort", abortUpstream);

@@ -8,6 +8,8 @@ export const SNAPSHOT_SCHEMA_VERSION = "hadron-ai-snapshot-v1";
 
 const ORDER_BOOK_LIMIT = 10;
 const RECENT_TRADES_LIMIT = 20;
+// 价格序列只保留最新点位：路由侧形状校验上限 500、请求体上限 32KB，留出余量。
+const PRICE_SERIES_LIMIT = 300;
 const TRADE_TYPES = new Set<TradeEvent["type"]>(["primary-sale", "purchased"]);
 
 export interface SnapshotAssetInput {
@@ -209,10 +211,12 @@ function buildPricePoints(
   asset: AssetView,
   events: readonly TradeEvent[],
 ): SnapshotPricePoint[] {
-  return buildPriceSeries(events, asset.tokenId, fallbackPrice(asset)).map((point) => ({
-    t: point.t,
-    sharePrice: sharePriceText(point.price),
-  }));
+  return buildPriceSeries(events, asset.tokenId, fallbackPrice(asset))
+    .slice(-PRICE_SERIES_LIMIT)
+    .map((point) => ({
+      t: point.t,
+      sharePrice: sharePriceText(point.price),
+    }));
 }
 
 function buildAssetCore(

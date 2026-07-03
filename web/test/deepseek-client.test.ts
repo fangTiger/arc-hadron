@@ -37,6 +37,36 @@ describe("DeepSeek 客户端工厂", () => {
     expect(text).toContain("not financial advice");
   });
 
+  test("无 key 时 mock 客户端按 brief 提示输出 Market Brief 结构", async () => {
+    vi.stubEnv("DEEPSEEK_API_KEY", "");
+    vi.stubEnv("NODE_ENV", "test");
+
+    const { getDeepSeekClient } = await loadModule();
+    const client = getDeepSeekClient();
+
+    const stream = await client.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: "Return sections: Movers, New listings, Notable trades.",
+        },
+        { role: "user", content: "brief" },
+      ],
+      model: "any",
+      stream: true,
+    });
+
+    let text = "";
+    for await (const chunk of stream as AsyncIterable<{
+      choices: Array<{ delta: { content?: string } }>;
+    }>) {
+      text += chunk.choices[0]?.delta.content ?? "";
+    }
+
+    expect(text).toContain("Movers");
+    expect(text).toContain("not financial advice");
+  });
+
   test("无 key 的生产环境抛错", async () => {
     vi.stubEnv("DEEPSEEK_API_KEY", "");
     vi.stubEnv("NODE_ENV", "production");

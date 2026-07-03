@@ -205,6 +205,7 @@ export function useAiGeneration({
     const parser = createSseFrameParser();
     const decoder = new TextDecoder();
     let markdown = "";
+    let sawDone = false;
 
     runIdRef.current = runId;
     abortRef.current = abortController;
@@ -218,6 +219,12 @@ export function useAiGeneration({
     });
 
     const applyEvent = (event: AiSseEvent) => {
+      if (event.type === "done") {
+        sawDone = true;
+
+        return;
+      }
+
       if (event.type === "chunk") {
         const delta = eventDelta(event);
 
@@ -282,6 +289,11 @@ export function useAiGeneration({
         for (const event of parser.push(tail)) {
           applyEvent(event);
         }
+      }
+
+      // 没等到 done 帧就 EOF 说明流被截断，残缺内容不得入缓存（spec 要求）。
+      if (!sawDone) {
+        throw new Error("Generation interrupted");
       }
 
       if (runIdRef.current !== runId) {

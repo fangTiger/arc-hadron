@@ -369,4 +369,24 @@ describe("useAiGeneration", () => {
     expect(mounted.current.error).toBe("Too many requests");
     expect(mounted.current.markdown).toBe("");
   });
+
+  test("treats a stream that ends without a done frame as interrupted and does not cache", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(streamResponse(encodeSseEvent("chunk", { delta: "partial insight" }))),
+    );
+    const storage = installLocalStorage();
+    const mounted = await mountHook();
+    root = mounted.root;
+
+    await act(async () => {
+      await mounted.current.generate();
+    });
+
+    expect(mounted.current.status).toBe("error");
+    expect(mounted.current.error).toBe("Generation interrupted");
+    expect(storage.getItem(CACHE_KEY)).toBeNull();
+  });
 });

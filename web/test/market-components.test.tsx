@@ -137,6 +137,18 @@ describe("market redesign components", () => {
     expect(html).toContain("0x1000…0001");
   });
 
+  test("renders bid-filled activity as an English market tape sentence", () => {
+    const html = renderToStaticMarkup(
+      <ActivityPanel
+        assets={[assetView()]}
+        events={[tradeEvent({ type: "bid-filled" })]}
+        nowMs={Date.UTC(2026, 6, 2, 12)}
+      />,
+    );
+
+    expect(html).toContain("BID FILL 3.00 TBILL @ 110.00");
+  });
+
   test("hides old token activity that is outside the active asset set", () => {
     const html = renderToStaticMarkup(
       <ActivityPanel

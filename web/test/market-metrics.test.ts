@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { eventSentence, priceSeriesForAsset } from "../lib/marketMetrics";
+import {
+  eventSentence,
+  priceSeriesForAsset,
+  total24hVolume,
+} from "../lib/marketMetrics";
 import type { TradeEvent } from "../lib/events";
 import type { AssetView } from "../lib/mappers";
 
@@ -61,5 +65,31 @@ describe("market metrics display prices", () => {
 
   test("renders activity sentences with display shares and display share price", () => {
     expect(eventSentence(event(), assetView())).toBe("BUY 2.50 TBILL @ 1.25");
+  });
+
+  test("treats bid fills as trades in page metrics and activity copy", () => {
+    const nowMs = Date.UTC(2026, 6, 3, 12);
+    const bidFill = event({
+      pricePerShare: 15000000000000000n,
+      timestamp: nowMs - 1_000,
+      totalPaid: 3750000000000000000n,
+      type: "bid-filled",
+    });
+
+    expect(priceSeriesForAsset(assetView(), [event(), bidFill])).toEqual([
+      { price: 1250000000000000000n, t: 1_000 },
+      { price: 1500000000000000000n, t: nowMs - 1_000 },
+    ]);
+    expect(total24hVolume([bidFill], nowMs)).toBe(3750000000000000000n);
+    expect(eventSentence(bidFill, assetView())).toBe("BID FILL 2.50 TBILL @ 1.50");
+  });
+
+  test("renders bid placement and cancellation activity copy", () => {
+    expect(eventSentence(event({ type: "bid-placed" }), assetView())).toBe(
+      "BID 2.50 TBILL @ 1.25",
+    );
+    expect(eventSentence(event({ type: "bid-cancelled" }), assetView())).toBe(
+      "BID CANCEL 2.50 TBILL @ 1.25",
+    );
   });
 });

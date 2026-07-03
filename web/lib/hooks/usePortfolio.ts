@@ -15,7 +15,32 @@ import { useAssets } from "./useAssets";
 const PRIMARY_SALE_EVENT = parseAbiItem(
   "event PrimarySale(uint256 indexed offeringId, uint256 indexed tokenId, address indexed buyer, uint256 amount, uint256 totalPaid, uint256 fee)",
 );
+const BID_FILLED_EVENT = parseAbiItem(
+  "event BidFilled(uint256 indexed bidId, uint256 indexed tokenId, address indexed bidder, address seller, uint256 amount, uint256 totalPaid, uint256 fee)",
+);
 export const PORTFOLIO_READ_ERROR_ZH = "Failed to load portfolio data from Arc RPC.";
+
+interface PortfolioBuyLog {
+  args: {
+    amount?: bigint;
+    bidder?: `0x${string}`;
+    buyer?: `0x${string}`;
+    tokenId?: bigint;
+    totalPaid?: bigint;
+  };
+}
+
+export function portfolioBuyEventsFromLogs(logs: readonly PortfolioBuyLog[]): BuyEvent[] {
+  return logs.flatMap((log) => {
+    const { tokenId, amount, totalPaid } = log.args;
+
+    if (tokenId === undefined || amount === undefined || totalPaid === undefined) {
+      return [];
+    }
+
+    return [{ tokenId, amount, totalPaid }];
+  });
+}
 
 export function usePortfolio(): { errorZh?: string; holdings: Holding[]; isLoading: boolean } {
   const { address, isConnected } = useAccount();
@@ -47,30 +72,41 @@ export function usePortfolio(): { errorZh?: string; holdings: Holding[]; isLoadi
       }
 
       const latestBlock = await publicClient.getBlockNumber();
-      const logs = await fetchLogsInBlockRange({
-        fromBlock: BigInt(DEPLOY_BLOCK),
-        getLogs: (chunk) =>
-          publicClient.getLogs({
-            address: HADRON_MARKET_ADDRESS,
-            args: {
-              buyer: address,
-            },
-            event: PRIMARY_SALE_EVENT,
-            fromBlock: chunk.from,
-            toBlock: chunk.to,
-          }),
-        toBlock: latestBlock,
-      });
+      const [primarySaleLogs, bidFilledLogs] = await Promise.all([
+        fetchLogsInBlockRange({
+          fromBlock: BigInt(DEPLOY_BLOCK),
+          getLogs: (chunk) =>
+            publicClient.getLogs({
+              address: HADRON_MARKET_ADDRESS,
+              args: {
+                buyer: address,
+              },
+              event: PRIMARY_SALE_EVENT,
+              fromBlock: chunk.from,
+              toBlock: chunk.to,
+            }),
+          toBlock: latestBlock,
+        }),
+        fetchLogsInBlockRange({
+          fromBlock: BigInt(DEPLOY_BLOCK),
+          getLogs: (chunk) =>
+            publicClient.getLogs({
+              address: HADRON_MARKET_ADDRESS,
+              args: {
+                bidder: address,
+              },
+              event: BID_FILLED_EVENT,
+              fromBlock: chunk.from,
+              toBlock: chunk.to,
+            }),
+          toBlock: latestBlock,
+        }),
+      ]);
 
-      return logs.flatMap((log) => {
-        const { tokenId, amount, totalPaid } = log.args;
-
-        if (tokenId === undefined || amount === undefined || totalPaid === undefined) {
-          return [];
-        }
-
-        return [{ tokenId, amount, totalPaid }];
-      });
+      return portfolioBuyEventsFromLogs([
+        ...(primarySaleLogs as readonly PortfolioBuyLog[]),
+        ...(bidFilledLogs as readonly PortfolioBuyLog[]),
+      ]);
     },
   });
 

@@ -4,7 +4,7 @@ import type { AssetView } from "@/lib/mappers";
 import { unitPriceToSharePrice } from "@/lib/shares";
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-const TRADE_TYPES = new Set<TradeEvent["type"]>(["primary-sale", "purchased"]);
+const TRADE_TYPES = new Set<TradeEvent["type"]>(["primary-sale", "purchased", "bid-filled"]);
 
 export function formatApyBps(apyBps: number | null): string {
   return apyBps === null ? "—" : `${(apyBps / 100).toFixed(2)}%`;
@@ -150,6 +150,18 @@ export function eventSentence(event: TradeEvent, asset?: AssetView): string {
     return `BUY${amount} ${ticker}${price}`;
   }
 
+  if (event.type === "bid-filled") {
+    return `BID FILL${amount} ${ticker}${price}`;
+  }
+
+  if (event.type === "bid-placed") {
+    return `BID${amount} ${ticker}${price}`;
+  }
+
+  if (event.type === "bid-cancelled") {
+    return `BID CANCEL${amount} ${ticker}${price}`;
+  }
+
   if (event.type === "listed") {
     return `LIST${amount} ${ticker}${price}`;
   }
@@ -170,15 +182,15 @@ export function eventSentence(event: TradeEvent, asset?: AssetView): string {
 }
 
 export function eventToneClassName(type: TradeEvent["type"]): string {
-  if (type === "primary-sale" || type === "purchased") {
+  if (type === "primary-sale" || type === "purchased" || type === "bid-filled") {
     return "text-up";
   }
 
-  if (type === "listed" || type === "offering-created") {
+  if (type === "listed" || type === "offering-created" || type === "bid-placed") {
     return "text-neon-dim";
   }
 
-  if (type === "cancelled" || type === "offering-closed") {
+  if (type === "cancelled" || type === "offering-closed" || type === "bid-cancelled") {
     return "text-muted";
   }
 

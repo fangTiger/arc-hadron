@@ -5,6 +5,9 @@ import HadronMarketAbi from "./abi/HadronMarket.json";
 export type TradeEventType =
   | "primary-sale"
   | "purchased"
+  | "bid-placed"
+  | "bid-filled"
+  | "bid-cancelled"
   | "listed"
   | "cancelled"
   | "asset-issued"
@@ -23,6 +26,7 @@ export interface TradeEvent {
   logIndex: number;
   blockNumber: bigint;
   timestamp?: number;
+  bidId?: bigint;
   listingId?: bigint;
   offeringId?: bigint;
 }
@@ -56,6 +60,9 @@ interface DecodedLog {
 
 const EVENT_NAME_TO_TYPE: Record<string, TradeEventType> = {
   AssetIssued: "asset-issued",
+  BidCancelled: "bid-cancelled",
+  BidFilled: "bid-filled",
+  BidPlaced: "bid-placed",
   Cancelled: "cancelled",
   Listed: "listed",
   OfferingClosed: "offering-closed",
@@ -70,7 +77,7 @@ function isTrackedEventAbiItem(item: { type?: string; name?: string }): boolean 
 
 const MARKET_EVENT_ABI = [...HadronAssetsAbi, ...HadronMarketAbi].filter(isTrackedEventAbiItem) as Abi;
 
-const TRADE_TYPES = new Set<TradeEventType>(["primary-sale", "purchased"]);
+const TRADE_TYPES = new Set<TradeEventType>(["primary-sale", "purchased", "bid-filled"]);
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 function toBigInt(value: unknown): bigint | undefined {
@@ -227,10 +234,11 @@ export function parseMarketLogs(logs: readonly RawMarketLog[]): TradeEvent[] {
     }
 
     const args = decoded.args;
+    const bidId = toBigInt(args.bidId);
     const listingId = toBigInt(args.listingId);
     const offeringId = toBigInt(args.offeringId);
     const amount = toBigInt(args.amount ?? args.totalShares ?? args.returnedAmount);
-    const buyer = toAddress(args.buyer);
+    const buyer = toAddress(args.buyer ?? args.bidder);
     const seller = toAddress(args.seller);
     const totalPaid = toBigInt(args.totalPaid);
     const pricePerShare = toBigInt(args.pricePerShare) ?? priceFromTotal(totalPaid, amount);
@@ -245,6 +253,7 @@ export function parseMarketLogs(logs: readonly RawMarketLog[]): TradeEvent[] {
 
     events.push({
       amount,
+      bidId,
       blockNumber,
       buyer,
       listingId,

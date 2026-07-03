@@ -23,6 +23,15 @@ const primarySaleAbi = parseAbiItem(
 const purchasedAbi = parseAbiItem(
   "event Purchased(uint256 indexed listingId, uint256 indexed tokenId, address indexed buyer, address seller, uint256 amount, uint256 totalPaid, uint256 fee)",
 ) as AbiEvent;
+const bidPlacedAbi = parseAbiItem(
+  "event BidPlaced(uint256 indexed bidId, uint256 indexed tokenId, address indexed bidder, uint256 pricePerShare, uint256 amount)",
+) as AbiEvent;
+const bidFilledAbi = parseAbiItem(
+  "event BidFilled(uint256 indexed bidId, uint256 indexed tokenId, address indexed bidder, address seller, uint256 amount, uint256 totalPaid, uint256 fee)",
+) as AbiEvent;
+const bidCancelledAbi = parseAbiItem(
+  "event BidCancelled(uint256 indexed bidId, uint256 indexed tokenId, address indexed bidder, uint256 pricePerShare, uint256 amount, uint256 returnedAmount)",
+) as AbiEvent;
 const listedAbi = parseAbiItem(
   "event Listed(uint256 indexed listingId, uint256 indexed tokenId, address indexed seller, uint256 pricePerShare, uint256 amount)",
 ) as AbiEvent;
@@ -133,6 +142,56 @@ describe("parseMarketLogs", () => {
       totalPaid: 1250n,
       type: "purchased",
     });
+  });
+
+  test("parses bid lifecycle logs with bidder mapped as the buyer", () => {
+    const parsed = parseMarketLogs([
+      rawLog({
+        abi: bidPlacedAbi,
+        args: [13n, 2n, buyer, 250n, 5n],
+        logIndex: 0,
+      }),
+      rawLog({
+        abi: bidFilledAbi,
+        args: [13n, 2n, buyer, seller, 2n, 500n, 2n],
+        logIndex: 1,
+      }),
+      rawLog({
+        abi: bidCancelledAbi,
+        args: [13n, 2n, buyer, 250n, 3n, 750n],
+        logIndex: 2,
+      }),
+    ]);
+
+    expect(parsed).toMatchObject([
+      {
+        amount: 5n,
+        bidId: 13n,
+        buyer,
+        pricePerShare: 250n,
+        tokenId: 2n,
+        type: "bid-placed",
+      },
+      {
+        amount: 2n,
+        bidId: 13n,
+        buyer,
+        pricePerShare: 250n,
+        seller,
+        tokenId: 2n,
+        totalPaid: 500n,
+        type: "bid-filled",
+      },
+      {
+        amount: 3n,
+        bidId: 13n,
+        buyer,
+        pricePerShare: 250n,
+        tokenId: 2n,
+        type: "bid-cancelled",
+      },
+    ]);
+    expect(parsed[2].totalPaid).toBeUndefined();
   });
 
   test("parses Listed and OfferingCreated logs with explicit price and amount", () => {
@@ -285,6 +344,7 @@ describe("buildPriceSeries", () => {
         [
           event({ pricePerShare: 120n, timestamp: 2_000 }),
           event({ pricePerShare: 999n, timestamp: 1_500, tokenId: 2n }),
+          event({ pricePerShare: 130n, timestamp: 2_500, type: "bid-filled" }),
           event({ pricePerShare: 100n, timestamp: 1_000 }),
         ],
         1n,
@@ -293,6 +353,7 @@ describe("buildPriceSeries", () => {
     ).toEqual([
       { price: 100n, t: 1_000 },
       { price: 120n, t: 2_000 },
+      { price: 130n, t: 2_500 },
     ]);
   });
 });
@@ -307,6 +368,7 @@ describe("compute24h", () => {
         event({ pricePerShare: 100n, timestamp: cutoff - 1, totalPaid: 100n }),
         event({ pricePerShare: 120n, timestamp: cutoff + 1, totalPaid: 240n }),
         event({ pricePerShare: 130n, timestamp: nowMs - 1, totalPaid: 130n, type: "purchased" }),
+        event({ pricePerShare: 140n, timestamp: nowMs, totalPaid: 280n, type: "bid-filled" }),
         event({ pricePerShare: 999n, timestamp: nowMs - 1, tokenId: 2n, totalPaid: 999n }),
       ],
       1n,
@@ -314,8 +376,8 @@ describe("compute24h", () => {
       nowMs,
     );
 
-    expect(result.volume).toBe(370n);
-    expect(result.changePct).toBeCloseTo(30);
+    expect(result.volume).toBe(650n);
+    expect(result.changePct).toBeCloseTo(40);
   });
 
   test("returns zero change and zero volume when an asset has no trades", () => {

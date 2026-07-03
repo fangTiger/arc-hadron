@@ -154,6 +154,9 @@ function AssetPriceHeader({
 function eventTypeLabel(type: TradeEvent["type"]): string {
   const labels: Record<TradeEvent["type"], string> = {
     "asset-issued": "ASSET ISSUED",
+    "bid-cancelled": "BID CANCEL",
+    "bid-filled": "BID FILL",
+    "bid-placed": "BID",
     cancelled: "CANCELLED",
     listed: "LISTED",
     "offering-closed": "OFFERING CLOSED",

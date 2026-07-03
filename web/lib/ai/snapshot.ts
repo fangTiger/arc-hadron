@@ -10,7 +10,7 @@ const ORDER_BOOK_LIMIT = 10;
 const RECENT_TRADES_LIMIT = 20;
 // 价格序列只保留最新点位：路由侧形状校验上限 500、请求体上限 32KB，留出余量。
 const PRICE_SERIES_LIMIT = 300;
-const TRADE_TYPES = new Set<TradeEvent["type"]>(["primary-sale", "purchased"]);
+const TRADE_TYPES = new Set<TradeEvent["type"]>(["primary-sale", "purchased", "bid-filled"]);
 
 export interface SnapshotAssetInput {
   asset: AssetView;

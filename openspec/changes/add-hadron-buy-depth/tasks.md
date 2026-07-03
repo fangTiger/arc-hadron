@@ -11,9 +11,9 @@
 
 ## 2. 前端事件层与数据（web TDD，新 ABI 来自组 1 产物，无需链上）
 
-- [ ] 2.1 ABI 更新 + `events.ts` 三个新事件解码（`bid-placed`/`bid-filled`/`bid-cancelled`，含跨批次分块扫描用例）
-- [ ] 2.2 成交口径四处同步：`events.ts` / `marketMetrics.ts` / `lib/ai/snapshot.ts` / `usePortfolio` 成本口径加 `bid-filled`；资产页 TradeHistoryTable exhaustive label 补齐；一致性测试
-- [ ] 2.3 `lib/bids.ts`（BidView 映射 + 价格降序）+ `useBids(tokenId)`/`useMyBids()` 读 hooks
+- [x] 2.1 ABI 更新 + `events.ts` 三个新事件解码（`bid-placed`/`bid-filled`/`bid-cancelled`，含跨批次分块扫描用例）
+- [x] 2.2 成交口径四处同步：`events.ts` / `marketMetrics.ts` / `lib/ai/snapshot.ts` / `usePortfolio` 成本口径加 `bid-filled`；资产页 TradeHistoryTable exhaustive label 补齐；一致性测试
+- [x] 2.3 `lib/bids.ts`（BidView 映射 + 价格降序）+ `useBids(tokenId)`/`useMyBids()` 读 hooks
 
 ## 3. 前端交易与 UI（web TDD）
 

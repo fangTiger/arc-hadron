@@ -154,6 +154,35 @@ describe("AI snapshot builders", () => {
     expectJsonRoundTrip(marketSnapshot);
   });
 
+  test("includes bid fills in AI recent trades and latest price without schema changes", () => {
+    const snapshot = buildAssetSnapshot({
+      asset: assetView(),
+      events: [
+        tradeEvent({ pricePerShare: 25000000000000000n, timestamp: Date.UTC(2026, 6, 3, 8) }),
+        tradeEvent({
+          blockNumber: 101n,
+          logIndex: 2,
+          pricePerShare: 30000000000000000n,
+          timestamp: Date.UTC(2026, 6, 3, 10),
+          totalPaid: 6n * USDC,
+          txHash: hash(2),
+          type: "bid-filled",
+        }),
+      ],
+      listings: [],
+      nowMs: Date.UTC(2026, 6, 3, 12),
+    });
+
+    expect(snapshot.schemaVersion).toBe(SNAPSHOT_SCHEMA_VERSION);
+    expect(snapshot.asset.latestSharePrice).toBe("3.00");
+    expect(snapshot.asset.volume24h).toBe("11.00");
+    expect(snapshot.recentTrades[0]).toMatchObject({
+      sharePrice: "3.00",
+      totalPaid: "6.00",
+      type: "bid-filled",
+    });
+  });
+
   test("keeps a 14-asset worst-case market snapshot under the 24 KiB route budget", () => {
     const assets = Array.from({ length: 14 }, (_, index) =>
       assetView({

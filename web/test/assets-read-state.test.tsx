@@ -168,6 +168,26 @@ describe("on-chain asset read state", () => {
     expect(html).toContain("href=\"https://testnet.arcscan.app/address/0x2000000000000000000000000000000000000002\"");
   });
 
+  test("renders bid lifecycle labels in asset trade history", () => {
+    const html = renderToStaticMarkup(
+      <AssetDetailView
+        assets={[assetView()]}
+        events={[
+          tradeEvent({ logIndex: 1, type: "bid-placed" }),
+          tradeEvent({ logIndex: 2, type: "bid-filled" }),
+          tradeEvent({ logIndex: 3, type: "bid-cancelled" }),
+        ]}
+        id="15"
+        isLoading={false}
+        nowMs={Date.UTC(2026, 6, 2, 12)}
+      />,
+    );
+
+    expect(html).toContain("BID");
+    expect(html).toContain("BID FILL");
+    expect(html).toContain("BID CANCEL");
+  });
+
   test("caps remaining ratio in bigint space before converting to number", () => {
     expect(
       remainingRatio(

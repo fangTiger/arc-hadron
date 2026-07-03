@@ -19,6 +19,11 @@ const mockState = vi.hoisted(() => ({
   cancelListing: vi.fn(),
   connect: vi.fn(),
   invalidateQueries: vi.fn(),
+  listForSale: vi.fn(),
+  listForSaleStatus: "idle",
+  listForSaleApproveTxHash: undefined as `0x${string}` | undefined,
+  listForSaleErrorText: undefined as string | undefined,
+  listForSaleTxHash: undefined as `0x${string}` | undefined,
   isConnected: true,
   isCorrectChain: true,
   isListingsLoading: false,
@@ -31,6 +36,7 @@ const mockState = vi.hoisted(() => ({
     isMine: boolean;
   }>,
   refetchBalance: vi.fn(),
+  tokenBalance: 0n,
   switchToArc: vi.fn(),
 }));
 
@@ -55,6 +61,10 @@ vi.mock("wagmi", () => ({
     connectors: [{ id: "injected", type: "injected" }],
     isPending: false,
   }),
+  useReadContract: () => ({
+    data: mockState.tokenBalance,
+    isLoading: false,
+  }),
 }));
 
 vi.mock("@/lib/hooks/useNetworkGuard", () => ({
@@ -70,6 +80,17 @@ vi.mock("@/lib/hooks/useBuyPrimary", () => ({
     buy: mockState.buyPrimary,
     reset: vi.fn(),
     status: "idle",
+  }),
+}));
+
+vi.mock("@/lib/hooks/useListForSale", () => ({
+  useListForSale: () => ({
+    approveTxHash: mockState.listForSaleApproveTxHash,
+    errorText: mockState.listForSaleErrorText,
+    listForSale: mockState.listForSale,
+    reset: vi.fn(),
+    status: mockState.listForSaleStatus,
+    txHash: mockState.listForSaleTxHash,
   }),
 }));
 
@@ -133,6 +154,12 @@ describe("secondary listings detail surface", () => {
     mockState.isConnected = true;
     mockState.isCorrectChain = true;
     mockState.isListingsLoading = false;
+    mockState.listForSale = vi.fn();
+    mockState.listForSaleStatus = "idle";
+    mockState.listForSaleApproveTxHash = undefined;
+    mockState.listForSaleErrorText = undefined;
+    mockState.listForSaleTxHash = undefined;
+    mockState.tokenBalance = 1_234n;
     mockState.listings = [
       {
         id: 7n,
@@ -213,5 +240,71 @@ describe("secondary listings detail surface", () => {
 
     expect(html).toContain("BEST ASK");
     expect(html).toContain("88.00");
+  });
+
+  test("renders the BuyPanel trade tabs with BUY selected by default", () => {
+    const html = renderWithToast(<BuyPanel asset={assetView()} />);
+
+    expect(html).toContain("role=\"tablist\"");
+    expect(html).toContain(">BUY<");
+    expect(html).toContain(">SELL<");
+    expect(html).toContain("aria-selected=\"true\"");
+    expect(html).toContain("PRIMARY OFFERING");
+    expect(html).toContain("BEST ASK");
+  });
+
+  test("renders the Sell tab with wallet holdings, MAX, best ask price, and estimated proceeds", () => {
+    mockState.listings = [
+      {
+        id: 12n,
+        isMine: false,
+        pricePerShare: unitPriceFromSharePriceCents(8_800n),
+        remaining: 200n,
+        seller: "0x3333333333333333333333333333333333333333",
+        tokenId: 1n,
+      },
+    ];
+    mockState.tokenBalance = 1_234n;
+
+    const html = renderWithToast(<BuyPanel asset={assetView()} initialMode="sell" />);
+
+    expect(html).toContain("aria-selected=\"true\"");
+    expect(html).toContain("YOU HOLD 12.34 SHARES");
+    expect(html).toContain("value=\"12.34\"");
+    expect(html).toContain(">MAX<");
+    expect(html).toContain("PRICE (USDC)");
+    expect(html).toContain("value=\"88\"");
+    expect(html).toContain("GROSS TOTAL");
+    expect(html).toContain("1,085.92 USDC");
+    expect(html).toContain("1,080.49 USDC");
+    expect(html).toContain("0.5% protocol fee");
+  });
+
+  test("falls back to the primary issue price when the Sell tab has no active asks", () => {
+    mockState.listings = [];
+    mockState.tokenBalance = 500n;
+
+    const html = renderWithToast(<BuyPanel asset={assetView()} initialMode="sell" />);
+
+    expect(html).toContain("YOU HOLD 5.00 SHARES");
+    expect(html).toContain("value=\"100\"");
+  });
+
+  test("shows the disconnected Sell tab action as connect wallet", () => {
+    mockState.isConnected = false;
+
+    const html = renderWithToast(<BuyPanel asset={assetView()} initialMode="sell" />);
+
+    expect(html).toContain("CONNECT WALLET");
+    expect(html).not.toContain("List shares");
+  });
+
+  test("shows an empty Sell tab state when the wallet does not hold the asset", () => {
+    mockState.tokenBalance = 0n;
+
+    const html = renderWithToast(<BuyPanel asset={assetView()} initialMode="sell" />);
+
+    expect(html).toContain("You do not hold this asset");
+    expect(html).not.toContain("List shares");
   });
 });

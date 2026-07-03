@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test, vi } from "vitest";
 import {
+  defaultListingAmountInput,
   formatListingPriceInput,
   ListForSaleModalView,
   listingProceeds,
@@ -98,6 +99,7 @@ describe("ListForSaleModalView", () => {
     expect(html).toContain("US T-Bill 2026-Q3");
     expect(html).toContain("BALANCE 12.00");
     expect(html).toContain("inputMode=\"decimal\"");
+    expect(html).toContain(">MAX<");
     expect(html).toContain("7.50 USDC");
     expect(html).toContain("7.46 USDC");
     expect(html).toContain("0.5% protocol fee");
@@ -140,6 +142,11 @@ describe("ListForSaleModalView", () => {
     expect(formatListingPriceInput(parseUsdc("0.021234567891234567"))).toBe(
       "2.1234567891234567",
     );
+  });
+
+  test("defaults the modal amount input to the full holding balance", () => {
+    expect(defaultListingAmountInput(holding().balance)).toBe("12");
+    expect(defaultListingAmountInput(1_234n)).toBe("12.34");
   });
 });
 

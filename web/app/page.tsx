@@ -1,25 +1,40 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { MarketBrief } from "@/components/ai/MarketBrief";
 import { ActivityPanel } from "@/components/market/ActivityPanel";
 import { CategoryTabs, type MarketCategory } from "@/components/market/CategoryTabs";
 import { LiveTicker } from "@/components/market/LiveTicker";
 import { MarketTable } from "@/components/market/MarketTable";
 import { StatsStrip } from "@/components/market/StatsStrip";
 import { displayCategoryForChainCategory } from "@/lib/categories";
+import type { TradeEvent } from "@/lib/events";
 import { useAssets } from "@/lib/hooks/useAssets";
+import { useAllListings, type ListingView } from "@/lib/hooks/useListings";
 import { useMarketEvents } from "@/lib/hooks/useMarketEvents";
+import type { AssetView } from "@/lib/mappers";
 
-export default function Home() {
+export function HomeView({
+  assets,
+  errorZh,
+  events,
+  eventsError,
+  isAssetsLoading,
+  isEventsLoading,
+  marketListings,
+  nowMs,
+}: {
+  assets: AssetView[];
+  errorZh?: string;
+  events: TradeEvent[];
+  eventsError?: Error;
+  isAssetsLoading: boolean;
+  isEventsLoading: boolean;
+  marketListings: ListingView[];
+  nowMs: number;
+}) {
   const [category, setCategory] = useState<MarketCategory>("all");
   const [search, setSearch] = useState("");
-  const { assets, errorZh, isLoading: isAssetsLoading } = useAssets();
-  const {
-    events,
-    error: eventsError,
-    isLoading: isEventsLoading,
-    nowMs,
-  } = useMarketEvents();
 
   const filteredAssets = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -75,7 +90,13 @@ export default function Home() {
               nowMs={nowMs}
             />
           </div>
-          <div className="w-full lg:w-[280px] lg:shrink-0">
+          <div className="w-full space-y-5 lg:w-[280px] lg:shrink-0">
+            <MarketBrief
+              assets={assets}
+              events={events}
+              listings={marketListings}
+              nowMs={nowMs}
+            />
             <ActivityPanel assets={assets} events={events} nowMs={nowMs} />
           </div>
         </section>
@@ -83,5 +104,29 @@ export default function Home() {
 
       <LiveTicker assets={assets} events={events} />
     </main>
+  );
+}
+
+export default function Home() {
+  const { assets, errorZh, isLoading: isAssetsLoading } = useAssets();
+  const {
+    events,
+    error: eventsError,
+    isLoading: isEventsLoading,
+    nowMs,
+  } = useMarketEvents();
+  const { listings: marketListings } = useAllListings();
+
+  return (
+    <HomeView
+      assets={assets}
+      errorZh={errorZh}
+      events={events}
+      eventsError={eventsError}
+      isAssetsLoading={isAssetsLoading}
+      isEventsLoading={isEventsLoading}
+      marketListings={marketListings}
+      nowMs={nowMs}
+    />
   );
 }

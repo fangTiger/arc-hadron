@@ -57,6 +57,55 @@ export function useListings(tokenId: bigint | null): { listings: ListingView[]; 
   };
 }
 
+export function useAllListings(): { listings: ListingView[]; isLoading: boolean } {
+  const { address } = useAccount();
+  const listingCountQuery = useReadContract({
+    address: HADRON_MARKET_ADDRESS,
+    abi: HADRON_MARKET_ABI,
+    functionName: "listingCount",
+    query: {
+      refetchInterval: REFETCH_INTERVAL_MS,
+    },
+  });
+  const listingCount = readContractCount(listingCountQuery.data);
+  const listingIds = useMemo(
+    () => Array.from({ length: listingCount }, (_, index) => BigInt(index + 1)),
+    [listingCount],
+  );
+  const listingContracts = useMemo(
+    () =>
+      listingIds.map((id) => ({
+        address: HADRON_MARKET_ADDRESS,
+        abi: HADRON_MARKET_ABI,
+        functionName: "getListing",
+        args: [id],
+      })),
+    [listingIds],
+  );
+  const listingsQuery = useReadContracts({
+    allowFailure: false,
+    contracts: listingContracts,
+    query: {
+      enabled: listingContracts.length > 0,
+      refetchInterval: REFETCH_INTERVAL_MS,
+    },
+  });
+  const listings = useMemo(
+    () =>
+      mapListingResults({
+        currentAddress: address,
+        ids: listingIds,
+        results: listingsQuery.data ?? [],
+      }),
+    [address, listingIds, listingsQuery.data],
+  );
+
+  return {
+    listings,
+    isLoading: listingCountQuery.isLoading || listingsQuery.isLoading,
+  };
+}
+
 export function useMyListings(): { listings: ListingView[]; isLoading: boolean } {
   const { address, isConnected } = useAccount();
   const listingCountQuery = useReadContract({

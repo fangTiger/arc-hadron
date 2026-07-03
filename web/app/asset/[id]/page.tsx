@@ -6,11 +6,13 @@ import { AssetProfile } from "@/components/asset/AssetProfile";
 import { BuyPanel } from "@/components/asset/BuyPanel";
 import { ListingsTable } from "@/components/asset/ListingsTable";
 import { PriceChart } from "@/components/asset/PriceChart";
+import { InsightPanel } from "@/components/ai/InsightPanel";
 import { glowButtonClassName } from "@/components/ui/GlowButton";
 import { Skeleton } from "@/components/ui/Skeleton";
 import type { TradeEvent } from "@/lib/events";
 import { formatShares, formatUsdc, shortAddress } from "@/lib/format";
 import { useAssets } from "@/lib/hooks/useAssets";
+import { useListings, type ListingView } from "@/lib/hooks/useListings";
 import { useMarketEvents } from "@/lib/hooks/useMarketEvents";
 import {
   addressExplorerUrl,
@@ -300,6 +302,7 @@ function TradeHistoryTable({
 }
 
 export function AssetDetailView({
+  assetListings = [],
   assets,
   errorZh,
   events = [],
@@ -308,6 +311,7 @@ export function AssetDetailView({
   isLoading,
   nowMs = 0,
 }: {
+  assetListings?: ListingView[];
   assets: AssetView[];
   errorZh?: string;
   events?: TradeEvent[];
@@ -341,6 +345,7 @@ export function AssetDetailView({
         <AssetPriceHeader asset={asset} events={events} nowMs={nowMs} />
         <PriceChart asset={asset} events={events} />
         <AssetProfile asset={asset} />
+        <InsightPanel asset={asset} events={events} listings={assetListings} nowMs={nowMs} />
         <ListingsTable tokenId={asset.tokenId} />
         <TradeHistoryTable
           asset={asset}
@@ -362,9 +367,12 @@ export default function AssetDetailPage() {
   const id = typeof params.id === "string" ? params.id : "";
   const { assets, errorZh, isLoading } = useAssets();
   const { events, isLoading: isEventsLoading, nowMs } = useMarketEvents();
+  const selectedAsset = assets.find((item) => item.tokenId.toString() === id);
+  const { listings: assetListings } = useListings(selectedAsset?.tokenId ?? null);
 
   return (
     <AssetDetailView
+      assetListings={assetListings}
       assets={assets}
       errorZh={errorZh}
       events={events}

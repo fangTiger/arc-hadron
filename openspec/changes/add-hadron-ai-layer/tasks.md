@@ -23,10 +23,10 @@
 
 ## 4. 客户端（codex，TDD）
 
-- [ ] 4.1 `web/lib/ai/useAiGeneration.ts` + `web/test/ai-generation-hook.test.ts`：fetch(POST)+ReadableStream 手写 SSE 解析（复用 2.4）；状态机 idle→streaming→done|error；AbortController（重复触发防护/卸载中止）；localStorage 读写（key 含 chainId/market 地址/schema 版本；storage 异常静默降级）
-- [ ] 4.2 `web/components/ai/AiMarkdown.tsx` + `web/test/ai-markdown.test.tsx`：受限 markdown 渲染（h2/h3/ul/li/strong/p 白名单，无 dangerouslySetInnerHTML；恶意输入渲染为纯文本用例）
-- [ ] 4.3 `web/components/ai/InsightPanel.tsx` + 挂入 `web/app/asset/[id]/page.tsx`（AssetProfile 与 SELL ORDERS 之间）+ `web/test/ai-insight-panel.test.tsx`：Generate/streaming 禁用态/缓存命中 "Generated Xh ago · Refresh"/指纹变化徽章/错误 Retry/免责尾注恒显
-- [ ] 4.4 `web/components/ai/MarketBrief.tsx` + 挂入市场页（ACTIVITY 上方）+ `web/test/ai-market-brief.test.tsx`：同 4.3 交互语义
+- [x] 4.1 `web/lib/ai/useAiGeneration.ts` + `web/test/ai-generation-hook.test.ts`：fetch(POST)+ReadableStream 手写 SSE 解析（复用 2.4）；状态机 idle→streaming→done|error；AbortController（重复触发防护/卸载中止）；localStorage 读写（key 含 chainId/market 地址/schema 版本；storage 异常静默降级）
+- [x] 4.2 `web/components/ai/AiMarkdown.tsx` + `web/test/ai-markdown.test.tsx`：受限 markdown 渲染（h2/h3/ul/li/strong/p 白名单，无 dangerouslySetInnerHTML；恶意输入渲染为纯文本用例）
+- [x] 4.3 `web/components/ai/InsightPanel.tsx` + 挂入 `web/app/asset/[id]/page.tsx`（AssetProfile 与 SELL ORDERS 之间）+ `web/test/ai-insight-panel.test.tsx`：Generate/streaming 禁用态/缓存命中 "Generated Xh ago · Refresh"/指纹变化徽章/错误 Retry/免责尾注恒显
+- [x] 4.4 `web/components/ai/MarketBrief.tsx` + 挂入市场页（ACTIVITY 上方）+ `web/test/ai-market-brief.test.tsx`：同 4.3 交互语义
 
 ## 5. 验证 · 交叉检查 · 验收 · 归档
 

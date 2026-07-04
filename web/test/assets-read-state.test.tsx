@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test, vi } from "vitest";
-import { AssetDetailView } from "../app/asset/[id]/page";
+import { AssetDetailView } from "../app/asset/[id]/AssetDetailView";
 import { remainingRatio } from "../components/market/AssetCard";
 import { AssetGridView } from "../components/market/AssetGrid";
 import { StatsBarView } from "../components/market/StatsBar";
@@ -38,8 +38,16 @@ vi.mock("../components/asset/BuyPanel", () => ({
   BuyPanel: () => <aside>BUY PANEL</aside>,
 }));
 
+vi.mock("../components/asset/DepthChart", () => ({
+  default: () => <section>DEPTH CHART</section>,
+}));
+
 vi.mock("../components/asset/ListingsTable", () => ({
   ListingsTable: () => <section>SELL ORDERS</section>,
+}));
+
+vi.mock("../components/asset/OrderBook", () => ({
+  default: () => <section>ORDER BOOK</section>,
 }));
 
 vi.mock("../components/asset/BidsTable", () => ({
@@ -313,6 +321,24 @@ describe("on-chain asset read state", () => {
     expect(html.indexOf("SELL ORDERS")).toBeLessThan(html.indexOf("BUY ORDERS"));
     expect(html.indexOf("BUY ORDERS")).toBeLessThan(html.indexOf("PLACE BID"));
     expect(html.indexOf("PLACE BID")).toBeLessThan(html.indexOf("TRADE HISTORY"));
+  });
+
+  test("mounts order book and depth chart in the right rail and wraps detail tables with anchors", () => {
+    const html = renderToStaticMarkup(
+      <AssetDetailView
+        assets={[assetView()]}
+        events={[tradeEvent()]}
+        id="15"
+        isLoading={false}
+        nowMs={Date.UTC(2026, 6, 2, 12)}
+      />,
+    );
+
+    expect(html.indexOf("ORDER BOOK")).toBeLessThan(html.indexOf("DEPTH CHART"));
+    expect(html.indexOf("DEPTH CHART")).toBeLessThan(html.indexOf("BUY PANEL"));
+    expect(html).toContain("id=\"sell-orders\"");
+    expect(html).toContain("id=\"buy-orders\"");
+    expect(html).toContain("space-y-6");
   });
 
   test("renders asset yield panel with pending claim, distribution records, and deposit entry before trade history", () => {

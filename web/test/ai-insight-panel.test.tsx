@@ -14,8 +14,16 @@ vi.mock("../components/asset/BuyPanel", () => ({
   BuyPanel: () => <aside>BUY PANEL</aside>,
 }));
 
+vi.mock("../components/asset/DepthChart", () => ({
+  default: () => <section>DEPTH CHART</section>,
+}));
+
 vi.mock("../components/asset/ListingsTable", () => ({
   ListingsTable: () => <section>SELL ORDERS</section>,
+}));
+
+vi.mock("../components/asset/OrderBook", () => ({
+  default: () => <section>ORDER BOOK</section>,
 }));
 
 vi.mock("../components/asset/BidsTable", () => ({
@@ -30,7 +38,7 @@ vi.mock("../components/asset/YieldPanel", () => ({
   YieldPanel: () => <section>YIELD PANEL</section>,
 }));
 
-import { AssetDetailView } from "../app/asset/[id]/page";
+import { AssetDetailView } from "../app/asset/[id]/AssetDetailView";
 import { InsightPanel, InsightPanelView } from "../components/ai/InsightPanel";
 
 const USDC = 10n ** 18n;

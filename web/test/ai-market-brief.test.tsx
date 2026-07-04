@@ -30,7 +30,7 @@ vi.mock("@/components/market/StatsStrip", () => ({
   StatsStrip: () => <section>STATS</section>,
 }));
 
-import { HomeView } from "../app/page";
+import { HomeView } from "../app/HomeView";
 import { MarketBrief, MarketBriefView } from "../components/ai/MarketBrief";
 
 const USDC = 10n ** 18n;

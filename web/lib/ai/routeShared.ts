@@ -4,7 +4,7 @@ import { encodeSseEvent } from "@/lib/ai/sse";
 import { SNAPSHOT_SCHEMA_VERSION, type AssetSnapshot, type MarketSnapshot } from "@/lib/ai/snapshot";
 import { DEEPSEEK_MODEL, getDeepSeekClient } from "@/lib/llm/deepseek";
 
-const RAW_BODY_LIMIT_BYTES = 32 * 1024;
+export const RAW_BODY_LIMIT_BYTES = 32 * 1024;
 const UPSTREAM_TIMEOUT_MS = 55_000;
 export const DEFAULT_AI_ROUTE_PER_IP_PER_MINUTE = 12;
 export const DEFAULT_AI_ROUTE_GLOBAL_PER_MINUTE = 60;
@@ -50,6 +50,16 @@ export interface AiRouteHandlerOptions<T> {
   validateSnapshot: SnapshotShapeGuard<T>;
 }
 
+interface AiJsonRequestGuardOptions<T> {
+  invalidPayloadMessage: string;
+  limiter?: SlidingWindowLimiter;
+  validatePayload: SnapshotShapeGuard<T>;
+}
+
+type AiJsonRequestGuardResult<T> =
+  | { ok: true; payload: T }
+  | { ok: false; response: Response };
+
 function createDefaultLimiter(): SlidingWindowLimiter {
   return createSlidingWindowLimiter({
     perIpPerMinute: DEFAULT_AI_ROUTE_PER_IP_PER_MINUTE,
@@ -67,21 +77,21 @@ function activeLimiter(override?: SlidingWindowLimiter): SlidingWindowLimiter {
   return override ?? sharedLimiter;
 }
 
-function jsonError(message: string, status: number, headers?: HeadersInit): Response {
+export function jsonError(message: string, status: number, headers?: HeadersInit): Response {
   return Response.json({ error: message }, { status, headers });
 }
 
 // 信任边界说明：Next.js 路由处理器拿不到 socket 地址，x-forwarded-for 是唯一来源信号，
 // 直接暴露公网时该头可伪造以绕过每 IP 配额（全局配额仍兜底）。仅应部署在可信代理之后，
 // 由代理覆写该头；本项目为 testnet 演示，不做公网直连部署。
-function clientIp(request: Request): string {
+export function clientIp(request: Request): string {
   const forwardedFor = request.headers.get("x-forwarded-for");
   const firstForwardedIp = forwardedFor?.split(",")[0]?.trim();
 
   return firstForwardedIp || "unknown";
 }
 
-async function readRawBody(request: Request): Promise<{ ok: true; text: string } | { ok: false }> {
+export async function readRawBody(request: Request): Promise<{ ok: true; text: string } | { ok: false }> {
   const bytes = await request.arrayBuffer();
 
   if (bytes.byteLength > RAW_BODY_LIMIT_BYTES) {
@@ -94,12 +104,51 @@ async function readRawBody(request: Request): Promise<{ ok: true; text: string }
   };
 }
 
-function parseJson(text: string): unknown | null {
+export function parseJson(text: string): unknown | null {
   try {
     return JSON.parse(text);
   } catch {
     return null;
   }
+}
+
+export async function guardAiJsonRequest<T>(
+  request: Request,
+  { invalidPayloadMessage, limiter, validatePayload }: AiJsonRequestGuardOptions<T>,
+): Promise<AiJsonRequestGuardResult<T>> {
+  const rateLimit = activeLimiter(limiter).check(clientIp(request));
+
+  if (!rateLimit.allowed) {
+    return {
+      ok: false,
+      response: jsonError("Too many requests", 429, {
+        "Retry-After": String(rateLimit.retryAfterSeconds ?? 60),
+      }),
+    };
+  }
+
+  const rawBody = await readRawBody(request);
+
+  if (!rawBody.ok) {
+    return {
+      ok: false,
+      response: jsonError("Payload too large", 400),
+    };
+  }
+
+  const payload = parseJson(rawBody.text);
+
+  if (!validatePayload(payload)) {
+    return {
+      ok: false,
+      response: jsonError(invalidPayloadMessage, 400),
+    };
+  }
+
+  return {
+    ok: true,
+    payload,
+  };
 }
 
 function createMessages(prompt: AiPrompt): ChatMessage[] {
@@ -240,27 +289,17 @@ export function createAiRouteHandler<T>({
   validateSnapshot,
 }: AiRouteHandlerOptions<T>) {
   return async function POST(request: Request): Promise<Response> {
-    const rateLimit = activeLimiter(limiter).check(clientIp(request));
+    const guardedRequest = await guardAiJsonRequest(request, {
+      invalidPayloadMessage: "Invalid snapshot",
+      limiter,
+      validatePayload: validateSnapshot,
+    });
 
-    if (!rateLimit.allowed) {
-      return jsonError("Too many requests", 429, {
-        "Retry-After": String(rateLimit.retryAfterSeconds ?? 60),
-      });
+    if (!guardedRequest.ok) {
+      return guardedRequest.response;
     }
 
-    const rawBody = await readRawBody(request);
-
-    if (!rawBody.ok) {
-      return jsonError("Payload too large", 400);
-    }
-
-    const snapshot = parseJson(rawBody.text);
-
-    if (!validateSnapshot(snapshot)) {
-      return jsonError("Invalid snapshot", 400);
-    }
-
-    return createSseResponse(buildPrompt(snapshot), request.signal);
+    return createSseResponse(buildPrompt(guardedRequest.payload), request.signal);
   };
 }
 

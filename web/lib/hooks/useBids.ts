@@ -57,6 +57,55 @@ export function useBids(tokenId: bigint | null): { bids: BidView[]; isLoading: b
   };
 }
 
+export function useAllBids(): { bids: BidView[]; isLoading: boolean } {
+  const { address } = useAccount();
+  const bidCountQuery = useReadContract({
+    address: HADRON_MARKET_ADDRESS,
+    abi: HADRON_MARKET_ABI,
+    functionName: "bidCount",
+    query: {
+      refetchInterval: REFETCH_INTERVAL_MS,
+    },
+  });
+  const bidCount = readContractCount(bidCountQuery.data);
+  const bidIds = useMemo(
+    () => Array.from({ length: bidCount }, (_, index) => BigInt(index + 1)),
+    [bidCount],
+  );
+  const bidContracts = useMemo(
+    () =>
+      bidIds.map((id) => ({
+        address: HADRON_MARKET_ADDRESS,
+        abi: HADRON_MARKET_ABI,
+        functionName: "getBid",
+        args: [id],
+      })),
+    [bidIds],
+  );
+  const bidsQuery = useReadContracts({
+    allowFailure: false,
+    contracts: bidContracts,
+    query: {
+      enabled: bidContracts.length > 0,
+      refetchInterval: REFETCH_INTERVAL_MS,
+    },
+  });
+  const bids = useMemo(
+    () =>
+      mapBidResults({
+        currentAddress: address,
+        ids: bidIds,
+        results: bidsQuery.data ?? [],
+      }),
+    [address, bidIds, bidsQuery.data],
+  );
+
+  return {
+    bids,
+    isLoading: bidCountQuery.isLoading || bidsQuery.isLoading,
+  };
+}
+
 export function useMyBids(): { bids: BidView[]; isLoading: boolean } {
   const { address, isConnected } = useAccount();
   const bidCountQuery = useReadContract({

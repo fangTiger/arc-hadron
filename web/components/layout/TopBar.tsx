@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { AssistantDock } from "@/components/assistant/AssistantDock";
 import { useNetworkGuard } from "@/lib/hooks/useNetworkGuard";
 import { WalletButton } from "./WalletButton";
 
@@ -66,6 +67,7 @@ export function TopBar() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2 sm:ml-3">
+          <AssistantDock />
           <NetworkBadge />
           <WalletButton />
         </div>

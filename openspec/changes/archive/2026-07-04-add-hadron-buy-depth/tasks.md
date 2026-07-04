@@ -30,7 +30,7 @@
 
 ## 5. 验证 · 交叉检查 · 验收 · 归档
 
-- [ ] 5.1 Claude：forge test + web 全量 test/lint/build + dev 三页 200 取证（零回归）
-- [ ] 5.2 Codex 只读交叉检查（合约资金流/对抗面/三处口径一致性/中文残留/spec 符合性）；阻塞项修复后重验
-- [ ] 5.3 用户验收（**验收环境已切换至 V6 部署**，与收益分配合并验收）：真实钱包挂买单 → Fill 部分成交 → 撤单退款；观察订单簿/活动流/AI 简报口径
-- [ ] 5.4 归档：delta 合并 `openspec/specs/secondary-market/`、design.md 同步、完整性 6 项检查
+- [x] 5.1 Claude 取证：forge 全量（V4 时 67/67，V6 基线 87/87）+ web 全量 + lint + build + 生产三页 200（证据见 b8ec52e→c821768 各提交）
+- [x] 5.2 Codex 只读交叉检查——6 技术维度通过；建议项处置（placeBid 回调重入用例/部署档案清理/.env.example）见 a458788；portfolio purchased 成本遗留缺口已单独修复（30690b1）
+- [x] 5.3 用户验收——**用户豁免**（2026-07-04 指示"先不验证"直接归档；功能可随时在 V6 部署上体验）
+- [x] 5.4 归档：delta 合并 `openspec/specs/secondary-market/`、design.md 同步、完整性 6 项检查

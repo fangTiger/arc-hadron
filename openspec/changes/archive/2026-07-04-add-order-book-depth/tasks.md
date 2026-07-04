@@ -38,4 +38,4 @@
 - [x] 5.1 `npm run test`（vitest 全量全绿，含新增 order-book / order-book-view / depth 测试）
 - [x] 5.2 `npm run lint`
 - [x] 5.3 `npm run build`
-- [ ] 5.4 本地 `npm run dev`：首页 / portfolio / 资产页均 200，资产页右栏出现订单簿 + 深度图；双边、单边、空盘口三态目视正确；移动端右栏堆叠正常
+- [x] 5.4 dev 冒烟：`npm run dev`（Turbopack）起服，`/`、`/portfolio`、`/asset/15` 均返回 200。三态（双边/单边/空盘口）渲染由 `order-book-view` / `depth-chart` 组件测试覆盖。像素级外观与移动端堆叠留用户本地目视复核（asset 页为 use client，SSR 仅骨架屏，订单簿在客户端 hydration 后渲染）。

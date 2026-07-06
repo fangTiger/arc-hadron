@@ -114,6 +114,19 @@ function AssetPriceHeader({
           <h1 className="mt-3 text-2xl font-semibold text-text sm:text-3xl">
             {asset.meta.displayName}
           </h1>
+          <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.18em] text-neon-dim">
+            Issuer:{" "}
+            {asset.meta.issuerSlug ? (
+              <Link
+                className="underline-offset-4 transition-colors duration-200 hover:text-neon hover:underline"
+                href={`/issuers/${asset.meta.issuerSlug}`}
+              >
+                {asset.meta.issuer}
+              </Link>
+            ) : (
+              <span>{asset.meta.issuer}</span>
+            )}
+          </p>
         </div>
         <span
           className={[

@@ -125,6 +125,7 @@ function assetView(overrides: Partial<AssetView> = {}): AssetView {
       description: "Test asset",
       docs: [],
       issuer: "Hadron Treasury Desk",
+      issuerSlug: "us-treasury-desk",
       displayName: "US T-Bill 2026-Q3",
       ticker: "TBILL",
       slug: "t-bill-2026-q3",
@@ -242,6 +243,20 @@ describe("on-chain asset read state", () => {
     expect(html).toContain("0x1000…0001");
     expect(html).toContain("href=\"https://testnet.arcscan.app/tx/");
     expect(html).toContain("href=\"https://testnet.arcscan.app/address/0x1000000000000000000000000000000000000001\"");
+  });
+
+  test("renders an issuer profile link in the asset price header", () => {
+    const html = renderToStaticMarkup(
+      <AssetDetailView
+        assets={[assetView()]}
+        id="15"
+        isLoading={false}
+      />,
+    );
+
+    expect(html).toContain("Issuer:");
+    expect(html).toContain("href=\"/issuers/us-treasury-desk\"");
+    expect(html).toContain("Hadron Treasury Desk");
   });
 
   test("renders both buyer and seller address links for secondary purchases", () => {

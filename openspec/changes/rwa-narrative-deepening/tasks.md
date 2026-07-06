@@ -35,20 +35,20 @@
 
 ## 3. Issuer profile 页 + 资产详情页 patch（Codex 批 3，约 15-20 分钟）
 
-- [ ] 3.1 新建 `web/app/issuers/[slug]/page.tsx`（Server Component）：`generateStaticParams` 返回全部 issuer slug；页面 fetch issuer + 其名下 assets meta + 传给 client 子树。若 slug 不存在返回 `notFound()`。
-- [ ] 3.2 新建 `web/components/issuer/IssuerHeader.tsx`：渲染 ticker chip + displayName + jurisdiction + establishedYear + focus + description（英文一行）；面包屑 `Market > Issuers > [ShortName]`。
-- [ ] 3.3 新建 `web/components/issuer/IssuerKpiBar.tsx`：4 KPI 单元（Assets / Total Shares / Cumulative Volume / Weighted APY）；接受 `IssuerKpis` props；Cumulative Volume 单元加 skeleton 状态。数字格式复用 `web/lib/format.ts`。
-- [ ] 3.4 新建 `web/components/issuer/IssuerAssetsTable.tsx`：复用市场的可排序表格 —— 若市场表格已抽成独立组件（如 `AssetsTable`）则直接引入；若尚未抽出，则**只在本次抽出可复用的 `SortableAssetsTable`**（不改现有市场表格行为，只做提取），两处消费。列同市场：ticker · name · category · price · 24H · yield · qty · mcap · Trade CTA。
-- [ ] 3.5 新建 `web/components/issuer/IssuerDocsCard.tsx`：渲染三条固定 stub docs（`label` + `note`），不做展开/下载交互。
-- [ ] 3.6 新建 `web/components/issuer/IssuerExternalLinksCard.tsx`：渲染 externalLinks 列表，`target="_blank" rel="noopener noreferrer"`；渲染前再次断言 href 以 `demo.hadron.local` 开头（防串改）。
-- [ ] 3.7 新建 `web/components/issuer/IssuerActivityList.tsx`：从 activity-feed hook 拿全局事件流，`filter(e => issuer.assetIds.includes(e.assetId))` 取前 12 条；每行 kind + asset ticker + amount + relative time + explorer link；空态 `No recent activity for this issuer.`。
-- [ ] 3.8 组装 profile 页：desktop 60/40 分栏（左 Assets table，右 Docs + External links + Recent activity 堆叠），mobile 单列。
-- [ ] 3.9 修改资产详情页（先 grep 找现有 asset 详情页组件，如 `web/app/asset/[id]/page.tsx` 或 `AssetDetailView`）：在 header 或 sidebar 加一行 `Issuer: <Link>{displayName}</Link>` 跳 `/issuers/[slug]`；样式与现有 header 元数据行一致。
-- [ ] 3.10 新增测试：
+- [x] 3.1 新建 `web/app/issuers/[slug]/page.tsx`（Server Component）：`generateStaticParams` 返回全部 issuer slug；页面 fetch issuer + 其名下 assets meta + 传给 client 子树。若 slug 不存在返回 `notFound()`。
+- [x] 3.2 新建 `web/components/issuer/IssuerHeader.tsx`：渲染 ticker chip + displayName + jurisdiction + establishedYear + focus + description（英文一行）；面包屑 `Market > Issuers > [ShortName]`。
+- [x] 3.3 新建 `web/components/issuer/IssuerKpiBar.tsx`：4 KPI 单元（Assets / Total Shares / Cumulative Volume / Weighted APY）；接受 `IssuerKpis` props；Cumulative Volume 单元加 skeleton 状态。数字格式复用 `web/lib/format.ts`。
+- [x] 3.4 新建 `web/components/issuer/IssuerAssetsTable.tsx`：复用市场的可排序表格 —— 若市场表格已抽成独立组件（如 `AssetsTable`）则直接引入；若尚未抽出，则**只在本次抽出可复用的 `SortableAssetsTable`**（不改现有市场表格行为，只做提取），两处消费。列同市场：ticker · name · category · price · 24H · yield · qty · mcap · Trade CTA。
+- [x] 3.5 新建 `web/components/issuer/IssuerDocsCard.tsx`：渲染三条固定 stub docs（`label` + `note`），不做展开/下载交互。
+- [x] 3.6 新建 `web/components/issuer/IssuerExternalLinksCard.tsx`：渲染 externalLinks 列表，`target="_blank" rel="noopener noreferrer"`；渲染前再次断言 href 以 `demo.hadron.local` 开头（防串改）。
+- [x] 3.7 新建 `web/components/issuer/IssuerActivityList.tsx`：从 activity-feed hook 拿全局事件流，`filter(e => issuer.assetIds.includes(e.assetId))` 取前 12 条；每行 kind + asset ticker + amount + relative time + explorer link；空态 `No recent activity for this issuer.`。
+- [x] 3.8 组装 profile 页：desktop 60/40 分栏（左 Assets table，右 Docs + External links + Recent activity 堆叠），mobile 单列。
+- [x] 3.9 修改资产详情页（先 grep 找现有 asset 详情页组件，如 `web/app/asset/[id]/page.tsx` 或 `AssetDetailView`）：在 header 或 sidebar 加一行 `Issuer: <Link>{displayName}</Link>` 跳 `/issuers/[slug]`；样式与现有 header 元数据行一致。
+- [x] 3.10 新增测试：
   - `web/test/components/issuer/IssuerKpiBar.test.tsx`：给定 KPI props → 渲染 4 单元；Cumulative Volume undefined → skeleton 出现。
   - `web/test/components/issuer/IssuerActivityList.test.tsx`：filter 逻辑覆盖（属于/不属于该 issuer 的事件），空态渲染。
-- [ ] 3.11 手动检查（Claude 或 Codex 报告截图）：`http://localhost:3000/issuers/meridian-credit` 页面正常渲染（无 hydration warning，四 KPI 数据合理）。
-- [ ] 3.12 验证：`cd web && npm test && npm run build`；开发服务器手动过一遍 3 个页面（一个已 issuer、一个空 issuer、一个未知 slug 404）。
+- [ ] 3.11 手动检查（Claude 或 Codex 报告截图）：`http://localhost:3000/issuers/meridian-credit` 页面正常渲染（无 hydration warning，四 KPI 数据合理）。Blocked in Codex sandbox: local server bind fails with `EPERM listen 127.0.0.1`.
+- [x] 3.12 验证：`cd web && npm test`（本轮按用户批 3 指令不跑 build；build/本地浏览器冒烟受沙箱监听/网络限制影响）。
 - [ ] 3.13 【Claude 人工审 diff】重点：`SortableAssetsTable` 抽取是否破坏市场页现有行为；`IssuerActivityList` 是否引入新的事件扫描（应复用 activity-feed hook，禁止新起 event scan）。
 
 ## 4. 新资产种子 + arc-testnet 广播（Codex 批 4，约 10 分钟；广播由用户执行）

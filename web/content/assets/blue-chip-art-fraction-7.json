@@ -3,7 +3,7 @@
   "displayName": "Blue-Chip Art Fraction #7",
   "ticker": "ART-7",
   "description": "A demo collectible asset referencing a custodied blue-chip artwork fraction for display of non-yielding RWA inventory. Disclosures emphasize provenance, custody controls, and independent valuation cadence.",
-  "issuer": "Aster Art Custody Ltd.",
+  "issuerSlug": "axiom-fine-art",
   "apyBps": null,
   "docs": [
     {

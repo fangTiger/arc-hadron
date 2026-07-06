@@ -3,7 +3,7 @@
   "displayName": "Nexus Invoice Pool 2026-07",
   "ticker": "NVIP",
   "description": "A demo invoice-financing pool referencing diversified business invoices with short expected duration and monitored obligor exposure. Disclosures focus on invoice eligibility, payment verification, and reserve coverage.",
-  "issuer": "Nexus Working Capital Finance LLC",
+  "issuerSlug": "atlas-receivables",
   "apyBps": 1050,
   "docs": [
     {

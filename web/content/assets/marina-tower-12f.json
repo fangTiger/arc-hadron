@@ -3,7 +3,7 @@
   "displayName": "Marina Tower 12F Unit",
   "ticker": "RES-12F",
   "description": "A demo fractional real-estate asset referencing office-unit rental cash flows in a marina business district. Disclosures focus on occupancy, lease stability, and issuance-price market value displayed from Arc contract data.",
-  "issuer": "Harborline Real Asset Trust",
+  "issuerSlug": "harbor-real-estate",
   "apyBps": 620,
   "docs": [
     {

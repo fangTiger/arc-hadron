@@ -3,7 +3,7 @@
   "displayName": "Silver Bullion Vault #2",
   "ticker": "SLVR",
   "description": "A demo fractional asset referencing vaulted silver bullion inventory with auditable bar records and transferable on-chain shares. The asset does not claim fixed yield; valuation is intended to follow issuance and market transaction data.",
-  "issuer": "Aurum Custody Markets Ltd.",
+  "issuerSlug": "polaris-metals-vault",
   "apyBps": null,
   "docs": [
     {

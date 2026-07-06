@@ -3,7 +3,7 @@
   "displayName": "Vaulted Gold Ounce #4",
   "ticker": "GOLD",
   "description": "A demo fractional asset referencing vaulted gold inventory with an emphasis on physical custody, auditable stock records, and transferable on-chain shares. The asset does not claim fixed yield; price display is derived from issuance and transaction data.",
-  "issuer": "Aurum Custody Markets Ltd.",
+  "issuerSlug": "polaris-metals-vault",
   "apyBps": null,
   "docs": [
     {

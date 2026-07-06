@@ -3,7 +3,7 @@
   "displayName": "Solar Farm Basin-2 Notes",
   "ticker": "SOLR",
   "description": "A demo infrastructure note referencing contracted cash flows from a utility-scale solar farm. Disclosures emphasize power-purchase agreement tenor, operating availability, and reserve assumptions.",
-  "issuer": "Helio Basin Infrastructure Trust",
+  "issuerSlug": "helios-infrastructure",
   "apyBps": 740,
   "docs": [
     {

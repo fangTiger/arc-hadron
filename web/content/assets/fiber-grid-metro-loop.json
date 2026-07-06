@@ -3,7 +3,7 @@
   "displayName": "Fiber Grid Metro Loop",
   "ticker": "FIBR",
   "description": "A demo infrastructure asset referencing contracted fiber capacity across a metropolitan network loop. Disclosures focus on customer contracts, utilization, and maintenance reserve assumptions.",
-  "issuer": "Metro Fiber Finance LLC",
+  "issuerSlug": "helios-infrastructure",
   "apyBps": 680,
   "docs": [
     {

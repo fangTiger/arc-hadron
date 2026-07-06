@@ -3,7 +3,7 @@
   "displayName": "Gold Standard Offset Bundle",
   "ticker": "GSOB",
   "description": "A demo carbon asset referencing a diversified bundle of verified offset credits from voluntary carbon markets. The asset does not claim fixed yield and is presented for batch-level traceability and disclosure review.",
-  "issuer": "Greenline Climate Registry Pte. Ltd.",
+  "issuerSlug": "goldstd-carbon",
   "apyBps": null,
   "docs": [
     {

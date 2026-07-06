@@ -3,7 +3,7 @@
   "displayName": "Atlas Trade Receivables B",
   "ticker": "PCRD-B",
   "description": "A demo private-credit asset referencing short-tenor trade receivables originated from investment-grade commercial buyers. Disclosures emphasize invoice eligibility, collection timing, and reserve coverage.",
-  "issuer": "Atlas Receivables Trust",
+  "issuerSlug": "atlas-receivables",
   "apyBps": 920,
   "docs": [
     {

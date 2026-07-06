@@ -6,10 +6,12 @@ import {
 } from "../lib/categories";
 
 describe("market display categories", () => {
-  test("builds ALL plus eight display category tab options", () => {
+  test("builds ALL plus ten display category tab options", () => {
     expect(CATEGORY_TAB_OPTIONS.map((option) => option.label)).toEqual([
       "ALL",
       "TREASURIES",
+      "SOVEREIGN BONDS",
+      "CORPORATE BONDS",
       "PRIVATE CREDIT",
       "REAL ESTATE",
       "COMMODITIES",

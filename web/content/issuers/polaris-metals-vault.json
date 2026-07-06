@@ -1,0 +1,33 @@
+{
+  "slug": "polaris-metals-vault",
+  "displayName": "Polaris Metals Vault",
+  "shortName": "POLARIS",
+  "jurisdiction": "Zurich, CH",
+  "establishedYear": 2004,
+  "focus": "Custodied precious-metals inventory",
+  "description": "Demo issuer profile for vaulted metal inventory references. This metadata is illustrative and not a legal entity record.",
+  "docs": [
+    {
+      "label": "Entity registration",
+      "note": "Demo document, not a legal instrument. Placeholder for entity registration filing."
+    },
+    {
+      "label": "Audit letter",
+      "note": "Demo document, not a legal instrument. Placeholder for annual audit summary."
+    },
+    {
+      "label": "Identifier registry",
+      "note": "Demo document, not a legal instrument. Placeholder for identifier reference."
+    }
+  ],
+  "externalLinks": [
+    {
+      "label": "Website",
+      "href": "https://demo.hadron.local/polaris-metals-vault"
+    },
+    {
+      "label": "Disclosures",
+      "href": "https://demo.hadron.local/polaris-metals-vault/disclosures"
+    }
+  ]
+}

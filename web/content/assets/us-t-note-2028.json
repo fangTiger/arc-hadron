@@ -3,7 +3,7 @@
   "displayName": "US T-Note 2028",
   "ticker": "TNOTE",
   "description": "A demo fractional asset referencing intermediate-duration U.S. Treasury note exposure for accounts seeking transparent sovereign-rate carry. Disclosures emphasize maturity profile, valuation discipline, and on-chain settlement state on Arc testnet.",
-  "issuer": "Northstar Treasury Vault LLC",
+  "issuerSlug": "us-treasury-desk",
   "apyBps": 460,
   "docs": [
     {

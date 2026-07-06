@@ -3,7 +3,7 @@
   "displayName": "Dockside Logistics Park",
   "ticker": "DOCK",
   "description": "A demo real-estate asset referencing stabilized logistics warehouses adjacent to a port corridor. Disclosures focus on tenant quality, lease maturity ladder, and operating-expense assumptions.",
-  "issuer": "Dockside Real Asset Partners",
+  "issuerSlug": "harbor-real-estate",
   "apyBps": 710,
   "docs": [
     {

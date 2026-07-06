@@ -1,0 +1,33 @@
+{
+  "slug": "harbor-real-estate",
+  "displayName": "Harbor Real Estate Partners",
+  "shortName": "HARBOR",
+  "jurisdiction": "New York, US",
+  "establishedYear": 2008,
+  "focus": "Income-producing commercial real estate",
+  "description": "Demo issuer profile for real-estate-backed fractional assets. This metadata is illustrative and not a legal entity record.",
+  "docs": [
+    {
+      "label": "Entity registration",
+      "note": "Demo document, not a legal instrument. Placeholder for entity registration filing."
+    },
+    {
+      "label": "Audit letter",
+      "note": "Demo document, not a legal instrument. Placeholder for annual audit summary."
+    },
+    {
+      "label": "Identifier registry",
+      "note": "Demo document, not a legal instrument. Placeholder for identifier reference."
+    }
+  ],
+  "externalLinks": [
+    {
+      "label": "Website",
+      "href": "https://demo.hadron.local/harbor-real-estate"
+    },
+    {
+      "label": "Disclosures",
+      "href": "https://demo.hadron.local/harbor-real-estate/disclosures"
+    }
+  ]
+}

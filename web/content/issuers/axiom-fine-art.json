@@ -1,0 +1,33 @@
+{
+  "slug": "axiom-fine-art",
+  "displayName": "Axiom Fine Art Partners",
+  "shortName": "AXIOM",
+  "jurisdiction": "London, UK",
+  "establishedYear": 2001,
+  "focus": "Custodied fine-art and collectible interests",
+  "description": "Demo issuer profile for fine-art custody and valuation references. This metadata is illustrative and not a legal entity record.",
+  "docs": [
+    {
+      "label": "Entity registration",
+      "note": "Demo document, not a legal instrument. Placeholder for entity registration filing."
+    },
+    {
+      "label": "Audit letter",
+      "note": "Demo document, not a legal instrument. Placeholder for annual audit summary."
+    },
+    {
+      "label": "Identifier registry",
+      "note": "Demo document, not a legal instrument. Placeholder for identifier reference."
+    }
+  ],
+  "externalLinks": [
+    {
+      "label": "Website",
+      "href": "https://demo.hadron.local/axiom-fine-art"
+    },
+    {
+      "label": "Disclosures",
+      "href": "https://demo.hadron.local/axiom-fine-art/disclosures"
+    }
+  ]
+}

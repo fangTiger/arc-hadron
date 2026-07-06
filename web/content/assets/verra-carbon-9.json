@@ -3,7 +3,7 @@
   "displayName": "Verra Carbon Credit Lot-9",
   "ticker": "CARB-9",
   "description": "A demo fractional asset referencing voluntary carbon-market credits with batch tracking, project disclosure, and transferable on-chain shares. The asset does not claim fixed yield and serves as a non-yielding RWA display sample.",
-  "issuer": "Greenline Climate Registry Pte. Ltd.",
+  "issuerSlug": "verra-registry-carbon",
   "apyBps": null,
   "docs": [
     {

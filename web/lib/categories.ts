@@ -6,6 +6,8 @@ export interface CategoryDisplay {
 
 export type DisplayCategory =
   | "treasuries"
+  | "sovereign-bonds"
+  | "corporate-bonds"
   | "private-credit"
   | "real-estate"
   | "commodities"
@@ -18,6 +20,8 @@ export type MarketCategory = "all" | DisplayCategory;
 
 export const DISPLAY_CATEGORIES: { label: string; value: DisplayCategory }[] = [
   { label: "TREASURIES", value: "treasuries" },
+  { label: "SOVEREIGN BONDS", value: "sovereign-bonds" },
+  { label: "CORPORATE BONDS", value: "corporate-bonds" },
   { label: "PRIVATE CREDIT", value: "private-credit" },
   { label: "REAL ESTATE", value: "real-estate" },
   { label: "COMMODITIES", value: "commodities" },
@@ -37,6 +41,16 @@ const categoryDisplays: Record<DisplayCategory, CategoryDisplay> = {
     label: "TREASURIES",
     gradient: "radial-gradient(circle at 20% 20%, #22d3ee 0%, #155e75 42%, #07111a 100%)",
     tickerClassName: "border-neon/50 bg-neon/10 text-neon",
+  },
+  "sovereign-bonds": {
+    label: "SOVEREIGN BONDS",
+    gradient: "radial-gradient(circle at 20% 20%, #60a5fa 0%, #1d4ed8 42%, #06111f 100%)",
+    tickerClassName: "border-blue-300/50 bg-blue-400/10 text-blue-200",
+  },
+  "corporate-bonds": {
+    label: "CORPORATE BONDS",
+    gradient: "radial-gradient(circle at 20% 20%, #f59e0b 0%, #475569 46%, #0b1018 100%)",
+    tickerClassName: "border-amber-300/45 bg-amber-300/10 text-amber-200",
   },
   "private-credit": {
     label: "PRIVATE CREDIT",

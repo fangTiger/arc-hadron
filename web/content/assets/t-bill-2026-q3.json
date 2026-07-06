@@ -3,7 +3,7 @@
   "displayName": "US T-Bill 2026-Q3",
   "ticker": "TBILL",
   "description": "A demo fractional asset referencing short-duration U.S. Treasury bill exposure for accounts that prioritize low-volatility yield. Disclosures emphasize transparent maturity cadence, stable settlement rhythm, and contract-sourced state on Arc testnet.",
-  "issuer": "Northstar Treasury Vault LLC",
+  "issuerSlug": "us-treasury-desk",
   "apyBps": 510,
   "docs": [
     {

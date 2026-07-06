@@ -102,4 +102,63 @@ describe("AssistantPanelView", () => {
     expect(html).toContain("Asset not found");
     expect(html).not.toContain("Confirm");
   });
+
+  test("renders sell, cancel, and claim write-action cards", () => {
+    const html = renderPanel([
+      {
+        type: "sell",
+        assetLabel: "HADRON",
+        balance: 500n,
+        errorText: undefined,
+        isConnected: true,
+        isCorrectChain: true,
+        onConnect: () => undefined,
+        onListForSale: () => undefined,
+        onSwitchNetwork: () => undefined,
+        price: 2.1,
+        quantity: 2.5,
+        status: "idle",
+        tokenId: 7n,
+        txHash: undefined,
+      },
+      {
+        type: "cancel",
+        assetLabel: "HADRON",
+        errorText: undefined,
+        isConnected: true,
+        isCorrectChain: true,
+        onCancelBid: () => undefined,
+        onCancelListing: () => undefined,
+        onConnect: () => undefined,
+        onSwitchNetwork: () => undefined,
+        orders: [
+          { side: "listing", id: 4n, price: unitPriceFromSharePriceCents(210n), size: 250n },
+          { side: "bid", id: 9n, price: unitPriceFromSharePriceCents(190n), size: 125n },
+        ],
+        status: "idle",
+        txHash: undefined,
+      },
+      {
+        type: "claim",
+        entries: [{ tokenId: 7n, assetLabel: "HADRON", amount: 250n * (USDC / 100n) }],
+        errorText: undefined,
+        isConnected: true,
+        isCorrectChain: true,
+        mode: "single",
+        onClaim: () => undefined,
+        onClaimBatch: () => undefined,
+        onConnect: () => undefined,
+        onSwitchNetwork: () => undefined,
+        status: "idle",
+        txHash: undefined,
+      },
+    ]);
+
+    expect(html).toContain("SELL / HADRON");
+    expect(html).toContain("CANCEL / HADRON");
+    expect(html).toContain("LISTING #4");
+    expect(html).toContain("BID #9");
+    expect(html).toContain("CLAIM / HADRON");
+    expect(html).toContain("2.50 USDC");
+  });
 });

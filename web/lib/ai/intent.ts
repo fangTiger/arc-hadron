@@ -4,6 +4,9 @@ export type Intent =
   | { kind: "query_holdings"; asset?: string }
   | { kind: "query_yield" }
   | { kind: "buy"; asset: string; quantity: number }
+  | { kind: "sell"; asset: string; quantity: number; price?: number }
+  | { kind: "cancel"; asset: string }
+  | { kind: "claim"; asset?: string }
   | { kind: "unknown" };
 
 export interface AssetMatchable {
@@ -77,6 +80,21 @@ export function isValidIntent(value: unknown): value is Intent {
         hasOnlyKeys(value, ["asset", "kind", "quantity"]) &&
         isNonEmptyString(value.asset) &&
         isValidQuantity(value.quantity)
+      );
+    case "sell":
+      return (
+        (hasOnlyKeys(value, ["asset", "kind", "quantity"]) ||
+          hasOnlyKeys(value, ["asset", "kind", "price", "quantity"])) &&
+        isNonEmptyString(value.asset) &&
+        isValidQuantity(value.quantity) &&
+        (value.price === undefined || isValidQuantity(value.price))
+      );
+    case "cancel":
+      return hasOnlyKeys(value, ["asset", "kind"]) && isNonEmptyString(value.asset);
+    case "claim":
+      return (
+        hasOnlyKeys(value, ["kind"]) ||
+        (hasOnlyKeys(value, ["asset", "kind"]) && isNonEmptyString(value.asset))
       );
     default:
       return false;

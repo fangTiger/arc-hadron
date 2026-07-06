@@ -49,7 +49,7 @@ describe("DeepSeek intent mock", () => {
       asset: "HADRON",
       quantity: 2.5,
     });
-    await expect(parseWithMock("cancel my order")).resolves.toEqual({
+    await expect(parseWithMock("transfer 1 HADRON")).resolves.toEqual({
       kind: "unknown",
     });
   });
@@ -59,6 +59,34 @@ describe("DeepSeek intent mock", () => {
       kind: "buy",
       asset: "HADRON",
       quantity: 5,
+    });
+  });
+
+  test("returns write intents for sell, cancel, and claim without transaction parameters", async () => {
+    await expect(parseWithMock("sell 2.5 HADRON at 2.10")).resolves.toEqual({
+      kind: "sell",
+      asset: "HADRON",
+      quantity: 2.5,
+      price: 2.1,
+    });
+    await expect(parseWithMock("list 1.25 TBILL")).resolves.toEqual({
+      kind: "sell",
+      asset: "TBILL",
+      quantity: 1.25,
+    });
+    await expect(parseWithMock("cancel my HADRON order")).resolves.toEqual({
+      kind: "cancel",
+      asset: "HADRON",
+    });
+    await expect(parseWithMock("claim my HADRON yield")).resolves.toEqual({
+      kind: "claim",
+      asset: "HADRON",
+    });
+    await expect(parseWithMock("claim my yield")).resolves.toEqual({
+      kind: "claim",
+    });
+    await expect(parseWithMock("deposit 10 USDC yield to HADRON")).resolves.toEqual({
+      kind: "unknown",
     });
   });
 });

@@ -16,18 +16,24 @@ import {
   buildAssistantIntentRequest,
 } from "@/lib/ai/assistantContext";
 import { resolveBuy, type ResolveBuyResult } from "@/lib/ai/resolveBuy";
+import { resolveCancelableOrders, type CancelableOrder } from "@/lib/ai/resolveCancelable";
+import { resolveClaimable } from "@/lib/ai/resolveClaimable";
 import { buildOrderBook } from "@/lib/orderBook";
 import { useBuyListing } from "@/lib/hooks/useBuyListing";
 import { useBuyPrimary } from "@/lib/hooks/useBuyPrimary";
+import { useCancelBid } from "@/lib/hooks/useCancelBid";
+import { useCancelListing } from "@/lib/hooks/useCancelListing";
 import { useAllBids } from "@/lib/hooks/useBids";
 import { useAssets } from "@/lib/hooks/useAssets";
 import { useAllListings } from "@/lib/hooks/useListings";
+import { useListForSale } from "@/lib/hooks/useListForSale";
 import { useNetworkGuard } from "@/lib/hooks/useNetworkGuard";
 import { usePortfolio } from "@/lib/hooks/usePortfolio";
-import { usePendingYield } from "@/lib/hooks/useYield";
+import { useClaimYield, usePendingYield } from "@/lib/hooks/useYield";
 import type { BidView } from "@/lib/bids";
 import type { ListingView } from "@/lib/listing";
 import type { AssetView, Holding } from "@/lib/mappers";
+import type { ClaimConfirmEntry } from "@/components/assistant/ClaimConfirmCard";
 
 function assetLabel(asset: AssetView): string {
   return asset.meta.ticker || asset.meta.displayName || asset.name;
@@ -47,6 +53,10 @@ function listingsForAsset(tokenId: bigint, listings: readonly ListingView[]): Li
 
 function bidsForAsset(tokenId: bigint, bids: readonly BidView[]): BidView[] {
   return bids.filter((bid) => bid.tokenId === tokenId);
+}
+
+function holdingBalance(tokenId: bigint, holdings: readonly Holding[]): bigint {
+  return holdings.find((holding) => holding.asset.tokenId === tokenId)?.balance ?? 0n;
 }
 
 function bestAsk(tokenId: bigint, listings: readonly ListingView[]): bigint | null {
@@ -148,7 +158,62 @@ function yieldCard({
   };
 }
 
-function cardsForReadIntent({
+interface BuyDraft {
+  asset: AssetView;
+  resolution: ResolveBuyResult;
+}
+
+interface SellDraft {
+  asset: AssetView;
+  balance: bigint;
+  price?: number;
+  quantity: number;
+}
+
+interface CancelDraft {
+  asset: AssetView;
+  orders: CancelableOrder[];
+}
+
+interface ClaimDraft {
+  entries: ClaimConfirmEntry[];
+  mode: "single" | "batch";
+}
+
+interface IntentCardsResult {
+  cards: AssistantCard[];
+  buyDraft: BuyDraft | null;
+  sellDraft: SellDraft | null;
+  cancelDraft: CancelDraft | null;
+  claimDraft: ClaimDraft | null;
+}
+
+const EMPTY_DRAFTS = {
+  buyDraft: null,
+  sellDraft: null,
+  cancelDraft: null,
+  claimDraft: null,
+} as const;
+
+function claimEntries(
+  entries: Array<{ tokenId: bigint; amount: bigint }>,
+  assets: readonly AssetView[],
+): ClaimConfirmEntry[] {
+  const assetByTokenId = new Map(assets.map((asset) => [asset.tokenId, asset]));
+
+  return entries.map((entry) => {
+    const asset = assetByTokenId.get(entry.tokenId);
+
+    return {
+      tokenId: entry.tokenId,
+      amount: entry.amount,
+      assetLabel: asset ? assetLabel(asset) : `TOKEN #${entry.tokenId.toString()}`,
+    };
+  });
+}
+
+function cardsForIntent({
+  address,
   assets,
   bids,
   holdings,
@@ -156,23 +221,26 @@ function cardsForReadIntent({
   isConnected,
   listings,
   pendingByTokenId,
+  pending,
   totalPending,
 }: {
+  address?: `0x${string}`;
   assets: readonly AssetView[];
   bids: readonly BidView[];
   holdings: readonly Holding[];
   intent: Intent;
   isConnected: boolean;
   listings: readonly ListingView[];
+  pending: Array<{ tokenId: bigint; amount: bigint }>;
   pendingByTokenId: Map<bigint, bigint>;
   totalPending: bigint;
-}): { cards: AssistantCard[]; buyDraft: { asset: AssetView; resolution: ResolveBuyResult } | null } {
+}): IntentCardsResult {
   switch (intent.kind) {
     case "query_price": {
       const matchedAsset = assetMatchCard(intent.asset, assets);
 
       if ("type" in matchedAsset) {
-        return { cards: [matchedAsset], buyDraft: null };
+        return { cards: [matchedAsset], ...EMPTY_DRAFTS };
       }
 
       return {
@@ -185,14 +253,14 @@ function cardsForReadIntent({
             bestBid: bestBid(matchedAsset.tokenId, bids),
           },
         ],
-        buyDraft: null,
+        ...EMPTY_DRAFTS,
       };
     }
     case "query_depth": {
       const matchedAsset = assetMatchCard(intent.asset, assets);
 
       if ("type" in matchedAsset) {
-        return { cards: [matchedAsset], buyDraft: null };
+        return { cards: [matchedAsset], ...EMPTY_DRAFTS };
       }
 
       const book = buildOrderBook({
@@ -209,28 +277,31 @@ function cardsForReadIntent({
             bids: depthLevels(book.bids),
           },
         ],
-        buyDraft: null,
+        ...EMPTY_DRAFTS,
       };
     }
     case "query_holdings":
       return {
         cards: [holdingsCard({ assetQuery: intent.asset, assets, holdings, isConnected })],
-        buyDraft: null,
+        ...EMPTY_DRAFTS,
       };
     case "query_yield":
       return {
         cards: [yieldCard({ assets, isConnected, pendingByTokenId, totalPending })],
-        buyDraft: null,
+        ...EMPTY_DRAFTS,
       };
     case "buy": {
       const matchedAsset = assetMatchCard(intent.asset, assets);
 
       if ("type" in matchedAsset) {
-        return { cards: [matchedAsset], buyDraft: null };
+        return { cards: [matchedAsset], ...EMPTY_DRAFTS };
       }
 
       return {
         cards: [],
+        sellDraft: null,
+        cancelDraft: null,
+        claimDraft: null,
         buyDraft: {
           asset: matchedAsset,
           resolution: resolveBuy(matchedAsset.tokenId, intent.quantity, {
@@ -240,8 +311,89 @@ function cardsForReadIntent({
         },
       };
     }
+    case "sell": {
+      const matchedAsset = assetMatchCard(intent.asset, assets);
+
+      if ("type" in matchedAsset) {
+        return { cards: [matchedAsset], ...EMPTY_DRAFTS };
+      }
+
+      return {
+        cards: [],
+        buyDraft: null,
+        cancelDraft: null,
+        claimDraft: null,
+        sellDraft: {
+          asset: matchedAsset,
+          balance: holdingBalance(matchedAsset.tokenId, holdings),
+          price: intent.price,
+          quantity: intent.quantity,
+        },
+      };
+    }
+    case "cancel": {
+      const matchedAsset = assetMatchCard(intent.asset, assets);
+
+      if ("type" in matchedAsset) {
+        return { cards: [matchedAsset], ...EMPTY_DRAFTS };
+      }
+
+      return {
+        cards: [],
+        buyDraft: null,
+        sellDraft: null,
+        claimDraft: null,
+        cancelDraft: {
+          asset: matchedAsset,
+          orders: address
+            ? resolveCancelableOrders(matchedAsset.tokenId, address, {
+                listings: listingsForAsset(matchedAsset.tokenId, listings),
+                bids: bidsForAsset(matchedAsset.tokenId, bids),
+              })
+            : [],
+        },
+      };
+    }
+    case "claim": {
+      if (intent.asset) {
+        const matchedAsset = assetMatchCard(intent.asset, assets);
+
+        if ("type" in matchedAsset) {
+          return { cards: [matchedAsset], ...EMPTY_DRAFTS };
+        }
+
+        const result = resolveClaimable(address, {
+          pending,
+          asset: matchedAsset.tokenId,
+        });
+
+        return {
+          cards: [],
+          buyDraft: null,
+          sellDraft: null,
+          cancelDraft: null,
+          claimDraft: {
+            mode: "single",
+            entries: claimEntries(result.entries, assets),
+          },
+        };
+      }
+
+      const result = resolveClaimable(address, { pending });
+
+      return {
+        cards: [],
+        buyDraft: null,
+        sellDraft: null,
+        cancelDraft: null,
+        claimDraft: {
+          mode: "batch",
+          entries: claimEntries(result.entries, assets),
+        },
+      };
+    }
     case "unknown":
-      return { cards: [{ type: "unknown" }], buyDraft: null };
+      return { cards: [{ type: "unknown" }], ...EMPTY_DRAFTS };
   }
 }
 
@@ -257,16 +409,23 @@ export function AssistantDock() {
   const { bids } = useAllBids();
   const { holdings } = usePortfolio();
   const tokenIds = useMemo(() => assets.map((asset) => asset.tokenId), [assets]);
-  const { pendingByTokenId, totalPending } = usePendingYield(tokenIds);
+  const { pending, pendingByTokenId, totalPending } = usePendingYield(tokenIds);
   const buyPrimary = useBuyPrimary();
   const buyListing = useBuyListing();
+  const listForSale = useListForSale();
+  const cancelListing = useCancelListing();
+  const cancelBid = useCancelBid();
+  const claimYield = useClaimYield();
   const defaultAsset = assistantDefaultAssetForPath(pathname, assets);
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [cards, setCards] = useState<AssistantCard[]>([]);
-  const [buyDraft, setBuyDraft] = useState<{ asset: AssetView; resolution: ResolveBuyResult } | null>(null);
+  const [buyDraft, setBuyDraft] = useState<BuyDraft | null>(null);
+  const [sellDraft, setSellDraft] = useState<SellDraft | null>(null);
+  const [cancelDraft, setCancelDraft] = useState<CancelDraft | null>(null);
+  const [claimDraft, setClaimDraft] = useState<ClaimDraft | null>(null);
   const injectedConnector = useMemo(
     () => connectors.find((connector) => connector.type === "injected" || connector.id === "injected"),
     [connectors],
@@ -289,6 +448,49 @@ export function AssistantDock() {
       pushError(buyListing.errorText);
     }
   }, [buyListing.errorText, buyListing.status, buyListing.txHash, pushError, pushSuccess, queryClient]);
+
+  useEffect(() => {
+    if (listForSale.status === "success" && listForSale.txHash) {
+      pushSuccess({ message: "Listing created", txHash: listForSale.txHash });
+      void queryClient.invalidateQueries();
+    } else if (listForSale.status === "error" && listForSale.errorText) {
+      pushError(listForSale.errorText);
+    }
+  }, [listForSale.errorText, listForSale.status, listForSale.txHash, pushError, pushSuccess, queryClient]);
+
+  useEffect(() => {
+    if (cancelListing.status === "success" && cancelListing.txHash) {
+      pushSuccess({ message: "Order cancelled", txHash: cancelListing.txHash });
+      void queryClient.invalidateQueries();
+    } else if (cancelListing.status === "error" && cancelListing.errorText) {
+      pushError(cancelListing.errorText);
+    }
+  }, [
+    cancelListing.errorText,
+    cancelListing.status,
+    cancelListing.txHash,
+    pushError,
+    pushSuccess,
+    queryClient,
+  ]);
+
+  useEffect(() => {
+    if (cancelBid.status === "success" && cancelBid.txHash) {
+      pushSuccess({ message: "Order cancelled", txHash: cancelBid.txHash });
+      void queryClient.invalidateQueries();
+    } else if (cancelBid.status === "error" && cancelBid.errorText) {
+      pushError(cancelBid.errorText);
+    }
+  }, [cancelBid.errorText, cancelBid.status, cancelBid.txHash, pushError, pushSuccess, queryClient]);
+
+  useEffect(() => {
+    if (claimYield.status === "success" && claimYield.txHash) {
+      pushSuccess({ message: "Yield claimed", txHash: claimYield.txHash });
+      void queryClient.invalidateQueries();
+    } else if (claimYield.status === "error" && claimYield.errorText) {
+      pushError(claimYield.errorText);
+    }
+  }, [claimYield.errorText, claimYield.status, claimYield.txHash, pushError, pushSuccess, queryClient]);
 
   function connectWallet() {
     if (!injectedConnector) {
@@ -314,6 +516,9 @@ export function AssistantDock() {
     setIsSubmitting(true);
     setErrorText(null);
     setBuyDraft(null);
+    setSellDraft(null);
+    setCancelDraft(null);
+    setClaimDraft(null);
 
     try {
       const response = await fetch("/api/ai/intent", {
@@ -328,19 +533,24 @@ export function AssistantDock() {
       }
 
       const intent = parseIntent(await response.json());
-      const next = cardsForReadIntent({
+      const next = cardsForIntent({
+        address,
         assets,
         bids,
         holdings,
         intent,
         isConnected,
         listings,
+        pending,
         pendingByTokenId,
         totalPending,
       });
 
       setCards(next.cards);
       setBuyDraft(next.buyDraft);
+      setSellDraft(next.sellDraft);
+      setCancelDraft(next.cancelDraft);
+      setClaimDraft(next.claimDraft);
     } catch {
       setErrorText("Assistant request failed");
     } finally {
@@ -375,6 +585,64 @@ export function AssistantDock() {
         },
       ]
     : [];
+  const sellCard: AssistantCard[] = sellDraft
+    ? [
+        {
+          type: "sell",
+          assetLabel: assetLabel(sellDraft.asset),
+          balance: sellDraft.balance,
+          errorText: listForSale.errorText,
+          isConnected: Boolean(isConnected && address),
+          isCorrectChain,
+          onConnect: connectWallet,
+          onListForSale: listForSale.listForSale,
+          onSwitchNetwork: switchToArc,
+          price: sellDraft.price,
+          quantity: sellDraft.quantity,
+          status: listForSale.status,
+          tokenId: sellDraft.asset.tokenId,
+          txHash: listForSale.txHash,
+        },
+      ]
+    : [];
+  const activeCancel =
+    cancelListing.status !== "idle" || cancelListing.errorText ? cancelListing : cancelBid;
+  const cancelCard: AssistantCard[] = cancelDraft
+    ? [
+        {
+          type: "cancel",
+          assetLabel: assetLabel(cancelDraft.asset),
+          errorText: activeCancel.errorText,
+          isConnected: Boolean(isConnected && address),
+          isCorrectChain,
+          onCancelBid: cancelBid.cancelBid,
+          onCancelListing: cancelListing.cancel,
+          onConnect: connectWallet,
+          onSwitchNetwork: switchToArc,
+          orders: cancelDraft.orders,
+          status: activeCancel.status,
+          txHash: activeCancel.txHash,
+        },
+      ]
+    : [];
+  const claimCard: AssistantCard[] = claimDraft
+    ? [
+        {
+          type: "claim",
+          entries: claimDraft.entries,
+          errorText: claimYield.errorText,
+          isConnected: Boolean(isConnected && address),
+          isCorrectChain,
+          mode: claimDraft.mode,
+          onClaim: claimYield.claim,
+          onClaimBatch: claimYield.claimBatch,
+          onConnect: connectWallet,
+          onSwitchNetwork: switchToArc,
+          status: claimYield.status,
+          txHash: claimYield.txHash,
+        },
+      ]
+    : [];
 
   return (
     <>
@@ -386,7 +654,7 @@ export function AssistantDock() {
         ASSISTANT
       </button>
       <AssistantPanelView
-        cards={[...cards, ...buyCard]}
+        cards={[...cards, ...buyCard, ...sellCard, ...cancelCard, ...claimCard]}
         defaultAssetLabel={defaultAsset ? assetLabel(defaultAsset) : null}
         errorText={errorText}
         inputValue={inputValue}

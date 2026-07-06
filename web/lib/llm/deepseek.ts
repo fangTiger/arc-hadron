@@ -117,14 +117,19 @@ function trailingAsset(message: string): string | null {
     "bid",
     "book",
     "buy",
+    "cancel",
+    "claim",
     "depth",
     "for",
     "holdings",
+    "list",
     "lowest",
     "my",
     "order",
+    "orders",
     "price",
     "show",
+    "sell",
     "the",
     "what",
     "yield",
@@ -138,13 +143,50 @@ function assetFromMessage(message: string, defaultAsset: string | null = null): 
   return assetAfterPreposition(message) ?? trailingAsset(message) ?? defaultAsset;
 }
 
+function sellIntentFromMessage(message: string, defaultAsset: string | null): unknown {
+  const match = message.match(
+    /\b(?:sell|list)\s+(\d+(?:\.\d{1,2})?)(?:\s+(?:shares?\s+(?:of\s+)?)?(.+?))?(?:\s+(?:at|for)\s+\$?(\d+(?:\.\d{1,2})?))?\s*$/i,
+  );
+  const quantity = match ? Number(match[1]) : Number.NaN;
+  const asset = cleanAsset(match?.[2]) ?? defaultAsset;
+  const price = match?.[3] === undefined ? undefined : Number(match[3]);
+
+  if (!Number.isFinite(quantity) || quantity <= 0 || !asset) {
+    return { kind: "unknown" };
+  }
+
+  return price !== undefined && Number.isFinite(price) && price > 0
+    ? { kind: "sell", asset, quantity, price }
+    : { kind: "sell", asset, quantity };
+}
+
+function cancelIntentFromMessage(message: string, defaultAsset: string | null): unknown {
+  const match = message.match(/\bcancel(?:\s+my)?(?:\s+(.+?))?(?:\s+orders?)?\s*$/i);
+  const asset = cleanAsset(match?.[1]) ?? defaultAsset;
+
+  return asset ? { kind: "cancel", asset } : { kind: "unknown" };
+}
+
+function claimIntentFromMessage(message: string): unknown {
+  const match = message.match(/\bclaim(?:\s+my)?(?:\s+(.+?))?\s+yield\b/i);
+  const asset = cleanAsset(match?.[1]);
+
+  return asset ? { kind: "claim", asset } : { kind: "claim" };
+}
+
 function mockIntentFor(messages: unknown): MockJsonCompletion {
   const { defaultAsset, userMessage } = intentPromptParts(messages);
   const lower = userMessage.toLowerCase();
   let intent: unknown = { kind: "unknown" };
 
-  if (/\b(sell|list|cancel|claim|deposit|transfer)\b/.test(lower)) {
+  if (/\b(deposit|transfer)\b/.test(lower)) {
     intent = { kind: "unknown" };
+  } else if (/\b(sell|list)\b/.test(lower)) {
+    intent = sellIntentFromMessage(userMessage, defaultAsset);
+  } else if (/\bcancel\b/.test(lower)) {
+    intent = cancelIntentFromMessage(userMessage, defaultAsset);
+  } else if (/\bclaim\b/.test(lower)) {
+    intent = claimIntentFromMessage(userMessage);
   } else if (/\bbuy\b/.test(lower)) {
     const match = userMessage.match(/\bbuy\s+(\d+(?:\.\d{1,2})?)(?:\s+(?:shares?\s+(?:of\s+)?)?(.+))?$/i);
     const quantity = match ? Number(match[1]) : Number.NaN;

@@ -2,6 +2,15 @@
 
 import type { ChangeEvent, FormEvent, ReactNode } from "react";
 import { BuyConfirmCard, type BuyConfirmCardProps } from "@/components/assistant/BuyConfirmCard";
+import {
+  CancelDisambiguationCard,
+  type CancelDisambiguationCardProps,
+} from "@/components/assistant/CancelDisambiguationCard";
+import {
+  ClaimConfirmCard,
+  type ClaimConfirmCardProps,
+} from "@/components/assistant/ClaimConfirmCard";
+import { SellConfirmCard, type SellConfirmCardProps } from "@/components/assistant/SellConfirmCard";
 import { formatShares, formatUsdc } from "@/lib/format";
 import { unitPriceToSharePrice } from "@/lib/shares";
 
@@ -36,6 +45,9 @@ export type AssistantCard =
       rows: Array<{ assetLabel: string; pending: bigint }>;
     }
   | ({ type: "buy" } & BuyConfirmCardProps)
+  | ({ type: "sell" } & SellConfirmCardProps)
+  | ({ type: "cancel" } & CancelDisambiguationCardProps)
+  | ({ type: "claim" } & ClaimConfirmCardProps)
   | { type: "unknown" }
   | {
       type: "asset_ambiguous";
@@ -243,6 +255,12 @@ export function AssistantCardView({ card }: { card: AssistantCard }) {
       return <YieldCard card={card} />;
     case "buy":
       return <BuyConfirmCard {...card} />;
+    case "sell":
+      return <SellConfirmCard {...card} />;
+    case "cancel":
+      return <CancelDisambiguationCard {...card} />;
+    case "claim":
+      return <ClaimConfirmCard {...card} />;
     case "asset_ambiguous":
       return <AssetAmbiguousCard card={card} />;
     case "asset_not_found":

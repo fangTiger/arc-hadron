@@ -551,6 +551,7 @@ export function AssistantDock() {
       setSellDraft(next.sellDraft);
       setCancelDraft(next.cancelDraft);
       setClaimDraft(next.claimDraft);
+      setInputValue("");
     } catch {
       setErrorText("Assistant request failed");
     } finally {

@@ -44,6 +44,27 @@ describe("AiPanelView compact mode", () => {
     expect(html).not.toContain("max-h-[16rem]");
   });
 
+  test("stacks the compact header while preserving the default horizontal header", () => {
+    const compact = renderToStaticMarkup(
+      <AiPanelView
+        compact
+        emptyText="No brief generated yet."
+        title="MARKET BRIEF"
+        {...panelProps()}
+      />,
+    );
+    const defaultPanel = renderToStaticMarkup(
+      <AiPanelView emptyText="No insight generated yet." title="ASSET INSIGHT" {...panelProps()} />,
+    );
+
+    expect(compact).not.toContain("sm:flex-row");
+    expect(compact).not.toContain("sm:items-center");
+    expect(compact).not.toContain("sm:justify-between");
+    expect(defaultPanel).toContain("sm:flex-row");
+    expect(defaultPanel).toContain("sm:items-center");
+    expect(defaultPanel).toContain("sm:justify-between");
+  });
+
   test("applies compact mode to MarketBriefView only", () => {
     const brief = renderToStaticMarkup(<MarketBriefView {...panelProps()} />);
     const insight = renderToStaticMarkup(<InsightPanelView {...panelProps()} />);

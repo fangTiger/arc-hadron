@@ -8,6 +8,129 @@ import {
   type AssistantPanelViewProps,
 } from "../components/assistant/AssistantPanel";
 
+const connectMock = vi.hoisted(() => vi.fn());
+const invalidateQueriesMock = vi.hoisted(() => vi.fn());
+const pushErrorMock = vi.hoisted(() => vi.fn());
+const pushSuccessMock = vi.hoisted(() => vi.fn());
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+}));
+
+vi.mock("@tanstack/react-query", () => ({
+  useQueryClient: () => ({
+    invalidateQueries: invalidateQueriesMock,
+  }),
+}));
+
+vi.mock("wagmi", () => ({
+  useAccount: () => ({
+    address: undefined,
+    isConnected: false,
+  }),
+  useConnect: () => ({
+    connect: connectMock,
+    connectors: [],
+  }),
+}));
+
+vi.mock("@/components/ui/TxToast", () => ({
+  useToast: () => ({
+    pushError: pushErrorMock,
+    pushSuccess: pushSuccessMock,
+  }),
+}));
+
+vi.mock("@/lib/hooks/useNetworkGuard", () => ({
+  useNetworkGuard: () => ({
+    isCorrectChain: true,
+    switchToArc: vi.fn(),
+  }),
+}));
+
+vi.mock("@/lib/hooks/useAssets", () => ({
+  useAssets: () => ({
+    assets: [],
+    isLoading: false,
+  }),
+}));
+
+vi.mock("@/lib/hooks/useListings", () => ({
+  useAllListings: () => ({
+    listings: [],
+    isLoading: false,
+  }),
+}));
+
+vi.mock("@/lib/hooks/useBids", () => ({
+  useAllBids: () => ({
+    bids: [],
+    isLoading: false,
+  }),
+}));
+
+vi.mock("@/lib/hooks/usePortfolio", () => ({
+  usePortfolio: () => ({
+    holdings: [],
+    isLoading: false,
+  }),
+}));
+
+vi.mock("@/lib/hooks/useBuyPrimary", () => ({
+  useBuyPrimary: () => ({
+    buy: vi.fn(),
+    reset: vi.fn(),
+    status: "idle",
+  }),
+}));
+
+vi.mock("@/lib/hooks/useBuyListing", () => ({
+  useBuyListing: () => ({
+    buy: vi.fn(),
+    reset: vi.fn(),
+    status: "idle",
+  }),
+}));
+
+vi.mock("@/lib/hooks/useListForSale", () => ({
+  useListForSale: () => ({
+    listForSale: vi.fn(),
+    reset: vi.fn(),
+    status: "idle",
+  }),
+}));
+
+vi.mock("@/lib/hooks/useCancelListing", () => ({
+  useCancelListing: () => ({
+    cancel: vi.fn(),
+    reset: vi.fn(),
+    status: "idle",
+  }),
+}));
+
+vi.mock("@/lib/hooks/useCancelBid", () => ({
+  useCancelBid: () => ({
+    cancelBid: vi.fn(),
+    reset: vi.fn(),
+    status: "idle",
+  }),
+}));
+
+vi.mock("@/lib/hooks/useYield", () => ({
+  useClaimYield: () => ({
+    claim: vi.fn(),
+    claimBatch: vi.fn(),
+    reset: vi.fn(),
+    status: "idle",
+  }),
+  usePendingYield: () => ({
+    isLoading: false,
+    pending: [],
+    pendingByTokenId: new Map(),
+    totalPending: 0n,
+  }),
+}));
+
 const USDC = 10n ** 18n;
 
 function unitPriceFromSharePriceCents(cents: bigint): bigint {
@@ -57,7 +180,11 @@ interface TestNode {
   nodeType: number;
   nodeValue?: string;
   parentNode: TestElement | null;
+  selectionEnd: number;
+  selectionStart: number;
+  setSelectionRange: (start: number, end: number) => void;
   textContent: string;
+  value: string;
 }
 
 interface TestElement extends TestNode {
@@ -165,8 +292,11 @@ function createElement(tag: string, ownerDocument: TestDocument): TestElement {
     nodeType: 1,
     ownerDocument,
     parentNode: null,
+    selectionEnd: 0,
+    selectionStart: 0,
     style: {},
     tagName: tag.toUpperCase(),
+    value: "",
     appendChild(child: TestNode) {
       this.childNodes.push(child);
       child.parentNode = this;
@@ -238,6 +368,10 @@ function createElement(tag: string, ownerDocument: TestDocument): TestElement {
       this.attributes[name] = value;
       (this as Record<string, unknown>)[name] = value;
     },
+    setSelectionRange(start: number, end: number) {
+      this.selectionStart = start;
+      this.selectionEnd = end;
+    },
     addEventListener(type: string, listener: TestListener) {
       this._listeners[type] = [...(this._listeners[type] ?? []), listener];
     },
@@ -308,6 +442,16 @@ function attr(element: TestElement, name: string): string | null {
   return element.getAttribute(name) ?? ((element as unknown as Record<string, string>)[name] ?? null);
 }
 
+function documentBody(): TestElement {
+  const body = (document as unknown as TestDocument).body;
+
+  if (!body) {
+    throw new Error("Test document body is not installed");
+  }
+
+  return body;
+}
+
 function keyEvent(key: string): TestEvent {
   return {
     bubbles: true,
@@ -363,6 +507,50 @@ async function unmount(root: Root) {
   });
 }
 
+function installFetch(fetchImpl: typeof fetch) {
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = fetchImpl;
+
+  return () => {
+    globalThis.fetch = previousFetch;
+  };
+}
+
+let dockPanelProps: AssistantPanelViewProps | null = null;
+
+async function mountDockWithPanelMock() {
+  dockPanelProps = null;
+  vi.resetModules();
+  vi.doMock("@/components/assistant/AssistantPanel", () => ({
+    AssistantPanelView: (props: AssistantPanelViewProps) => {
+      dockPanelProps = props;
+      return null;
+    },
+  }));
+
+  const { AssistantDock } = await import("../components/assistant/AssistantDock");
+  const container = document.createElement("div") as unknown as TestElement;
+  const root = createRoot(container as unknown as Element);
+
+  await act(async () => {
+    root.render(<AssistantDock />);
+    await flushEffects();
+  });
+
+  if (!dockPanelProps) {
+    throw new Error("Assistant panel props were not captured");
+  }
+
+  return { root };
+}
+
+async function setDockInputValue(value: string) {
+  await act(async () => {
+    dockPanelProps?.onInputChange(value);
+    await flushEffects();
+  });
+}
+
 describe("AssistantPanelView", () => {
   test("renders the panel shell and deterministic price and depth cards", () => {
     const html = renderPanel([
@@ -412,6 +600,62 @@ describe("AssistantPanelView", () => {
     expect(naturalLanguage).not.toContain("role=\"listbox\"");
   });
 
+  test("portals the open panel to document body with slash commands visible there", async () => {
+    const cleanupDom = installDom();
+    let root: Root | null = null;
+
+    try {
+      const mounted = await mountPanel({ inputValue: "/" });
+      root = mounted.root;
+      const body = documentBody();
+
+      expect(findElements(mounted.container, (element) => element.tagName === "ASIDE")).toHaveLength(0);
+      expect(findElements(mounted.container, (element) => attr(element, "role") === "listbox")).toHaveLength(0);
+      expect(findElements(body, (element) => element.tagName === "ASIDE")).toHaveLength(1);
+      expect(findElements(body, (element) => attr(element, "role") === "listbox")).toHaveLength(1);
+      expect(findElements(body, (element) => attr(element, "data-command") === "price")).toHaveLength(1);
+    } finally {
+      if (root) {
+        await unmount(root);
+      }
+
+      cleanupDom();
+    }
+  });
+
+  test("focuses the assistant input when the panel opens", async () => {
+    const cleanupDom = installDom();
+    let root: Root | null = null;
+
+    try {
+      const container = document.createElement("div") as unknown as TestElement;
+      root = createRoot(container as unknown as Element);
+
+      await act(async () => {
+        root?.render(<AssistantPanelView {...panelProps({ isOpen: false })} />);
+        await flushEffects();
+      });
+
+      expect(findElements(documentBody(), (element) => element.tagName === "INPUT")).toHaveLength(0);
+      expect((document as unknown as TestDocument).activeElement).toBeNull();
+
+      await act(async () => {
+        root?.render(<AssistantPanelView {...panelProps({ isOpen: true })} />);
+        await flushEffects();
+      });
+
+      const input = findElements(documentBody(), (element) => element.tagName === "INPUT")[0];
+
+      expect((document as unknown as TestDocument).activeElement).toBe(input);
+    } finally {
+      if (root) {
+        await unmount(root);
+      }
+
+      cleanupDom();
+    }
+  });
+
   test("moves command highlight with arrow keys and inserts the selected template on enter", async () => {
     const cleanupDom = installDom();
     let root: Root | null = null;
@@ -420,10 +664,11 @@ describe("AssistantPanelView", () => {
       const onInputChange = vi.fn();
       const mounted = await mountPanel({ inputValue: "/", onInputChange });
       root = mounted.root;
+      const body = documentBody();
 
-      const input = findElements(mounted.container, (element) => element.tagName === "INPUT")[0];
+      const input = findElements(body, (element) => element.tagName === "INPUT")[0];
       const options = () =>
-        findElements(mounted.container, (element) => attr(element, "role") === "option");
+        findElements(body, (element) => attr(element, "role") === "option");
 
       expect(options().map((option) => attr(option, "data-command"))).toEqual([
         "price",
@@ -457,8 +702,145 @@ describe("AssistantPanelView", () => {
       });
 
       expect(onInputChange).toHaveBeenCalledWith("depth <asset>");
-      expect(findElements(mounted.container, (element) => attr(element, "role") === "listbox")).toHaveLength(0);
+      await act(async () => {
+        root?.render(<AssistantPanelView {...panelProps({ inputValue: "depth <asset>", onInputChange })} />);
+        await flushEffects();
+      });
+
+      expect(findElements(body, (element) => attr(element, "role") === "listbox")).toHaveLength(0);
       expect((document as unknown as TestDocument).activeElement).toBe(input);
+    } finally {
+      if (root) {
+        await unmount(root);
+      }
+
+      cleanupDom();
+    }
+  });
+
+  test("reopens command menu after selecting a template and typing slash again", async () => {
+    const cleanupDom = installDom();
+    let root: Root | null = null;
+
+    try {
+      const onInputChange = vi.fn();
+      const container = document.createElement("div") as unknown as TestElement;
+      root = createRoot(container as unknown as Element);
+      const renderWithInput = async (inputValue: string) => {
+        await act(async () => {
+          root?.render(<AssistantPanelView {...panelProps({ inputValue, onInputChange })} />);
+          await flushEffects();
+        });
+      };
+
+      await renderWithInput("/");
+      const body = documentBody();
+      const input = findElements(body, (element) => element.tagName === "INPUT")[0];
+      const listboxes = () => findElements(body, (element) => attr(element, "role") === "listbox");
+
+      expect(listboxes()).toHaveLength(1);
+
+      await act(async () => {
+        input.dispatchEvent(keyEvent("Enter"));
+        await flushEffects();
+      });
+
+      expect(onInputChange).toHaveBeenLastCalledWith("price <asset>");
+
+      await renderWithInput("price <asset>");
+      expect(listboxes()).toHaveLength(0);
+
+      await renderWithInput("");
+      expect(listboxes()).toHaveLength(0);
+
+      await renderWithInput("/");
+
+      expect(listboxes()).toHaveLength(1);
+      expect(findElements(body, (element) => attr(element, "data-command") === "price")).toHaveLength(1);
+    } finally {
+      if (root) {
+        await unmount(root);
+      }
+
+      cleanupDom();
+    }
+  });
+
+  test("selects the first placeholder after inserting a command template", async () => {
+    const cleanupDom = installDom();
+    let root: Root | null = null;
+
+    try {
+      const onInputChange = vi.fn();
+      const container = document.createElement("div") as unknown as TestElement;
+      root = createRoot(container as unknown as Element);
+      const renderWithInput = async (inputValue: string) => {
+        await act(async () => {
+          root?.render(<AssistantPanelView {...panelProps({ inputValue, onInputChange })} />);
+          await flushEffects();
+        });
+      };
+
+      await renderWithInput("/");
+      const body = documentBody();
+      const input = findElements(body, (element) => element.tagName === "INPUT")[0];
+
+      await act(async () => {
+        input.dispatchEvent(keyEvent("Enter"));
+        await flushEffects();
+      });
+
+      expect(onInputChange).toHaveBeenLastCalledWith("price <asset>");
+
+      await renderWithInput("price <asset>");
+
+      const selectedInput = findElements(body, (element) => element.tagName === "INPUT")[0];
+
+      expect(selectedInput.value).toBe("price <asset>");
+      expect(selectedInput.selectionStart).toBe(6);
+      expect(selectedInput.selectionEnd).toBe(13);
+    } finally {
+      if (root) {
+        await unmount(root);
+      }
+
+      cleanupDom();
+    }
+  });
+
+  test("places the cursor at the end when a command template has no placeholder", async () => {
+    const cleanupDom = installDom();
+    let root: Root | null = null;
+
+    try {
+      const onInputChange = vi.fn();
+      const container = document.createElement("div") as unknown as TestElement;
+      root = createRoot(container as unknown as Element);
+      const renderWithInput = async (inputValue: string) => {
+        await act(async () => {
+          root?.render(<AssistantPanelView {...panelProps({ inputValue, onInputChange })} />);
+          await flushEffects();
+        });
+      };
+
+      await renderWithInput("/cl");
+      const body = documentBody();
+      const input = findElements(body, (element) => element.tagName === "INPUT")[0];
+
+      await act(async () => {
+        input.dispatchEvent(keyEvent("Enter"));
+        await flushEffects();
+      });
+
+      expect(onInputChange).toHaveBeenLastCalledWith("claim my yield");
+
+      await renderWithInput("claim my yield");
+
+      const selectedInput = findElements(body, (element) => element.tagName === "INPUT")[0];
+
+      expect(selectedInput.value).toBe("claim my yield");
+      expect(selectedInput.selectionStart).toBe("claim my yield".length);
+      expect(selectedInput.selectionEnd).toBe("claim my yield".length);
     } finally {
       if (root) {
         await unmount(root);
@@ -476,10 +858,11 @@ describe("AssistantPanelView", () => {
       const onInputChange = vi.fn();
       const mounted = await mountPanel({ inputValue: "/", onInputChange });
       root = mounted.root;
+      const body = documentBody();
 
-      const input = findElements(mounted.container, (element) => element.tagName === "INPUT")[0];
+      const input = findElements(body, (element) => element.tagName === "INPUT")[0];
       const options = () =>
-        findElements(mounted.container, (element) => attr(element, "role") === "option");
+        findElements(body, (element) => attr(element, "role") === "option");
 
       expect(options()).toHaveLength(8);
 
@@ -519,8 +902,9 @@ describe("AssistantPanelView", () => {
       const onInputChange = vi.fn();
       const mounted = await mountPanel({ inputValue: "/", onInputChange });
       root = mounted.root;
+      const body = documentBody();
 
-      const input = findElements(mounted.container, (element) => element.tagName === "INPUT")[0];
+      const input = findElements(body, (element) => element.tagName === "INPUT")[0];
 
       await act(async () => {
         input.dispatchEvent(keyEvent("Escape"));
@@ -529,7 +913,7 @@ describe("AssistantPanelView", () => {
 
       expect(onInputChange).not.toHaveBeenCalled();
       expect((input as unknown as HTMLInputElement).value).toBe("/");
-      expect(findElements(mounted.container, (element) => attr(element, "role") === "listbox")).toHaveLength(0);
+      expect(findElements(body, (element) => attr(element, "role") === "listbox")).toHaveLength(0);
     } finally {
       if (root) {
         await unmount(root);
@@ -547,9 +931,10 @@ describe("AssistantPanelView", () => {
       const onSubmit = vi.fn();
       const mounted = await mountPanel({ inputValue: "buy 5 HADRON", onSubmit });
       root = mounted.root;
-      const form = findElements(mounted.container, (element) => element.tagName === "FORM")[0];
+      const body = documentBody();
+      const form = findElements(body, (element) => element.tagName === "FORM")[0];
 
-      expect(findElements(mounted.container, (element) => attr(element, "role") === "listbox")).toHaveLength(0);
+      expect(findElements(body, (element) => attr(element, "role") === "listbox")).toHaveLength(0);
 
       await act(async () => {
         form.dispatchEvent(submitEvent());
@@ -563,6 +948,75 @@ describe("AssistantPanelView", () => {
       }
 
       cleanupDom();
+    }
+  });
+
+  test("clears the dock input after a successful intent submit", async () => {
+    const cleanupDom = installDom();
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({ kind: "unknown" }), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      }),
+    );
+    const cleanupFetch = installFetch(fetchMock as unknown as typeof fetch);
+    let root: Root | null = null;
+
+    try {
+      const mounted = await mountDockWithPanelMock();
+      root = mounted.root;
+
+      await setDockInputValue("show me prices");
+      expect(dockPanelProps?.inputValue).toBe("show me prices");
+
+      await act(async () => {
+        dockPanelProps?.onSubmit();
+        await flushEffects();
+        await flushEffects();
+      });
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(dockPanelProps?.inputValue).toBe("");
+    } finally {
+      if (root) {
+        await unmount(root);
+      }
+
+      cleanupFetch();
+      cleanupDom();
+      vi.doUnmock("@/components/assistant/AssistantPanel");
+    }
+  });
+
+  test("keeps the dock input after a failed intent response", async () => {
+    const cleanupDom = installDom();
+    const fetchMock = vi.fn(async () => new Response(null, { status: 500 }));
+    const cleanupFetch = installFetch(fetchMock as unknown as typeof fetch);
+    let root: Root | null = null;
+
+    try {
+      const mounted = await mountDockWithPanelMock();
+      root = mounted.root;
+
+      await setDockInputValue("show me prices");
+      expect(dockPanelProps?.inputValue).toBe("show me prices");
+
+      await act(async () => {
+        dockPanelProps?.onSubmit();
+        await flushEffects();
+        await flushEffects();
+      });
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(dockPanelProps?.inputValue).toBe("show me prices");
+    } finally {
+      if (root) {
+        await unmount(root);
+      }
+
+      cleanupFetch();
+      cleanupDom();
+      vi.doUnmock("@/components/assistant/AssistantPanel");
     }
   });
 

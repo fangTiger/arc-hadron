@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -9,6 +10,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import { BuyConfirmCard, type BuyConfirmCardProps } from "@/components/assistant/BuyConfirmCard";
 import {
   CancelDisambiguationCard,
@@ -82,6 +84,12 @@ type CommandMenuState = {
   highlightedIndex: number;
   inputValue: string;
   isDismissed: boolean;
+};
+
+type PendingInputSelection = {
+  end: number;
+  inputValue: string;
+  start: number;
 };
 
 function unitPriceText(price: bigint | null): string {
@@ -298,6 +306,8 @@ export function AssistantPanelView({
   onSubmit,
 }: AssistantPanelViewProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const pendingInputSelectionRef = useRef<PendingInputSelection | null>(null);
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
   const [commandMenuState, setCommandMenuState] = useState<CommandMenuState>({
     highlightedIndex: 0,
     inputValue,
@@ -315,6 +325,40 @@ export function AssistantPanelView({
       ? 0
       : Math.min(activeCommandMenuState.highlightedIndex, commandItems.length - 1);
 
+  useEffect(() => {
+    let isActive = true;
+
+    queueMicrotask(() => {
+      if (isActive) {
+        setPortalTarget(document.body);
+      }
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen || !portalTarget || isSubmitting) {
+      return;
+    }
+
+    inputRef.current?.focus();
+  }, [isOpen, isSubmitting, portalTarget]);
+
+  useEffect(() => {
+    const pendingInputSelection = pendingInputSelectionRef.current;
+
+    if (!pendingInputSelection || inputValue !== pendingInputSelection.inputValue) {
+      return;
+    }
+
+    inputRef.current?.focus();
+    inputRef.current?.setSelectionRange(pendingInputSelection.start, pendingInputSelection.end);
+    pendingInputSelectionRef.current = null;
+  }, [inputValue]);
+
   if (!isOpen) {
     return null;
   }
@@ -329,8 +373,15 @@ export function AssistantPanelView({
   }
 
   function selectCommandTemplate(template: string) {
+    const placeholderMatch = /<[a-z]+>/.exec(template);
+    const selectionStart = placeholderMatch?.index ?? template.length;
+    const selectionEnd = placeholderMatch
+      ? selectionStart + placeholderMatch[0].length
+      : selectionStart;
+
     onInputChange(template);
-    setCommandMenuState({ highlightedIndex: 0, inputValue, isDismissed: true });
+    pendingInputSelectionRef.current = { end: selectionEnd, inputValue: template, start: selectionStart };
+    setCommandMenuState({ highlightedIndex: 0, inputValue: template, isDismissed: true });
     inputRef.current?.focus();
   }
 
@@ -382,7 +433,7 @@ export function AssistantPanelView({
     }
   }
 
-  return (
+  const panel = (
     <aside className="fixed inset-x-3 bottom-3 z-50 border border-border bg-panel/95 shadow-2xl shadow-bg/60 backdrop-blur-xl sm:inset-x-auto sm:right-4 sm:w-[420px]">
       <div className="flex items-start justify-between gap-4 border-b border-border px-4 py-4">
         <div>
@@ -453,4 +504,10 @@ export function AssistantPanelView({
       </form>
     </aside>
   );
+
+  if (typeof document === "undefined") {
+    return panel;
+  }
+
+  return portalTarget ? createPortal(panel, portalTarget) : null;
 }

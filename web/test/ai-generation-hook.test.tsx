@@ -300,6 +300,55 @@ describe("useAiGeneration", () => {
     expect(mounted.current.isStale).toBe(true);
   });
 
+  test("keeps the first client render cache-neutral before hydrating stale cached content", async () => {
+    const cachedFingerprint = fingerprintSnapshot(assetSnapshot());
+    const changedSnapshot = assetSnapshot({ latestSharePrice: "1.42" });
+    const renderStates: Array<Pick<UseAiGenerationResult, "status" | "markdown" | "isStale">> = [];
+    installLocalStorage({
+      [CACHE_KEY]: JSON.stringify({
+        markdown: "Cached insight",
+        fingerprint: cachedFingerprint,
+        generatedAt: 1_783_072_800_000,
+      }),
+    });
+    const container = document.createElement("div");
+    root = createRoot(container);
+
+    function HookHost() {
+      const generation = useAiGeneration({
+        chainId: 5042002,
+        endpoint: "/api/ai/insight",
+        marketAddress: MARKET_ADDRESS,
+        purpose: "insight",
+        snapshot: changedSnapshot,
+      });
+
+      renderStates.push({
+        status: generation.status,
+        markdown: generation.markdown,
+        isStale: generation.isStale,
+      });
+
+      return null;
+    }
+
+    await act(async () => {
+      root?.render(<HookHost />);
+      await flushEffects();
+    });
+
+    expect(renderStates[0]).toEqual({
+      status: "idle",
+      markdown: "",
+      isStale: false,
+    });
+    expect(renderStates.at(-1)).toEqual({
+      status: "done",
+      markdown: "Cached insight",
+      isStale: true,
+    });
+  });
+
   test("aborts an active stream before starting a replacement request and aborts on unmount", async () => {
     let firstSignal: AbortSignal | undefined;
     let secondSignal: AbortSignal | undefined;

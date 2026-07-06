@@ -81,10 +81,16 @@ export function AiPanelView({
   title,
 }: AiPanelViewProps) {
   const isStreaming = status === "streaming";
+  const headerClassName = [
+    "flex flex-col gap-3 border-b border-border px-5 py-4 sm:px-6",
+    compact ? "" : "sm:flex-row sm:items-center sm:justify-between",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <section className="overflow-hidden border border-border bg-panel">
-      <div className="flex flex-col gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <div className={headerClassName}>
         <div className="flex flex-wrap items-center gap-3">
           <h2 className="font-mono text-[11px] uppercase tracking-[0.2em] text-text">
             {title}

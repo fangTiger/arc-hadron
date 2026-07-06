@@ -172,7 +172,10 @@ export function useAiGeneration({
       }),
     [chainId, marketAddress, purpose, snapshot, tokenId],
   );
-  const cachedGeneration = useMemo(() => readCache(cacheKey), [cacheKey]);
+  const [hydratedCache, setHydratedCache] = useState<{
+    cacheKey: string;
+    generation: CachedGeneration | null;
+  } | null>(null);
   const [state, setState] = useState<{
     cacheKey: string | null;
     status: AiGenerationStatus;
@@ -196,6 +199,25 @@ export function useAiGeneration({
     },
     [],
   );
+
+  useEffect(() => {
+    let isActive = true;
+
+    queueMicrotask(() => {
+      if (!isActive) {
+        return;
+      }
+
+      setHydratedCache({
+        cacheKey,
+        generation: readCache(cacheKey),
+      });
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, [cacheKey]);
 
   const generate = useCallback(async () => {
     abortRef.current?.abort();
@@ -335,6 +357,8 @@ export function useAiGeneration({
     }
   }, [cacheKey, currentFingerprint, endpoint, snapshot]);
 
+  const cachedGeneration =
+    hydratedCache?.cacheKey === cacheKey ? hydratedCache.generation : null;
   const displayState =
     state.cacheKey === cacheKey
       ? state

@@ -1,0 +1,22 @@
+{
+  "slug": "de-bund-10y",
+  "displayName": "German Bund 10Y Demo",
+  "ticker": "BUND-10Y",
+  "description": "A demo sovereign bond referencing the 10-year German Bund. Payments and price behavior are illustrative only.",
+  "issuerSlug": "germany-treasury-demo",
+  "apyBps": 320,
+  "docs": [
+    {
+      "label": "Offering memorandum",
+      "note": "Demo document, not a legal instrument. Summarizes sovereign note tenor, share structure, and yield assumptions."
+    },
+    {
+      "label": "Custody statement",
+      "note": "Demo document, not a legal instrument. Describes illustrative custody and reconciliation controls."
+    },
+    {
+      "label": "Rate risk memo",
+      "note": "Demo document, not a legal instrument. Lists duration, liquidity, and mark-to-market considerations."
+    }
+  ]
+}

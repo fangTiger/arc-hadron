@@ -1,10 +1,14 @@
 import artFraction from "../content/assets/blue-chip-art-fraction-7.json";
+import apexIndustrials from "../content/assets/apex-industrials-2029.json";
 import carbon from "../content/assets/verra-carbon-9.json";
+import bund10y from "../content/assets/de-bund-10y.json";
 import dockside from "../content/assets/dockside-logistics-park.json";
 import fiber from "../content/assets/fiber-grid-metro-loop.json";
 import gold from "../content/assets/gold-ounce-4.json";
 import goldOffset from "../content/assets/gold-standard-offset-bundle.json";
+import heliosUtility from "../content/assets/helios-utility-2031.json";
 import invoicePool from "../content/assets/nexus-invoice-pool-2026-07.json";
+import jgb5y from "../content/assets/jp-jgb-5y.json";
 import marina from "../content/assets/marina-tower-12f.json";
 import meridianCredit from "../content/assets/meridian-sme-credit-a.json";
 import receivables from "../content/assets/atlas-trade-receivables-b.json";
@@ -106,6 +110,10 @@ const ASSET_META_BY_SLUG = new Map<string, AssetMeta>(
     fiber,
     artFraction,
     invoicePool,
+    bund10y,
+    jgb5y,
+    apexIndustrials,
+    heliosUtility,
   ].map((meta) => {
     const hydrated = hydrateAssetMeta(meta);
 

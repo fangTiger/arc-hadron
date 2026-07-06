@@ -1,0 +1,33 @@
+{
+  "slug": "germany-treasury-demo",
+  "displayName": "Germany Treasury Desk (Demo)",
+  "shortName": "BUND",
+  "jurisdiction": "Berlin, DE",
+  "establishedYear": 1949,
+  "focus": "Sovereign bond issuance demo desk",
+  "description": "Demo issuer profile for German Bund-linked inventory on HADRON. This metadata is illustrative and not a legal entity record.",
+  "docs": [
+    {
+      "label": "Entity registration",
+      "note": "Demo document, not a legal instrument. Placeholder for entity registration filing."
+    },
+    {
+      "label": "Audit letter",
+      "note": "Demo document, not a legal instrument. Placeholder for annual audit summary."
+    },
+    {
+      "label": "Identifier registry",
+      "note": "Demo document, not a legal instrument. Placeholder for identifier reference."
+    }
+  ],
+  "externalLinks": [
+    {
+      "label": "Website",
+      "href": "https://demo.hadron.local/germany-treasury-demo"
+    },
+    {
+      "label": "Disclosures",
+      "href": "https://demo.hadron.local/germany-treasury-demo/disclosures"
+    }
+  ]
+}

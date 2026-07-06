@@ -1,0 +1,33 @@
+{
+  "slug": "apex-corporate-desk",
+  "displayName": "Apex Industrials Treasury",
+  "shortName": "APEX",
+  "jurisdiction": "Delaware, US",
+  "establishedYear": 2003,
+  "focus": "Investment-grade corporate treasury demo",
+  "description": "Demo issuer profile for Apex Industrials corporate note inventory on HADRON. This metadata is illustrative and not a legal entity record.",
+  "docs": [
+    {
+      "label": "Entity registration",
+      "note": "Demo document, not a legal instrument. Placeholder for entity registration filing."
+    },
+    {
+      "label": "Audit letter",
+      "note": "Demo document, not a legal instrument. Placeholder for annual audit summary."
+    },
+    {
+      "label": "Identifier registry",
+      "note": "Demo document, not a legal instrument. Placeholder for identifier reference."
+    }
+  ],
+  "externalLinks": [
+    {
+      "label": "Website",
+      "href": "https://demo.hadron.local/apex-corporate-desk"
+    },
+    {
+      "label": "Disclosures",
+      "href": "https://demo.hadron.local/apex-corporate-desk/disclosures"
+    }
+  ]
+}

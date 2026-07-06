@@ -1,0 +1,22 @@
+{
+  "slug": "apex-industrials-2029",
+  "displayName": "Apex Industrials 2029",
+  "ticker": "APEX-29",
+  "description": "A demo corporate bond referencing Apex Industrials 2029 unsecured note exposure. Payments and price behavior are illustrative only.",
+  "issuerSlug": "apex-corporate-desk",
+  "apyBps": 540,
+  "docs": [
+    {
+      "label": "Offering memorandum",
+      "note": "Demo document, not a legal instrument. Summarizes note tenor, share structure, and yield assumptions."
+    },
+    {
+      "label": "Credit memo",
+      "note": "Demo document, not a legal instrument. Describes illustrative issuer credit metrics and covenant assumptions."
+    },
+    {
+      "label": "Risk disclosure",
+      "note": "Demo document, not a legal instrument. Lists liquidity, duration, and corporate credit considerations."
+    }
+  ]
+}

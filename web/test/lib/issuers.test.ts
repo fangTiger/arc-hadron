@@ -2,10 +2,10 @@ import { describe, expect, test } from "vitest";
 import { issuerForAsset, listIssuers, loadIssuerBySlug } from "../../lib/issuers";
 
 describe("issuer metadata loader", () => {
-  test("lists the nine batch-1 issuers with derived asset ids", () => {
+  test("lists the current issuers with derived asset ids", () => {
     const issuers = listIssuers();
 
-    expect(issuers).toHaveLength(9);
+    expect(issuers).toHaveLength(12);
     expect(issuers.map((issuer) => issuer.slug)).toEqual([
       "us-treasury-desk",
       "meridian-credit",
@@ -16,6 +16,9 @@ describe("issuer metadata loader", () => {
       "goldstd-carbon",
       "helios-infrastructure",
       "axiom-fine-art",
+      "germany-treasury-demo",
+      "japan-treasury-demo",
+      "apex-corporate-desk",
     ]);
   });
 
@@ -49,6 +52,14 @@ describe("issuer metadata loader", () => {
     expect(loadIssuerBySlug("helios-infrastructure")?.assetIds).toEqual([
       "solar-farm-basin-2",
       "fiber-grid-metro-loop",
+      "helios-utility-2031",
+    ]);
+    expect(loadIssuerBySlug("germany-treasury-demo")?.assetIds).toEqual([
+      "de-bund-10y",
+    ]);
+    expect(loadIssuerBySlug("japan-treasury-demo")?.assetIds).toEqual(["jp-jgb-5y"]);
+    expect(loadIssuerBySlug("apex-corporate-desk")?.assetIds).toEqual([
+      "apex-industrials-2029",
     ]);
   });
 });

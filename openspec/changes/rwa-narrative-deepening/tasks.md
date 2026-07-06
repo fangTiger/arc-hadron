@@ -53,21 +53,21 @@
 
 ## 4. 新资产种子 + arc-testnet 广播（Codex 批 4，约 10 分钟；广播由用户执行）
 
-- [ ] 4.1 新建 `web/content/issuers/*.json` × 3 新 issuer：`germany-treasury-demo`（Berlin, DE, Est. 1949）、`japan-treasury-demo`（Tokyo, JP, Est. 1949）、`apex-corporate-desk`（Delaware, US, Est. 2003）。docs/externalLinks 保持 stub。
-- [ ] 4.2 新建 `web/content/assets/*.json` × 4 新资产：
+- [x] 4.1 新建 `web/content/issuers/*.json` × 3 新 issuer：`germany-treasury-demo`（Berlin, DE, Est. 1949）、`japan-treasury-demo`（Tokyo, JP, Est. 1949）、`apex-corporate-desk`（Delaware, US, Est. 2003）。docs/externalLinks 保持 stub。
+- [x] 4.2 新建 `web/content/assets/*.json` × 4 新资产：
   - `de-bund-10y`：ticker `BUND-10Y`, category `sovereign-bonds`, issuerSlug `germany-treasury-demo`, apyBps 320
   - `jp-jgb-5y`：ticker `JGB-5Y`, category `sovereign-bonds`, issuerSlug `japan-treasury-demo`, apyBps 80
   - `apex-industrials-2029`：ticker `APEX-29`, category `corporate-bonds`, issuerSlug `apex-corporate-desk`, apyBps 540
   - `helios-utility-2031`：ticker `HELIO-31`, category `corporate-bonds`, issuerSlug `helios-infrastructure`（复用现有 issuer 跨类别）, apyBps 590
   - description 一句话英文 demo 语气；docs 三条 stub。
-- [ ] 4.3 新建 `contracts/script/Seed2026Q3RwaExpansion.s.sol`：`vm.startBroadcast()` 后 4 笔 `assets.createAsset(name, category, totalShares, metadataURI)`，参数：
+- [x] 4.3 新建 `contracts/script/Seed2026Q3RwaExpansion.s.sol`：`vm.startBroadcast()` 后 4 笔 `assets.createAsset(name, category, totalShares, metadataURI)`，参数：
   - `("German Bund 10Y Demo", "sovereign-bonds", 10_000_000, "hadron://assets/de-bund-10y")`
   - `("JGB 5Y Demo", "sovereign-bonds", 10_000_000, "hadron://assets/jp-jgb-5y")`
   - `("Apex Industrials 2029", "corporate-bonds", 5_000_000, "hadron://assets/apex-industrials-2029")`
   - `("Helios Utility Note 2031", "corporate-bonds", 5_000_000, "hadron://assets/helios-utility-2031")`
   - 参考 `SeedV5.s.sol` 的 `SeedAsset` struct 用法；不做定价/挂单，只 createAsset。
-- [ ] 4.4 更新 `README.md` 或 `DEPLOYMENTS.md`（如存在）：追加广播命令样例（`--slow` + 一次性密钥）与新 asset id 记录位。
-- [ ] 4.5 验证（前端只跑构建/测试）：`cd web && npm test && npm run build`；4 新 asset JSON 无 `issuerSlug` fail-fast 报错；类别过滤 `sovereign-bonds` / `corporate-bonds` 各显示 2 资产（此时 mock 或跳过链上 id 校验）。
+- [x] 4.4 检查 `web/lib/contracts.ts` 是否硬编码 asset id / tokenId 列表；若无硬编码列表则无文件修改，报告说明前端从 `HadronAssets.assetCount` 派生 tokenId 范围。
+- [x] 4.5 验证前端：`cd web && npm test`；4 新 asset JSON 无 `issuerSlug` fail-fast 报错；类别过滤 `sovereign-bonds` / `corporate-bonds` 各匹配 2 个 seeded asset。
 - [ ] 4.6 【用户手动】按 memory [[arc-testnet-broadcast-practice]] 广播：
   ```
   # 用一次性密钥 SEED_PK（不复用主部署密钥）

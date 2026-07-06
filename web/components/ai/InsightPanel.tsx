@@ -65,9 +65,11 @@ export interface AiPanelViewProps {
   isStale: boolean;
   nowMs: number;
   onGenerate: () => void;
+  compact?: boolean;
 }
 
 export function AiPanelView({
+  compact = false,
   emptyText,
   error,
   generatedAt,
@@ -120,9 +122,25 @@ export function AiPanelView({
         ) : null}
 
         {markdown ? (
-          <div className="max-w-[70ch]">
-            <AiMarkdown markdown={markdown} />
-          </div>
+          compact ? (
+            <div className="relative max-w-[70ch]">
+              <div
+                className="max-h-[16rem] overflow-y-auto pr-2"
+                data-ai-panel-body="compact"
+              >
+                <AiMarkdown markdown={markdown} />
+              </div>
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-panel to-transparent"
+                data-ai-panel-fade="bottom"
+              />
+            </div>
+          ) : (
+            <div className="max-w-[70ch]">
+              <AiMarkdown markdown={markdown} />
+            </div>
+          )
         ) : status === "idle" ? (
           <p className="text-sm leading-6 text-muted">{emptyText}</p>
         ) : null}
@@ -135,7 +153,7 @@ export function AiPanelView({
   );
 }
 
-export type InsightPanelViewProps = Omit<AiPanelViewProps, "emptyText" | "title">;
+export type InsightPanelViewProps = Omit<AiPanelViewProps, "compact" | "emptyText" | "title">;
 
 export function InsightPanelView(props: InsightPanelViewProps) {
   return <AiPanelView emptyText="No insight generated yet." title="ASSET INSIGHT" {...props} />;

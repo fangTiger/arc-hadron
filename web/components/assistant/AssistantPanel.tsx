@@ -1,6 +1,14 @@
 "use client";
 
-import type { ChangeEvent, FormEvent, ReactNode } from "react";
+import {
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import { BuyConfirmCard, type BuyConfirmCardProps } from "@/components/assistant/BuyConfirmCard";
 import {
   CancelDisambiguationCard,
@@ -10,7 +18,9 @@ import {
   ClaimConfirmCard,
   type ClaimConfirmCardProps,
 } from "@/components/assistant/ClaimConfirmCard";
+import { CommandMenu } from "@/components/assistant/CommandMenu";
 import { SellConfirmCard, type SellConfirmCardProps } from "@/components/assistant/SellConfirmCard";
+import { filterCommands } from "@/lib/assistant/commands";
 import { formatShares, formatUsdc } from "@/lib/format";
 import { unitPriceToSharePrice } from "@/lib/shares";
 
@@ -67,6 +77,12 @@ export interface AssistantPanelViewProps {
   onInputChange: (value: string) => void;
   onSubmit: () => void;
 }
+
+type CommandMenuState = {
+  highlightedIndex: number;
+  inputValue: string;
+  isDismissed: boolean;
+};
 
 function unitPriceText(price: bigint | null): string {
   return price === null ? "—" : `${formatUsdc(unitPriceToSharePrice(price))} USDC`;
@@ -205,7 +221,7 @@ function UnknownCard() {
   return (
     <CardShell title="ASSISTANT">
       <p className="text-sm leading-6 text-text-dim">
-        I can help with prices, depth, your holdings, yield, and buying.
+        I can help with prices, depth, holdings, yield, buying, selling, cancelling orders, and claiming yield.
       </p>
     </CardShell>
   );
@@ -281,6 +297,24 @@ export function AssistantPanelView({
   onInputChange,
   onSubmit,
 }: AssistantPanelViewProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [commandMenuState, setCommandMenuState] = useState<CommandMenuState>({
+    highlightedIndex: 0,
+    inputValue,
+    isDismissed: false,
+  });
+  const commandItems = useMemo(() => filterCommands(inputValue), [inputValue]);
+  const activeCommandMenuState =
+    commandMenuState.inputValue === inputValue
+      ? commandMenuState
+      : { highlightedIndex: 0, inputValue, isDismissed: false };
+  const isCommandInput = inputValue.startsWith("/");
+  const isCommandMenuOpen = isCommandInput && !activeCommandMenuState.isDismissed;
+  const safeHighlightedCommandIndex =
+    commandItems.length === 0
+      ? 0
+      : Math.min(activeCommandMenuState.highlightedIndex, commandItems.length - 1);
+
   if (!isOpen) {
     return null;
   }
@@ -294,13 +328,67 @@ export function AssistantPanelView({
     onInputChange(event.target.value);
   }
 
+  function selectCommandTemplate(template: string) {
+    onInputChange(template);
+    setCommandMenuState({ highlightedIndex: 0, inputValue, isDismissed: true });
+    inputRef.current?.focus();
+  }
+
+  function updateCommandMenuState(update: (current: CommandMenuState) => CommandMenuState) {
+    setCommandMenuState((current) =>
+      update(
+        current.inputValue === inputValue
+          ? current
+          : { highlightedIndex: 0, inputValue, isDismissed: false },
+      ),
+    );
+  }
+
+  function handleInputKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (!isCommandMenuOpen) {
+      return;
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      updateCommandMenuState((current) => ({
+        ...current,
+        highlightedIndex: Math.min(current.highlightedIndex + 1, Math.max(commandItems.length - 1, 0)),
+        inputValue,
+      }));
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      updateCommandMenuState((current) => ({
+        ...current,
+        highlightedIndex: Math.max(current.highlightedIndex - 1, 0),
+        inputValue,
+      }));
+      return;
+    }
+
+    if (event.key === "Enter" && commandItems.length > 0) {
+      event.preventDefault();
+      selectCommandTemplate(commandItems[safeHighlightedCommandIndex].template);
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setCommandMenuState({ highlightedIndex: safeHighlightedCommandIndex, inputValue, isDismissed: true });
+      inputRef.current?.focus();
+    }
+  }
+
   return (
     <aside className="fixed inset-x-3 bottom-3 z-50 border border-border bg-panel/95 shadow-2xl shadow-bg/60 backdrop-blur-xl sm:inset-x-auto sm:right-4 sm:w-[420px]">
       <div className="flex items-start justify-between gap-4 border-b border-border px-4 py-4">
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-dim">NL ASSISTANT</p>
           <p className="mt-2 text-sm leading-6 text-text-dim">
-            Ask about prices, depth, holdings, yield, or buying.
+            Type / for commands, or ask in plain English.
           </p>
           {defaultAssetLabel ? (
             <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
@@ -330,13 +418,22 @@ export function AssistantPanelView({
       </div>
 
       <form className="border-t border-border p-4" onSubmit={submit}>
+        {isCommandMenuOpen ? (
+          <CommandMenu
+            highlightedIndex={safeHighlightedCommandIndex}
+            items={commandItems}
+            onSelect={selectCommandTemplate}
+          />
+        ) : null}
         <label className="block">
           <span className="sr-only">Assistant message</span>
           <input
             className="h-11 w-full border border-border bg-bg px-3 font-mono text-[11px] uppercase tracking-[0.14em] text-text outline-none transition-colors duration-200 placeholder:text-muted focus:border-neon"
             disabled={isSubmitting}
             onChange={changeInput}
+            onKeyDown={handleInputKeyDown}
             placeholder="BUY 5 TBILL"
+            ref={inputRef}
             value={inputValue}
           />
         </label>

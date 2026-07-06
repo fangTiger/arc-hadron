@@ -11,7 +11,7 @@ import { useAiGeneration } from "@/lib/ai/useAiGeneration";
 import type { AssetView } from "@/lib/mappers";
 
 export function MarketBriefView(props: InsightPanelViewProps) {
-  return <AiPanelView emptyText="No brief generated yet." title="MARKET BRIEF" {...props} />;
+  return <AiPanelView compact emptyText="No brief generated yet." title="MARKET BRIEF" {...props} />;
 }
 
 export function MarketBrief({

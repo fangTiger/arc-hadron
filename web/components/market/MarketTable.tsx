@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { categoryDisplay } from "@/lib/categories";
 import type { TradeEvent } from "@/lib/events";
@@ -175,12 +175,14 @@ function SkeletonRows() {
 
 export function MarketTable({
   assets,
+  emptyState,
   errorText,
   events,
   isLoading,
   nowMs,
 }: {
   assets: AssetView[];
+  emptyState?: ReactNode;
   errorText?: string;
   events: TradeEvent[];
   isLoading: boolean;
@@ -205,6 +207,7 @@ export function MarketTable({
       assets={assets}
       errorText={errorText}
       events={events}
+      emptyState={emptyState}
       isLoading={isLoading}
       nowMs={nowMs}
       onNavigate={(href) => router.push(href)}
@@ -217,6 +220,7 @@ export function MarketTable({
 
 export function MarketTableView({
   assets,
+  emptyState,
   errorText,
   events,
   isLoading,
@@ -227,6 +231,7 @@ export function MarketTableView({
   sortKey = "mktcap",
 }: {
   assets: AssetView[];
+  emptyState?: ReactNode;
   errorText?: string;
   events: TradeEvent[];
   isLoading: boolean;
@@ -308,7 +313,7 @@ export function MarketTableView({
             {!isLoading && !errorText && rows.length === 0 ? (
               <tr>
                 <td className="px-4 py-8 text-sm text-muted" colSpan={8}>
-                  No assets match this market filter.
+                  {emptyState ?? "No assets match this market filter."}
                 </td>
               </tr>
             ) : null}

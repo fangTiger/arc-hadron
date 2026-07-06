@@ -5,9 +5,16 @@ import type { ListingView } from "../lib/listing";
 import type { AssetView } from "../lib/mappers";
 
 const useAiGenerationMock = vi.hoisted(() => vi.fn());
+const routerReplaceMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/ai/useAiGeneration", () => ({
   useAiGeneration: useAiGenerationMock,
+}));
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+  useRouter: () => ({ replace: routerReplaceMock }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 vi.mock("@/components/market/ActivityPanel", () => ({

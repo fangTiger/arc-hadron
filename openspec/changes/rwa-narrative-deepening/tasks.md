@@ -22,15 +22,15 @@
 
 ## 2. Explore 过滤（Codex 批 2，约 10-15 分钟）
 
-- [ ] 2.1 新建 `web/components/market/ExploreIssuerFilter.tsx`：受控组件；props `{ issuers: Issuer[], selectedSlug: string | null, onChange: (slug: string | null) => void }`；渲染下拉，第一项 "All Issuers"，其他项显示 `displayName (assetsCount)`；键盘可达 + focus 状态遵循现有 chip/输入样式基调。
-- [ ] 2.2 新建 `web/components/market/ExploreYieldFilter.tsx`：受控组件；props `{ selected: YieldBucket | null, onChange: (b: YieldBucket | null) => void }`；`YieldBucket` = `"lt4" | "4to6" | "6to10" | "gt10"`（对应 apyBps `<400` / `[400,600)` / `[600,1000)` / `≥1000`）；4 chip 互斥单选（点已选 chip 取消），样式与类别 chip 一致。
-- [ ] 2.3 修改 Explore/首页（定位：`web/app/HomeView.tsx` 或市场目录页 —— codex 先 grep `CATEGORY_TAB_OPTIONS` 定位当前挂载）：类别 chips 下方插入两行 —— `Issuer:` 加 `ExploreIssuerFilter`、`Yield:` 加 `ExploreYieldFilter`；接入 URL search params（读写 `category` / `issuer` / `yield` / `q`）；filter 逻辑抽到纯函数 `filterAssets(assets, { category, issuerSlug, yieldBucket, query })` 便于测试；**统计条口径不动**（继续用未过滤集）。
-- [ ] 2.4 空态：过滤后无匹配时表格区显示 `No assets match current filters. Reset filters.` + 一个 "Reset" 按钮回到无过滤态。
-- [ ] 2.5 新增测试：
+- [x] 2.1 新建 `web/components/market/ExploreIssuerFilter.tsx`：受控组件；props `{ issuers: Issuer[], selectedSlug: string | null, onChange: (slug: string | null) => void }`；渲染下拉，第一项 "All Issuers"，其他项显示 `displayName (assetsCount)`；键盘可达 + focus 状态遵循现有 chip/输入样式基调。
+- [x] 2.2 新建 `web/components/market/ExploreYieldFilter.tsx`：受控组件；props `{ selected: YieldBucket | null, onChange: (b: YieldBucket | null) => void }`；`YieldBucket` = `"lt4" | "4to6" | "6to10" | "gt10"`（对应 apyBps `<400` / `[400,600)` / `[600,1000)` / `≥1000`）；4 chip 互斥单选（点已选 chip 取消），样式与类别 chip 一致。
+- [x] 2.3 修改 Explore/首页（定位：`web/app/HomeView.tsx` 或市场目录页 —— codex 先 grep `CATEGORY_TAB_OPTIONS` 定位当前挂载）：类别 chips 下方插入两行 —— `Issuer:` 加 `ExploreIssuerFilter`、`Yield:` 加 `ExploreYieldFilter`；接入 URL search params（读写 `category` / `issuer` / `yield` / `q`）；filter 逻辑抽到纯函数 `filterAssets(assets, { category, issuerSlug, yieldBucket, query })` 便于测试；**统计条口径不动**（继续用未过滤集）。
+- [x] 2.4 空态：过滤后无匹配时表格区显示 `No assets match current filters. Reset filters.` + 一个 "Reset" 按钮回到无过滤态。
+- [x] 2.5 新增测试：
   - `web/test/components/market/ExploreIssuerFilter.test.tsx`：选中触发 `onChange`；渲染 "All Issuers" + 全部 issuer 项。
   - `web/test/components/market/ExploreYieldFilter.test.tsx`：点击 chip 触发 `onChange(bucket)`；再点同 chip 触发 `onChange(null)`。
   - `web/test/lib/filterAssets.test.ts`（若把 filterAssets 抽到 lib 里）：category / issuer / yield / query 单条件 + 组合 case + 边界（apyBps=400、600、1000 的桶归属）。
-- [ ] 2.6 验证：`cd web && npm test && npm run build`。
+- [x] 2.6 验证：`cd web && npm test`（本批按沙箱说明不跑 build）。
 - [ ] 2.7 【Claude 人工审 diff】重点：URL 状态往回读时是否正确 hydrate；过滤逻辑与 `filterAssets` 单测口径一致；chip 样式没引入新 Tailwind 类污染现有 token。
 
 ## 3. Issuer profile 页 + 资产详情页 patch（Codex 批 3，约 15-20 分钟）

@@ -8,8 +8,8 @@ import {
 } from "@/lib/contracts";
 import { deriveBuyPrimaryState, type BuyPrimaryStatus } from "@/lib/hooks/useBuyPrimary";
 import { mapWagmiError } from "@/lib/purchase";
-
-const REFETCH_INTERVAL_MS = 8000;
+import { POLL_WARM_MS } from "./pollingConstants";
+import { visibleRefetch } from "./visibilityAware";
 
 type LocalYieldTransactionStatus = Exclude<BuyPrimaryStatus, "success">;
 
@@ -146,7 +146,7 @@ export function usePendingYield(tokenIds: bigint[]): UsePendingYieldResult {
     contracts,
     query: {
       enabled: canRead,
-      refetchInterval: REFETCH_INTERVAL_MS,
+      refetchInterval: visibleRefetch(POLL_WARM_MS),
     },
   });
   const pending = useMemo<PendingYield[]>(

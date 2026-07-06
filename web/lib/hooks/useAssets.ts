@@ -15,8 +15,9 @@ import {
   type ChainOffering,
 } from "@/lib/mappers";
 import { metaBySlug } from "@/lib/metadata";
+import { POLL_COLD_MS } from "./pollingConstants";
+import { visibleRefetch } from "./visibilityAware";
 
-const REFETCH_INTERVAL_MS = 8000;
 export const ASSETS_READ_ERROR_ZH = "Failed to load market data from Arc RPC.";
 
 type RawAsset = readonly [string, string, bigint, string] & {
@@ -99,7 +100,7 @@ export function useAssets(): { assets: AssetView[]; errorZh?: string; isLoading:
     abi: HADRON_ASSETS_ABI,
     functionName: "assetCount",
     query: {
-      refetchInterval: REFETCH_INTERVAL_MS,
+      refetchInterval: visibleRefetch(POLL_COLD_MS),
     },
   });
 
@@ -108,7 +109,7 @@ export function useAssets(): { assets: AssetView[]; errorZh?: string; isLoading:
     abi: HADRON_MARKET_ABI,
     functionName: "offeringCount",
     query: {
-      refetchInterval: REFETCH_INTERVAL_MS,
+      refetchInterval: visibleRefetch(POLL_COLD_MS),
     },
   });
 
@@ -143,7 +144,7 @@ export function useAssets(): { assets: AssetView[]; errorZh?: string; isLoading:
     contracts: assetContracts,
     query: {
       enabled: assetContracts.length > 0,
-      refetchInterval: REFETCH_INTERVAL_MS,
+      refetchInterval: visibleRefetch(POLL_COLD_MS),
     },
   });
 
@@ -152,7 +153,7 @@ export function useAssets(): { assets: AssetView[]; errorZh?: string; isLoading:
     contracts: offeringContracts,
     query: {
       enabled: offeringCount > 0,
-      refetchInterval: REFETCH_INTERVAL_MS,
+      refetchInterval: visibleRefetch(POLL_COLD_MS),
     },
   });
 

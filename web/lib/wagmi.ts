@@ -8,7 +8,7 @@ export const wagmiAdapter = appKitProjectId
       networks: appKitNetworks,
       projectId: appKitProjectId,
       transports: {
-        [arcTestnet.id]: http(ARC_RPC_URL),
+        [arcTestnet.id]: http(ARC_RPC_URL, { batch: true }),
       },
       ssr: true,
     })
@@ -20,7 +20,7 @@ export const wagmiConfig =
     chains: [arcTestnet],
     connectors: [injected()],
     transports: {
-      [arcTestnet.id]: http(ARC_RPC_URL),
+      [arcTestnet.id]: http(ARC_RPC_URL, { batch: true }),
     },
     ssr: true,
   });

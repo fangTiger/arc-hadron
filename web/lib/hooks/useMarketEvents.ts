@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { usePublicClient } from "wagmi";
 import {
@@ -19,8 +19,9 @@ import {
   writeMarketEventsCache,
   type MarketEventsCacheData,
 } from "@/lib/marketEventCache";
+import { POLL_EVENT_MS } from "./pollingConstants";
+import { visibleRefetch } from "./visibilityAware";
 
-const EVENT_REFETCH_INTERVAL_MS = 15_000;
 const BLOCK_TIMESTAMP_CONCURRENCY = 8;
 
 type MarketLog = Parameters<typeof parseMarketLogs>[0][number];
@@ -58,6 +59,30 @@ function eventQueryError(error: unknown): Error | undefined {
   return error instanceof Error ? error : new Error("Failed to load on-chain market events.");
 }
 
+function eventDedupeKey(event: Pick<TradeEvent, "txHash" | "logIndex">): string {
+  return `${event.txHash}:${event.logIndex}`;
+}
+
+function collectNewEvents(
+  seenEventKeys: Set<string>,
+  events: readonly TradeEvent[],
+): TradeEvent[] {
+  const newEvents: TradeEvent[] = [];
+
+  for (const event of events) {
+    const key = eventDedupeKey(event);
+
+    if (seenEventKeys.has(key)) {
+      continue;
+    }
+
+    seenEventKeys.add(key);
+    newEvents.push(event);
+  }
+
+  return newEvents;
+}
+
 export async function populateBlockTimestampCache({
   blockNumbers,
   cache,
@@ -85,6 +110,7 @@ export async function populateBlockTimestampCache({
 
 export function useMarketEvents(): {
   events: TradeEvent[];
+  newEvents: TradeEvent[];
   isLoading: boolean;
   error?: Error;
   nowMs: number;
@@ -114,6 +140,10 @@ export function useMarketEvents(): {
     ),
   );
   const queryDataRef = useRef<MarketEventsQueryData | null>(initialData);
+  const seenEventKeysRef = useRef(
+    new Set((initialData?.events ?? []).map((event) => eventDedupeKey(event))),
+  );
+  const [newEvents, setNewEvents] = useState<TradeEvent[]>([]);
 
   const query = useQuery({
     enabled: Boolean(publicClient),
@@ -185,13 +215,18 @@ export function useMarketEvents(): {
       HADRON_YIELD_ADDRESS,
       DEPLOY_BLOCK,
     ],
-    refetchInterval: EVENT_REFETCH_INTERVAL_MS,
+    refetchInterval: visibleRefetch(POLL_EVENT_MS),
   });
+
+  useEffect(() => {
+    setNewEvents(collectNewEvents(seenEventKeysRef.current, query.data?.events ?? []));
+  }, [query.data?.events, query.dataUpdatedAt]);
 
   return {
     error: eventQueryError(query.error),
     events: query.data?.events ?? [],
     isLoading: Boolean(publicClient) && query.isLoading,
+    newEvents,
     nowMs: query.dataUpdatedAt,
   };
 }

@@ -5,8 +5,8 @@ import { useAccount, useReadContract, useReadContracts } from "wagmi";
 import { HADRON_MARKET_ABI, HADRON_MARKET_ADDRESS } from "@/lib/contracts";
 import { mapListingResults, type ListingView } from "@/lib/listing";
 import { readContractCount } from "@/lib/hooks/useAssets";
-
-const REFETCH_INTERVAL_MS = 8000;
+import { POLL_HOT_MS, POLL_WARM_MS } from "./pollingConstants";
+import { visibleRefetch } from "./visibilityAware";
 
 export type { ListingView };
 
@@ -19,7 +19,7 @@ export function useListings(tokenId: bigint | null): { listings: ListingView[]; 
     args: tokenId === null ? undefined : [tokenId],
     query: {
       enabled: tokenId !== null,
-      refetchInterval: REFETCH_INTERVAL_MS,
+      refetchInterval: visibleRefetch(POLL_HOT_MS),
     },
   });
   const listingIds = useMemo(() => (listingIdsQuery.data ?? []) as bigint[], [listingIdsQuery.data]);
@@ -38,7 +38,7 @@ export function useListings(tokenId: bigint | null): { listings: ListingView[]; 
     contracts: listingContracts,
     query: {
       enabled: tokenId !== null && listingContracts.length > 0,
-      refetchInterval: REFETCH_INTERVAL_MS,
+      refetchInterval: visibleRefetch(POLL_HOT_MS),
     },
   });
   const listings = useMemo(
@@ -64,7 +64,7 @@ export function useAllListings(): { listings: ListingView[]; isLoading: boolean 
     abi: HADRON_MARKET_ABI,
     functionName: "listingCount",
     query: {
-      refetchInterval: REFETCH_INTERVAL_MS,
+      refetchInterval: visibleRefetch(POLL_HOT_MS),
     },
   });
   const listingCount = readContractCount(listingCountQuery.data);
@@ -87,7 +87,7 @@ export function useAllListings(): { listings: ListingView[]; isLoading: boolean 
     contracts: listingContracts,
     query: {
       enabled: listingContracts.length > 0,
-      refetchInterval: REFETCH_INTERVAL_MS,
+      refetchInterval: visibleRefetch(POLL_HOT_MS),
     },
   });
   const listings = useMemo(
@@ -114,7 +114,7 @@ export function useMyListings(): { listings: ListingView[]; isLoading: boolean }
     functionName: "listingCount",
     query: {
       enabled: isConnected,
-      refetchInterval: REFETCH_INTERVAL_MS,
+      refetchInterval: visibleRefetch(POLL_WARM_MS),
     },
   });
   const listingCount = readContractCount(listingCountQuery.data);
@@ -137,7 +137,7 @@ export function useMyListings(): { listings: ListingView[]; isLoading: boolean }
     contracts: listingContracts,
     query: {
       enabled: Boolean(isConnected && address && listingContracts.length > 0),
-      refetchInterval: REFETCH_INTERVAL_MS,
+      refetchInterval: visibleRefetch(POLL_WARM_MS),
     },
   });
   const listings = useMemo(

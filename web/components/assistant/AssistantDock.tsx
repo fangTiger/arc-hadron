@@ -23,6 +23,7 @@ import { useBuyListing } from "@/lib/hooks/useBuyListing";
 import { useBuyPrimary } from "@/lib/hooks/useBuyPrimary";
 import { useCancelBid } from "@/lib/hooks/useCancelBid";
 import { useCancelListing } from "@/lib/hooks/useCancelListing";
+import { applyTxInvalidation } from "@/lib/hooks/applyTxInvalidation";
 import { useAllBids } from "@/lib/hooks/useBids";
 import { useAssets } from "@/lib/hooks/useAssets";
 import { useAllListings } from "@/lib/hooks/useListings";
@@ -434,7 +435,7 @@ export function AssistantDock() {
   useEffect(() => {
     if (buyPrimary.status === "success" && buyPrimary.txHash) {
       pushSuccess({ message: "Purchase successful", txHash: buyPrimary.txHash });
-      void queryClient.invalidateQueries();
+      applyTxInvalidation(queryClient, "buy");
     } else if (buyPrimary.status === "error" && buyPrimary.errorText) {
       pushError(buyPrimary.errorText);
     }
@@ -443,7 +444,7 @@ export function AssistantDock() {
   useEffect(() => {
     if (buyListing.status === "success" && buyListing.txHash) {
       pushSuccess({ message: "Purchase successful", txHash: buyListing.txHash });
-      void queryClient.invalidateQueries();
+      applyTxInvalidation(queryClient, "buy");
     } else if (buyListing.status === "error" && buyListing.errorText) {
       pushError(buyListing.errorText);
     }
@@ -452,7 +453,7 @@ export function AssistantDock() {
   useEffect(() => {
     if (listForSale.status === "success" && listForSale.txHash) {
       pushSuccess({ message: "Listing created", txHash: listForSale.txHash });
-      void queryClient.invalidateQueries();
+      applyTxInvalidation(queryClient, "sell");
     } else if (listForSale.status === "error" && listForSale.errorText) {
       pushError(listForSale.errorText);
     }
@@ -461,7 +462,7 @@ export function AssistantDock() {
   useEffect(() => {
     if (cancelListing.status === "success" && cancelListing.txHash) {
       pushSuccess({ message: "Order cancelled", txHash: cancelListing.txHash });
-      void queryClient.invalidateQueries();
+      applyTxInvalidation(queryClient, "cancel");
     } else if (cancelListing.status === "error" && cancelListing.errorText) {
       pushError(cancelListing.errorText);
     }
@@ -477,7 +478,7 @@ export function AssistantDock() {
   useEffect(() => {
     if (cancelBid.status === "success" && cancelBid.txHash) {
       pushSuccess({ message: "Order cancelled", txHash: cancelBid.txHash });
-      void queryClient.invalidateQueries();
+      applyTxInvalidation(queryClient, "cancel");
     } else if (cancelBid.status === "error" && cancelBid.errorText) {
       pushError(cancelBid.errorText);
     }
@@ -486,7 +487,7 @@ export function AssistantDock() {
   useEffect(() => {
     if (claimYield.status === "success" && claimYield.txHash) {
       pushSuccess({ message: "Yield claimed", txHash: claimYield.txHash });
-      void queryClient.invalidateQueries();
+      applyTxInvalidation(queryClient, "claim");
     } else if (claimYield.status === "error" && claimYield.errorText) {
       pushError(claimYield.errorText);
     }

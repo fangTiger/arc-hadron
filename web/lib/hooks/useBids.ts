@@ -5,8 +5,8 @@ import { useAccount, useReadContract, useReadContracts } from "wagmi";
 import { mapBidResults, type BidView } from "@/lib/bids";
 import { HADRON_MARKET_ABI, HADRON_MARKET_ADDRESS } from "@/lib/contracts";
 import { readContractCount } from "@/lib/hooks/useAssets";
-
-const REFETCH_INTERVAL_MS = 8000;
+import { POLL_HOT_MS, POLL_WARM_MS } from "./pollingConstants";
+import { visibleRefetch } from "./visibilityAware";
 
 export type { BidView };
 
@@ -19,7 +19,7 @@ export function useBids(tokenId: bigint | null): { bids: BidView[]; isLoading: b
     args: tokenId === null ? undefined : [tokenId],
     query: {
       enabled: tokenId !== null,
-      refetchInterval: REFETCH_INTERVAL_MS,
+      refetchInterval: visibleRefetch(POLL_HOT_MS),
     },
   });
   const bidIds = useMemo(() => (bidIdsQuery.data ?? []) as bigint[], [bidIdsQuery.data]);
@@ -38,7 +38,7 @@ export function useBids(tokenId: bigint | null): { bids: BidView[]; isLoading: b
     contracts: bidContracts,
     query: {
       enabled: tokenId !== null && bidContracts.length > 0,
-      refetchInterval: REFETCH_INTERVAL_MS,
+      refetchInterval: visibleRefetch(POLL_HOT_MS),
     },
   });
   const bids = useMemo(
@@ -64,7 +64,7 @@ export function useAllBids(): { bids: BidView[]; isLoading: boolean } {
     abi: HADRON_MARKET_ABI,
     functionName: "bidCount",
     query: {
-      refetchInterval: REFETCH_INTERVAL_MS,
+      refetchInterval: visibleRefetch(POLL_HOT_MS),
     },
   });
   const bidCount = readContractCount(bidCountQuery.data);
@@ -87,7 +87,7 @@ export function useAllBids(): { bids: BidView[]; isLoading: boolean } {
     contracts: bidContracts,
     query: {
       enabled: bidContracts.length > 0,
-      refetchInterval: REFETCH_INTERVAL_MS,
+      refetchInterval: visibleRefetch(POLL_HOT_MS),
     },
   });
   const bids = useMemo(
@@ -114,7 +114,7 @@ export function useMyBids(): { bids: BidView[]; isLoading: boolean } {
     functionName: "bidCount",
     query: {
       enabled: isConnected,
-      refetchInterval: REFETCH_INTERVAL_MS,
+      refetchInterval: visibleRefetch(POLL_WARM_MS),
     },
   });
   const bidCount = readContractCount(bidCountQuery.data);
@@ -137,7 +137,7 @@ export function useMyBids(): { bids: BidView[]; isLoading: boolean } {
     contracts: bidContracts,
     query: {
       enabled: Boolean(isConnected && address && bidContracts.length > 0),
-      refetchInterval: REFETCH_INTERVAL_MS,
+      refetchInterval: visibleRefetch(POLL_WARM_MS),
     },
   });
   const bids = useMemo(

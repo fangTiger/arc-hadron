@@ -1,7 +1,9 @@
 # ai-insights Specification
 
-## Requirements
+## Purpose
 
+AI 洞察能力：在资产详情页与市场页提供按需的、只读的 DeepSeek AI 分析（资产洞察 + 市场日报），以 SSE 流式渲染英文 markdown，配套按需生成、localStorage 缓存与数据指纹失效、滥用防护与无密钥降级；纯呈现层，不改动任何链上行为。
+## Requirements
 ### Requirement: 资产 AI 洞察生成
 系统 SHALL 在资产详情页提供按需的 AI 洞察生成：用户点击 Generate 后，前端将该资产的链上数据快照（元数据、每份显示价、价格序列、24H 变动、挂单深度前 10 档、最近 20 条成交）POST 至服务端路由，服务端调用 DeepSeek 以 SSE 流式返回英文 markdown 简报（含 Outlook / Liquidity / Risk flags 三节与 "AI-generated · testnet demo data · not financial advice" 尾注）。
 
@@ -67,3 +69,15 @@ DEEPSEEK_API_KEY MUST 仅存在于服务端环境变量（禁止 NEXT_PUBLIC 前
 #### Scenario: 本地开发无 key
 - **WHEN** 开发者未配置 key 并点击 Generate
 - **THEN** mock 流正常渲染全流程，无外部请求
+
+### Requirement: 市场日报首页紧凑呈现
+首页右侧的市场 AI 日报（MarketBrief）SHALL 以紧凑高度呈现：生成内容 SHALL 限制在固定最大高度内并支持内部滚动（含底部渐隐提示），避免在窄侧栏中撑高、破坏首页布局。该紧凑呈现 MUST 仅作用于首页 MarketBrief；资产详情页的资产洞察（InsightPanel）布局 MUST 保持不变。紧凑呈现为纯展示层，MUST NOT 改动生成、缓存或 SSE 行为。
+
+#### Scenario: 首页日报限高滚动
+- **WHEN** 首页 MarketBrief 生成较长的日报内容
+- **THEN** 内容限制在固定最大高度内、可内部滚动，首页整体布局不被撑高
+
+#### Scenario: 资产页洞察不受影响
+- **WHEN** 用户在资产详情页查看资产洞察
+- **THEN** 洞察面板按原有布局完整展示，不施加紧凑限高
+

@@ -1,23 +1,23 @@
 {
   "slug": "us-treasury-desk",
-  "displayName": "US Treasury Desk (Demo)",
+  "displayName": "US Treasury Desk",
   "shortName": "UST",
   "jurisdiction": "Washington DC, US",
   "establishedYear": 1789,
   "focus": "Short and intermediate U.S. Treasury exposure",
-  "description": "Demo issuer profile for U.S. Treasury-linked inventory on HADRON. This metadata is illustrative and not a legal entity record.",
+  "description": "Reference issuer profile for U.S. Treasury-linked inventory on HADRON. This metadata is illustrative and not a legal entity record.",
   "docs": [
     {
       "label": "Entity registration",
-      "note": "Demo document, not a legal instrument. Placeholder for entity registration filing."
+      "note": "Illustrative material, not a legal instrument. Placeholder for entity registration filing."
     },
     {
       "label": "Audit letter",
-      "note": "Demo document, not a legal instrument. Placeholder for annual audit summary."
+      "note": "Illustrative material, not a legal instrument. Placeholder for annual audit summary."
     },
     {
       "label": "Identifier registry",
-      "note": "Demo document, not a legal instrument. Placeholder for identifier reference."
+      "note": "Illustrative material, not a legal instrument. Placeholder for identifier reference."
     }
   ],
   "externalLinks": [

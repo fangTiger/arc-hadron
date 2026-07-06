@@ -5,19 +5,19 @@
   "jurisdiction": "Geneva, CH",
   "establishedYear": 2010,
   "focus": "Gold Standard offset credit aggregation",
-  "description": "Demo issuer profile for Gold Standard-referenced offset bundles. This metadata is illustrative and not a legal entity record.",
+  "description": "Reference issuer profile for Gold Standard-referenced offset bundles. This metadata is illustrative and not a legal entity record.",
   "docs": [
     {
       "label": "Entity registration",
-      "note": "Demo document, not a legal instrument. Placeholder for entity registration filing."
+      "note": "Illustrative material, not a legal instrument. Placeholder for entity registration filing."
     },
     {
       "label": "Audit letter",
-      "note": "Demo document, not a legal instrument. Placeholder for annual audit summary."
+      "note": "Illustrative material, not a legal instrument. Placeholder for annual audit summary."
     },
     {
       "label": "Identifier registry",
-      "note": "Demo document, not a legal instrument. Placeholder for identifier reference."
+      "note": "Illustrative material, not a legal instrument. Placeholder for identifier reference."
     }
   ],
   "externalLinks": [

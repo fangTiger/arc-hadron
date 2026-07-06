@@ -2,17 +2,17 @@
   "slug": "gold-ounce-4",
   "displayName": "Vaulted Gold Ounce #4",
   "ticker": "GOLD",
-  "description": "A demo fractional asset referencing vaulted gold inventory with an emphasis on physical custody, auditable stock records, and transferable on-chain shares. The asset does not claim fixed yield; price display is derived from issuance and transaction data.",
+  "description": "A reference fractional asset referencing vaulted gold inventory with an emphasis on physical custody, auditable stock records, and transferable on-chain shares. The asset does not claim fixed yield; price display is derived from issuance and transaction data.",
   "issuerSlug": "polaris-metals-vault",
   "apyBps": null,
   "docs": [
     {
       "label": "Custody statement",
-      "note": "Demo document, not a legal instrument. Describes the demo custody narrative and inventory reference number."
+      "note": "Illustrative material, not a legal instrument. Describes the reference custody narrative and inventory reference number."
     },
     {
       "label": "Insurance summary",
-      "note": "Demo document, not a legal instrument. Outlines illustrative coverage assumptions for vaulted metal custody."
+      "note": "Illustrative material, not a legal instrument. Outlines illustrative coverage assumptions for vaulted metal custody."
     }
   ]
 }

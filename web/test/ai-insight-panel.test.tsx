@@ -43,6 +43,7 @@ import { InsightPanel, InsightPanelView } from "../components/ai/InsightPanel";
 
 const USDC = 10n ** 18n;
 const NOW_MS = Date.UTC(2026, 6, 3, 12);
+const DISCLOSURE = "AI-generated · testnet illustrative data · not financial advice";
 
 function unitPriceFromSharePriceCents(cents: bigint): bigint {
   return (cents * USDC) / 10_000n;
@@ -132,7 +133,8 @@ describe("InsightPanel", () => {
 
     expect(html).toContain("ASSET INSIGHT");
     expect(html).toContain(">Generate<");
-    expect(html).toContain("AI-generated · testnet demo data · not financial advice");
+    expect(html).toContain(DISCLOSURE);
+    expect(html).not.toContain("testnet demo data");
     expect(useAiGenerationMock).toHaveBeenCalledWith(
       expect.objectContaining({
         chainId: 5042002,
@@ -203,10 +205,11 @@ describe("InsightPanel", () => {
     expect(stale).toContain(">Regenerate<");
     expect(failed).toContain("Generation failed");
     expect(failed).toContain(">Retry<");
-    expect(streaming).toContain("AI-generated · testnet demo data · not financial advice");
-    expect(done).toContain("AI-generated · testnet demo data · not financial advice");
-    expect(stale).toContain("AI-generated · testnet demo data · not financial advice");
-    expect(failed).toContain("AI-generated · testnet demo data · not financial advice");
+    expect(streaming).toContain(DISCLOSURE);
+    expect(done).toContain(DISCLOSURE);
+    expect(stale).toContain(DISCLOSURE);
+    expect(failed).toContain(DISCLOSURE);
+    expect([streaming, done, stale, failed].join("\n")).not.toContain("testnet demo data");
   });
 
   test("mounts between the asset profile and sell orders on the asset page", () => {

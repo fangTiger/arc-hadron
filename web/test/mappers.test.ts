@@ -14,7 +14,7 @@ const meta = (slug: string, apyBps: number | null = null): AssetMeta => ({
   description: "Test asset description",
   issuer: "Test issuer",
   apyBps,
-  docs: [{ label: "Test document", note: "Demo document, not a legal instrument." }],
+  docs: [{ label: "Test document", note: "Illustrative document, not a legal instrument." }],
 });
 
 const assets = [

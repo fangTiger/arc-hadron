@@ -2,21 +2,21 @@
   "slug": "verra-carbon-9",
   "displayName": "Verra Carbon Credit Lot-9",
   "ticker": "CARB-9",
-  "description": "A demo fractional asset referencing voluntary carbon-market credits with batch tracking, project disclosure, and transferable on-chain shares. The asset does not claim fixed yield and serves as a non-yielding RWA display sample.",
+  "description": "A reference fractional asset referencing voluntary carbon-market credits with batch tracking, project disclosure, and transferable on-chain shares. The asset does not claim fixed yield and serves as a non-yielding RWA display sample.",
   "issuerSlug": "verra-registry-carbon",
   "apyBps": null,
   "docs": [
     {
       "label": "Project overview",
-      "note": "Demo document, not a legal instrument. Describes the credit project type and batch narrative."
+      "note": "Illustrative material, not a legal instrument. Describes the credit project type and batch narrative."
     },
     {
       "label": "Verification summary",
-      "note": "Demo document, not a legal instrument. Shows an illustrative emissions-reduction verification workflow."
+      "note": "Illustrative material, not a legal instrument. Shows an illustrative emissions-reduction verification workflow."
     },
     {
       "label": "Retirement rules",
-      "note": "Demo document, not a legal instrument. Explains illustrative usage and retirement paths for demo credits."
+      "note": "Illustrative material, not a legal instrument. Explains illustrative usage and retirement paths for reference credits."
     }
   ]
 }

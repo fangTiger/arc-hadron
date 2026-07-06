@@ -2,21 +2,21 @@
   "slug": "nexus-invoice-pool-2026-07",
   "displayName": "Nexus Invoice Pool 2026-07",
   "ticker": "NVIP",
-  "description": "A demo invoice-financing pool referencing diversified business invoices with short expected duration and monitored obligor exposure. Disclosures focus on invoice eligibility, payment verification, and reserve coverage.",
+  "description": "A reference invoice-financing pool referencing diversified business invoices with short expected duration and monitored obligor exposure. Disclosures focus on invoice eligibility, payment verification, and reserve coverage.",
   "issuerSlug": "atlas-receivables",
   "apyBps": 1050,
   "docs": [
     {
       "label": "Invoice pool summary",
-      "note": "Demo document, not a legal instrument. Summarizes invoice eligibility, obligor mix, and expected duration."
+      "note": "Illustrative material, not a legal instrument. Summarizes invoice eligibility, obligor mix, and expected duration."
     },
     {
       "label": "Payment verification",
-      "note": "Demo document, not a legal instrument. Describes illustrative payment confirmation and reconciliation controls."
+      "note": "Illustrative material, not a legal instrument. Describes illustrative payment confirmation and reconciliation controls."
     },
     {
       "label": "Reserve memo",
-      "note": "Demo document, not a legal instrument. Provides demo reserve assumptions and loss-coverage mechanics."
+      "note": "Illustrative material, not a legal instrument. Provides reference reserve assumptions and loss-coverage mechanics."
     }
   ]
 }

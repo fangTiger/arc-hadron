@@ -42,6 +42,7 @@ import { MarketBrief, MarketBriefView } from "../components/ai/MarketBrief";
 
 const USDC = 10n ** 18n;
 const NOW_MS = Date.UTC(2026, 6, 3, 12);
+const DISCLOSURE = "AI-generated · testnet illustrative data · not financial advice";
 
 function unitPriceFromSharePriceCents(cents: bigint): bigint {
   return (cents * USDC) / 10_000n;
@@ -131,7 +132,8 @@ describe("MarketBrief", () => {
 
     expect(html).toContain("MARKET BRIEF");
     expect(html).toContain(">Generate<");
-    expect(html).toContain("AI-generated · testnet demo data · not financial advice");
+    expect(html).toContain(DISCLOSURE);
+    expect(html).not.toContain("testnet demo data");
     expect(useAiGenerationMock).toHaveBeenCalledWith(
       expect.objectContaining({
         chainId: 5042002,

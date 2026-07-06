@@ -63,7 +63,9 @@ function expectCompleteMeta(meta: AssetMeta) {
 
   for (const doc of meta.docs) {
     expect(doc.label).toBeTruthy();
-    expect(doc.note).toContain("Demo document, not a legal instrument.");
+    expect(doc.note).toContain("Illustrative");
+    expect(doc.note).toContain("not a legal instrument.");
+    expect(doc.note).not.toContain("Demo");
   }
 }
 

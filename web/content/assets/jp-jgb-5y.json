@@ -1,22 +1,22 @@
 {
   "slug": "jp-jgb-5y",
-  "displayName": "JGB 5Y Demo",
+  "displayName": "JGB 5Y",
   "ticker": "JGB-5Y",
-  "description": "A demo sovereign bond referencing the 5-year Japanese Government Bond. Payments and price behavior are illustrative only.",
-  "issuerSlug": "japan-treasury-demo",
+  "description": "A reference sovereign bond referencing the 5-year Japanese Government Bond. Payments and price behavior are illustrative only.",
+  "issuerSlug": "japan-treasury-desk",
   "apyBps": 80,
   "docs": [
     {
       "label": "Offering memorandum",
-      "note": "Demo document, not a legal instrument. Summarizes sovereign note tenor, share structure, and yield assumptions."
+      "note": "Illustrative material, not a legal instrument. Summarizes sovereign note tenor, share structure, and yield assumptions."
     },
     {
       "label": "Custody statement",
-      "note": "Demo document, not a legal instrument. Describes illustrative custody and reconciliation controls."
+      "note": "Illustrative material, not a legal instrument. Describes illustrative custody and reconciliation controls."
     },
     {
       "label": "Rate risk memo",
-      "note": "Demo document, not a legal instrument. Lists duration, liquidity, and mark-to-market considerations."
+      "note": "Illustrative material, not a legal instrument. Lists duration, liquidity, and mark-to-market considerations."
     }
   ]
 }

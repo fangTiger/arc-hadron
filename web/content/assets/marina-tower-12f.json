@@ -2,21 +2,21 @@
   "slug": "marina-tower-12f",
   "displayName": "Marina Tower 12F Unit",
   "ticker": "RES-12F",
-  "description": "A demo fractional real-estate asset referencing office-unit rental cash flows in a marina business district. Disclosures focus on occupancy, lease stability, and issuance-price market value displayed from Arc contract data.",
+  "description": "A reference fractional real-estate asset referencing office-unit rental cash flows in a marina business district. Disclosures focus on occupancy, lease stability, and issuance-price market value displayed from Arc contract data.",
   "issuerSlug": "harbor-real-estate",
   "apyBps": 620,
   "docs": [
     {
       "label": "Offering memorandum",
-      "note": "Demo document, not a legal instrument. Summarizes rental income, share structure, and fee assumptions."
+      "note": "Illustrative material, not a legal instrument. Summarizes rental income, share structure, and fee assumptions."
     },
     {
       "label": "Valuation memo",
-      "note": "Demo document, not a legal instrument. Presents illustrative property valuation and lease assumptions."
+      "note": "Illustrative material, not a legal instrument. Presents illustrative property valuation and lease assumptions."
     },
     {
       "label": "Custody statement",
-      "note": "Demo document, not a legal instrument. Describes the asset-interest custody narrative for demo purposes."
+      "note": "Illustrative material, not a legal instrument. Describes the asset-interest custody narrative for reference purposes."
     }
   ]
 }

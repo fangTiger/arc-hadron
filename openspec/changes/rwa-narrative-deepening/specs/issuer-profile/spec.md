@@ -16,7 +16,7 @@
 
 ### Requirement: Issuer 元数据 stub 语气与占位域名
 
-系统 SHALL 强制 issuer JSON 的 `docs[].note` 使用 stub 语气（示例："Demo document, not a legal instrument."），`externalLinks[].href` MUST 使用 `demo.hadron.local` 域名占位；构建期校验违反则失败。
+系统 SHALL 强制 issuer JSON 的 `docs[].note` 使用 stub 语气（示例："Illustrative material, not a legal instrument."），`externalLinks[].href` MUST 使用 `demo.hadron.local` 域名占位；构建期校验违反则失败。
 
 #### Scenario: externalLinks 指向真实企业域名
 - **WHEN** issuer JSON 的 `externalLinks[].href` 使用非 `demo.hadron.local` 域名
@@ -25,7 +25,7 @@
 ### Requirement: Issuer profile 页布局与 KPI
 
 系统 SHALL 提供 `/issuers/[slug]` 页面，展示：
-- **Header**：ticker chip（shortName）+ displayName + jurisdiction + establishedYear + focus + 一行 description
+- **Header**：Back 按钮 + ticker chip（shortName）+ displayName + jurisdiction + establishedYear + focus + 一行 description
 - **KPI 栏（4 格）**：Assets（issuer 名下资产数）· Total Shares Issued（Σ `HadronAssets.totalShares(tokenId)`）· Cumulative Volume（Σ `PrimarySale.paid + Purchased.paid` 该 issuer 全部资产的历史事件金额）· Weighted APY（Σ `apyBps[i] × totalShares[i]` / Σ `totalShares[i]`）
 - **主区（desktop 60/40 分栏，mobile 单列）**：左 Assets table（复用市场表格组件，可排序）；右 Docs 卡片（三条固定 stub）+ External links 卡片 + Recent activity（最多 12 条，复用 activity-feed 数据源，前端 filter `event.assetId in issuer.assetIds`）
 - **面包屑**：Market > Issuers > [ShortName]
@@ -35,6 +35,10 @@
 #### Scenario: 访问 issuer profile 页
 - **WHEN** 访客访问 `/issuers/meridian-credit`
 - **THEN** 页面展示 Meridian 的 Header + 4 KPI + 名下资产 table + Docs + External links + Recent activity；数据与首页/资产页一致
+
+#### Scenario: 从 issuer profile 页返回
+- **WHEN** 访客点击 Header 中的 "Back" 按钮
+- **THEN** 系统优先调用浏览器历史返回；若没有上一条历史记录，则跳转到 Market 首页
 
 #### Scenario: KPI Weighted APY 口径
 - **WHEN** issuer 名下 2 资产：A（apy 5%, shares 10M）B（apy 10%, shares 5M）

@@ -2,21 +2,21 @@
   "slug": "helios-utility-2031",
   "displayName": "Helios Utility Note 2031",
   "ticker": "HELIO-31",
-  "description": "A demo corporate bond referencing Helios utility-linked 2031 note exposure. Payments and price behavior are illustrative only.",
+  "description": "A reference corporate bond referencing Helios utility-linked 2031 note exposure. Payments and price behavior are illustrative only.",
   "issuerSlug": "helios-infrastructure",
   "apyBps": 590,
   "docs": [
     {
       "label": "Offering memorandum",
-      "note": "Demo document, not a legal instrument. Summarizes note tenor, share structure, and yield assumptions."
+      "note": "Illustrative material, not a legal instrument. Summarizes note tenor, share structure, and yield assumptions."
     },
     {
       "label": "Credit memo",
-      "note": "Demo document, not a legal instrument. Describes illustrative utility revenue and reserve assumptions."
+      "note": "Illustrative material, not a legal instrument. Describes illustrative utility revenue and reserve assumptions."
     },
     {
       "label": "Risk disclosure",
-      "note": "Demo document, not a legal instrument. Lists liquidity, duration, and corporate credit considerations."
+      "note": "Illustrative material, not a legal instrument. Lists liquidity, duration, and corporate credit considerations."
     }
   ]
 }

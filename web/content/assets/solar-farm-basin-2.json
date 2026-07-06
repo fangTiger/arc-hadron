@@ -2,21 +2,21 @@
   "slug": "solar-farm-basin-2",
   "displayName": "Solar Farm Basin-2 Notes",
   "ticker": "SOLR",
-  "description": "A demo infrastructure note referencing contracted cash flows from a utility-scale solar farm. Disclosures emphasize power-purchase agreement tenor, operating availability, and reserve assumptions.",
+  "description": "A reference infrastructure note referencing contracted cash flows from a utility-scale solar farm. Disclosures emphasize power-purchase agreement tenor, operating availability, and reserve assumptions.",
   "issuerSlug": "helios-infrastructure",
   "apyBps": 740,
   "docs": [
     {
       "label": "Project note summary",
-      "note": "Demo document, not a legal instrument. Summarizes project capacity, note tenor, and payment waterfall."
+      "note": "Illustrative material, not a legal instrument. Summarizes project capacity, note tenor, and payment waterfall."
     },
     {
       "label": "PPA overview",
-      "note": "Demo document, not a legal instrument. Describes illustrative offtaker and contracted revenue assumptions."
+      "note": "Illustrative material, not a legal instrument. Describes illustrative offtaker and contracted revenue assumptions."
     },
     {
       "label": "Operations report",
-      "note": "Demo document, not a legal instrument. Provides demo availability and maintenance assumptions."
+      "note": "Illustrative material, not a legal instrument. Provides reference availability and maintenance assumptions."
     }
   ]
 }

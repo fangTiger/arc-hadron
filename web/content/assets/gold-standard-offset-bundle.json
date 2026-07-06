@@ -2,21 +2,21 @@
   "slug": "gold-standard-offset-bundle",
   "displayName": "Gold Standard Offset Bundle",
   "ticker": "GSOB",
-  "description": "A demo carbon asset referencing a diversified bundle of verified offset credits from voluntary carbon markets. The asset does not claim fixed yield and is presented for batch-level traceability and disclosure review.",
+  "description": "A reference carbon asset referencing a diversified bundle of verified offset credits from voluntary carbon markets. The asset does not claim fixed yield and is presented for batch-level traceability and disclosure review.",
   "issuerSlug": "goldstd-carbon",
   "apyBps": null,
   "docs": [
     {
       "label": "Project bundle overview",
-      "note": "Demo document, not a legal instrument. Summarizes illustrative project types, vintages, and registry references."
+      "note": "Illustrative material, not a legal instrument. Summarizes illustrative project types, vintages, and registry references."
     },
     {
       "label": "Verification summary",
-      "note": "Demo document, not a legal instrument. Describes demo verification and monitoring assumptions."
+      "note": "Illustrative material, not a legal instrument. Describes reference verification and monitoring assumptions."
     },
     {
       "label": "Retirement policy",
-      "note": "Demo document, not a legal instrument. Explains illustrative credit usage and retirement handling."
+      "note": "Illustrative material, not a legal instrument. Explains illustrative credit usage and retirement handling."
     }
   ]
 }

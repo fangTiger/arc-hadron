@@ -43,11 +43,11 @@ const UNKNOWN_META: AssetMeta = {
   docs: [
     {
       label: "Metadata placeholder",
-      note: "Demo document, not a legal instrument. This placeholder explains how unknown assets are displayed.",
+      note: "Illustrative material, not a legal instrument. This placeholder explains how unknown assets are displayed.",
     },
     {
       label: "On-chain data priority",
-      note: "Demo document, not a legal instrument. Share balances and transaction states are sourced from contract reads.",
+      note: "Illustrative material, not a legal instrument. Share balances and transaction states are sourced from contract reads.",
     },
   ],
 };

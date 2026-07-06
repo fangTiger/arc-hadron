@@ -4,7 +4,7 @@ import { IssuerExternalLinksCard } from "../../../components/issuer/IssuerExtern
 import type { IssuerExternalLink } from "../../../lib/issuers";
 
 describe("IssuerExternalLinksCard", () => {
-  test("renders safe demo links as external anchors", () => {
+  test("renders safe illustrative links as external anchors", () => {
     const links: IssuerExternalLink[] = [
       { label: "Website", href: "https://demo.hadron.local/atlas" },
     ];
@@ -17,7 +17,7 @@ describe("IssuerExternalLinksCard", () => {
     expect(html).toContain("rel=\"noopener noreferrer\"");
   });
 
-  test("warns and renders a placeholder when a link does not use the demo domain", () => {
+  test("warns and renders an illustrative placeholder when a link does not use the demo domain", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     const links: IssuerExternalLink[] = [
       { label: "Unsafe", href: "https://example.com/unsafe" },
@@ -29,7 +29,8 @@ describe("IssuerExternalLinksCard", () => {
       "Unsafe issuer external link blocked:",
       "https://example.com/unsafe",
     );
-    expect(html).toContain("Unavailable demo link");
+    expect(html).toContain("Unavailable illustrative link");
+    expect(html).not.toContain("Unavailable demo link");
     expect(html).not.toContain("https://example.com/unsafe");
 
     warn.mockRestore();

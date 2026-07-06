@@ -1,5 +1,5 @@
 export const AI_DISCLOSURE_FOOTER =
-  "AI-generated · testnet demo data · not financial advice";
+  "AI-generated · testnet illustrative data · not financial advice";
 
 export interface AiPrompt {
   system: string;

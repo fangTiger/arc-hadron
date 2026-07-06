@@ -1,11 +1,11 @@
 {
-  "slug": "atlas-receivables",
-  "displayName": "Atlas Receivables Partners",
-  "shortName": "ATLAS",
-  "jurisdiction": "Singapore",
-  "establishedYear": 2015,
-  "focus": "Trade receivables and invoice financing",
-  "description": "Reference issuer profile for short-duration receivables pools. This metadata is illustrative and not a legal entity record.",
+  "slug": "germany-treasury-desk",
+  "displayName": "Germany Treasury Desk",
+  "shortName": "BUND",
+  "jurisdiction": "Berlin, DE",
+  "establishedYear": 1949,
+  "focus": "Sovereign bond issuance desk",
+  "description": "Reference issuer profile for German Bund-linked inventory on HADRON. This metadata is illustrative and not a legal entity record.",
   "docs": [
     {
       "label": "Entity registration",
@@ -23,11 +23,11 @@
   "externalLinks": [
     {
       "label": "Website",
-      "href": "https://demo.hadron.local/atlas-receivables"
+      "href": "https://demo.hadron.local/germany-treasury-desk"
     },
     {
       "label": "Disclosures",
-      "href": "https://demo.hadron.local/atlas-receivables/disclosures"
+      "href": "https://demo.hadron.local/germany-treasury-desk/disclosures"
     }
   ]
 }

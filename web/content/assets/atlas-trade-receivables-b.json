@@ -2,21 +2,21 @@
   "slug": "atlas-trade-receivables-b",
   "displayName": "Atlas Trade Receivables B",
   "ticker": "PCRD-B",
-  "description": "A demo private-credit asset referencing short-tenor trade receivables originated from investment-grade commercial buyers. Disclosures emphasize invoice eligibility, collection timing, and reserve coverage.",
+  "description": "A reference private-credit asset referencing short-tenor trade receivables originated from investment-grade commercial buyers. Disclosures emphasize invoice eligibility, collection timing, and reserve coverage.",
   "issuerSlug": "atlas-receivables",
   "apyBps": 920,
   "docs": [
     {
       "label": "Receivables schedule",
-      "note": "Demo document, not a legal instrument. Shows illustrative invoice aging, obligor mix, and eligibility criteria."
+      "note": "Illustrative material, not a legal instrument. Shows illustrative invoice aging, obligor mix, and eligibility criteria."
     },
     {
       "label": "Servicer controls",
-      "note": "Demo document, not a legal instrument. Describes demo collection and reconciliation controls."
+      "note": "Illustrative material, not a legal instrument. Describes reference collection and reconciliation controls."
     },
     {
       "label": "Reserve memo",
-      "note": "Demo document, not a legal instrument. Summarizes reserve assumptions and loss-coverage mechanics."
+      "note": "Illustrative material, not a legal instrument. Summarizes reserve assumptions and loss-coverage mechanics."
     }
   ]
 }

@@ -13,15 +13,15 @@ const USDC = 10n ** 18n;
 function issuer(overrides: Partial<Issuer> = {}): Issuer {
   return {
     assetIds: ["asset-a"],
-    description: "Demo issuer",
-    displayName: "Atlas Demo Issuer",
+    description: "Illustrative issuer",
+    displayName: "Atlas Illustrative Issuer",
     docs: [],
     establishedYear: 2011,
     externalLinks: [],
     focus: "Receivables",
     jurisdiction: "Singapore",
     shortName: "ATLAS",
-    slug: "atlas-demo",
+    slug: "atlas-illustrative",
     ...overrides,
   };
 }
@@ -31,11 +31,11 @@ function assetView(overrides: Partial<AssetView> = {}): AssetView {
     category: "private-credit",
     meta: {
       apyBps: 740,
-      description: "Demo asset",
+      description: "Illustrative asset",
       displayName: "Asset A",
       docs: [],
-      issuer: "Atlas Demo Issuer",
-      issuerSlug: "atlas-demo",
+      issuer: "Atlas Illustrative Issuer",
+      issuerSlug: "atlas-illustrative",
       slug: "asset-a",
       ticker: "ASTA",
     },

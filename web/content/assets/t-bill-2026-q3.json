@@ -2,21 +2,21 @@
   "slug": "t-bill-2026-q3",
   "displayName": "US T-Bill 2026-Q3",
   "ticker": "TBILL",
-  "description": "A demo fractional asset referencing short-duration U.S. Treasury bill exposure for accounts that prioritize low-volatility yield. Disclosures emphasize transparent maturity cadence, stable settlement rhythm, and contract-sourced state on Arc testnet.",
+  "description": "A reference fractional asset referencing short-duration U.S. Treasury bill exposure for accounts that prioritize low-volatility yield. Disclosures emphasize transparent maturity cadence, stable settlement rhythm, and contract-sourced state on Arc testnet.",
   "issuerSlug": "us-treasury-desk",
   "apyBps": 510,
   "docs": [
     {
       "label": "Offering memorandum",
-      "note": "Demo document, not a legal instrument. Summarizes share structure, tenor, and yield methodology."
+      "note": "Illustrative material, not a legal instrument. Summarizes share structure, tenor, and yield methodology."
     },
     {
       "label": "Custody statement",
-      "note": "Demo document, not a legal instrument. Illustrates the custody narrative and valuation assumptions for the referenced bills."
+      "note": "Illustrative material, not a legal instrument. Illustrates the custody narrative and valuation assumptions for the referenced bills."
     },
     {
       "label": "Risk disclosure",
-      "note": "Demo document, not a legal instrument. Lists interest-rate, liquidity, and settlement risks for demo review."
+      "note": "Illustrative material, not a legal instrument. Lists interest-rate, liquidity, and settlement risks for reference review."
     }
   ]
 }

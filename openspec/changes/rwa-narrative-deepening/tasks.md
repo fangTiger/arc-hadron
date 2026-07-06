@@ -36,7 +36,7 @@
 ## 3. Issuer profile 页 + 资产详情页 patch（Codex 批 3，约 15-20 分钟）
 
 - [x] 3.1 新建 `web/app/issuers/[slug]/page.tsx`（Server Component）：`generateStaticParams` 返回全部 issuer slug；页面 fetch issuer + 其名下 assets meta + 传给 client 子树。若 slug 不存在返回 `notFound()`。
-- [x] 3.2 新建 `web/components/issuer/IssuerHeader.tsx`：渲染 ticker chip + displayName + jurisdiction + establishedYear + focus + description（英文一行）；面包屑 `Market > Issuers > [ShortName]`。
+- [x] 3.2 新建 `web/components/issuer/IssuerHeader.tsx`：渲染 Back 按钮 + ticker chip + displayName + jurisdiction + establishedYear + focus + description（英文一行）；面包屑 `Market > Issuers > [ShortName]`。
 - [x] 3.3 新建 `web/components/issuer/IssuerKpiBar.tsx`：4 KPI 单元（Assets / Total Shares / Cumulative Volume / Weighted APY）；接受 `IssuerKpis` props；Cumulative Volume 单元加 skeleton 状态。数字格式复用 `web/lib/format.ts`。
 - [x] 3.4 新建 `web/components/issuer/IssuerAssetsTable.tsx`：复用市场的可排序表格 —— 若市场表格已抽成独立组件（如 `AssetsTable`）则直接引入；若尚未抽出，则**只在本次抽出可复用的 `SortableAssetsTable`**（不改现有市场表格行为，只做提取），两处消费。列同市场：ticker · name · category · price · 24H · yield · qty · mcap · Trade CTA。
 - [x] 3.5 新建 `web/components/issuer/IssuerDocsCard.tsx`：渲染三条固定 stub docs（`label` + `note`），不做展开/下载交互。
@@ -50,19 +50,21 @@
 - [ ] 3.11 手动检查（Claude 或 Codex 报告截图）：`http://localhost:3000/issuers/meridian-credit` 页面正常渲染（无 hydration warning，四 KPI 数据合理）。Blocked in Codex sandbox: local server bind fails with `EPERM listen 127.0.0.1`.
 - [x] 3.12 验证：`cd web && npm test`（本轮按用户批 3 指令不跑 build；build/本地浏览器冒烟受沙箱监听/网络限制影响）。
 - [ ] 3.13 【Claude 人工审 diff】重点：`SortableAssetsTable` 抽取是否破坏市场页现有行为；`IssuerActivityList` 是否引入新的事件扫描（应复用 activity-feed hook，禁止新起 event scan）。
+- [x] 3.14 补充 `web/components/issuer/BackButton.tsx`：Issuer profile Header 右侧显示 "Back"；有浏览器历史时 `router.back()`，否则 `router.push("/")`；新增 `web/test/components/issuer/BackButton.test.tsx` 覆盖 Header 挂载与两个导航分支。
+- [x] 3.15 去掉 UI 用户可见 "Demo" 字样：AI 免责声明、AI prompt footer、mock LLM footer、未知资产 fallback docs、Issuer 外链拦截占位均改用 "Illustrative"；保留 `demo.hadron.local` 合规占位域名。
 
 ## 4. 新资产种子 + arc-testnet 广播（Codex 批 4，约 10 分钟；广播由用户执行）
 
-- [x] 4.1 新建 `web/content/issuers/*.json` × 3 新 issuer：`germany-treasury-demo`（Berlin, DE, Est. 1949）、`japan-treasury-demo`（Tokyo, JP, Est. 1949）、`apex-corporate-desk`（Delaware, US, Est. 2003）。docs/externalLinks 保持 stub。
+- [x] 4.1 新建 `web/content/issuers/*.json` × 3 新 issuer：`germany-treasury-desk`（Berlin, DE, Est. 1949）、`japan-treasury-desk`（Tokyo, JP, Est. 1949）、`apex-corporate-desk`（Delaware, US, Est. 2003）。docs/externalLinks 保持 stub。
 - [x] 4.2 新建 `web/content/assets/*.json` × 4 新资产：
-  - `de-bund-10y`：ticker `BUND-10Y`, category `sovereign-bonds`, issuerSlug `germany-treasury-demo`, apyBps 320
-  - `jp-jgb-5y`：ticker `JGB-5Y`, category `sovereign-bonds`, issuerSlug `japan-treasury-demo`, apyBps 80
+  - `de-bund-10y`：ticker `BUND-10Y`, category `sovereign-bonds`, issuerSlug `germany-treasury-desk`, apyBps 320
+  - `jp-jgb-5y`：ticker `JGB-5Y`, category `sovereign-bonds`, issuerSlug `japan-treasury-desk`, apyBps 80
   - `apex-industrials-2029`：ticker `APEX-29`, category `corporate-bonds`, issuerSlug `apex-corporate-desk`, apyBps 540
   - `helios-utility-2031`：ticker `HELIO-31`, category `corporate-bonds`, issuerSlug `helios-infrastructure`（复用现有 issuer 跨类别）, apyBps 590
-  - description 一句话英文 demo 语气；docs 三条 stub。
+  - description 一句话英文 illustrative 语气；docs 三条 stub。
 - [x] 4.3 新建 `contracts/script/Seed2026Q3RwaExpansion.s.sol`：`vm.startBroadcast()` 后 4 笔 `assets.createAsset(name, category, totalShares, metadataURI)`，参数：
-  - `("German Bund 10Y Demo", "sovereign-bonds", 10_000_000, "hadron://assets/de-bund-10y")`
-  - `("JGB 5Y Demo", "sovereign-bonds", 10_000_000, "hadron://assets/jp-jgb-5y")`
+  - `("German Bund 10Y", "sovereign-bonds", 10_000_000, "hadron://assets/de-bund-10y")`
+  - `("JGB 5Y", "sovereign-bonds", 10_000_000, "hadron://assets/jp-jgb-5y")`
   - `("Apex Industrials 2029", "corporate-bonds", 5_000_000, "hadron://assets/apex-industrials-2029")`
   - `("Helios Utility Note 2031", "corporate-bonds", 5_000_000, "hadron://assets/helios-utility-2031")`
   - 参考 `SeedV5.s.sol` 的 `SeedAsset` struct 用法；不做定价/挂单，只 createAsset。

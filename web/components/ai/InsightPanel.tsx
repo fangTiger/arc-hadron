@@ -11,7 +11,7 @@ import { buildAssetSnapshot } from "@/lib/ai/snapshot";
 import { useAiGeneration, type AiGenerationStatus } from "@/lib/ai/useAiGeneration";
 import type { AssetView } from "@/lib/mappers";
 
-const DISCLAIMER = "AI-generated · testnet demo data · not financial advice";
+const DISCLAIMER = "AI-generated · testnet illustrative data · not financial advice";
 
 function generatedAgo(generatedAt: number | null, nowMs: number): string {
   if (!generatedAt) {

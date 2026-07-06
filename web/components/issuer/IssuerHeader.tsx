@@ -1,23 +1,27 @@
 import Link from "next/link";
 import type { Issuer } from "@/lib/issuers";
+import { BackButton } from "./BackButton";
 
 export function IssuerHeader({ issuer }: { issuer: Issuer }) {
   return (
     <header className="overflow-hidden border border-border bg-panel">
-      <nav
-        aria-label="Breadcrumb"
-        className="flex flex-wrap items-center gap-2 border-b border-border px-5 py-3 font-mono text-[10px] uppercase tracking-[0.18em] text-muted sm:px-6"
-      >
-        <Link className="transition-colors duration-200 hover:text-neon" href="/">
-          Market
-        </Link>
-        <span aria-hidden="true">/</span>
-        <Link className="transition-colors duration-200 hover:text-neon" href="/">
-          Issuers
-        </Link>
-        <span aria-hidden="true">/</span>
-        <span className="text-text">{issuer.shortName}</span>
-      </nav>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3 sm:px-6">
+        <nav
+          aria-label="Breadcrumb"
+          className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted"
+        >
+          <Link className="transition-colors duration-200 hover:text-neon" href="/">
+            Market
+          </Link>
+          <span aria-hidden="true">/</span>
+          <Link className="transition-colors duration-200 hover:text-neon" href="/">
+            Issuers
+          </Link>
+          <span aria-hidden="true">/</span>
+          <span className="text-text">{issuer.shortName}</span>
+        </nav>
+        <BackButton />
+      </div>
 
       <div className="bg-bg/35 px-5 py-6 sm:px-6 sm:py-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

@@ -39,7 +39,7 @@ export function IssuerExternalLinksCard({ links }: { links: IssuerExternalLink[]
               </a>
             ) : (
               <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
-                {row.label}: Unavailable demo link
+                {row.label}: Unavailable illustrative link
               </p>
             )}
           </li>

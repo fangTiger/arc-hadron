@@ -2,17 +2,17 @@
   "slug": "silver-bullion-vault-2",
   "displayName": "Silver Bullion Vault #2",
   "ticker": "SLVR",
-  "description": "A demo fractional asset referencing vaulted silver bullion inventory with auditable bar records and transferable on-chain shares. The asset does not claim fixed yield; valuation is intended to follow issuance and market transaction data.",
+  "description": "A reference fractional asset referencing vaulted silver bullion inventory with auditable bar records and transferable on-chain shares. The asset does not claim fixed yield; valuation is intended to follow issuance and market transaction data.",
   "issuerSlug": "polaris-metals-vault",
   "apyBps": null,
   "docs": [
     {
       "label": "Custody statement",
-      "note": "Demo document, not a legal instrument. Describes illustrative vaulted silver custody and bar-list controls."
+      "note": "Illustrative material, not a legal instrument. Describes illustrative vaulted silver custody and bar-list controls."
     },
     {
       "label": "Inventory report",
-      "note": "Demo document, not a legal instrument. Shows demo inventory references and reconciliation assumptions."
+      "note": "Illustrative material, not a legal instrument. Shows reference inventory references and reconciliation assumptions."
     }
   ]
 }

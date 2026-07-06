@@ -32,7 +32,7 @@ function collectElements(node: ReactNode, predicate: (props: TestElementProps) =
 
 describe("ExploreIssuerFilter", () => {
   const issuers = [
-    { assetsCount: 2, displayName: "US Treasury Desk (Demo)", slug: "us-treasury-desk" },
+    { assetsCount: 2, displayName: "US Treasury Desk (Illustrative)", slug: "us-treasury-desk" },
     { assetsCount: 1, displayName: "Meridian Credit Management LP", slug: "meridian-credit" },
   ];
 
@@ -42,7 +42,8 @@ describe("ExploreIssuerFilter", () => {
     );
 
     expect(html).toContain("All Issuers");
-    expect(html).toContain("US Treasury Desk (Demo) (2)");
+    expect(html).toContain("US Treasury Desk (Illustrative) (2)");
+    expect(html).not.toContain("US Treasury Desk (Demo)");
     expect(html).toContain("Meridian Credit Management LP (1)");
   });
 

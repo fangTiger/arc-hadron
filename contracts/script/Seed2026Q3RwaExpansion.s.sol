@@ -28,13 +28,13 @@ contract Seed2026Q3RwaExpansion is Script {
     function seedAssets() public pure returns (SeedAsset[] memory seeds) {
         seeds = new SeedAsset[](4);
         seeds[0] = SeedAsset({
-            name: "German Bund 10Y Demo",
+            name: "German Bund 10Y",
             category: "sovereign-bonds",
             totalShares: 10_000_000,
             metadataURI: "hadron://assets/de-bund-10y"
         });
         seeds[1] = SeedAsset({
-            name: "JGB 5Y Demo",
+            name: "JGB 5Y",
             category: "sovereign-bonds",
             totalShares: 10_000_000,
             metadataURI: "hadron://assets/jp-jgb-5y"

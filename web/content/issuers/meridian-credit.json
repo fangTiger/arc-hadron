@@ -5,19 +5,19 @@
   "jurisdiction": "Delaware, US",
   "establishedYear": 2011,
   "focus": "Middle-market private credit",
-  "description": "Demo issuer profile for senior secured private-credit pools. This metadata is illustrative and not a legal entity record.",
+  "description": "Reference issuer profile for senior secured private-credit pools. This metadata is illustrative and not a legal entity record.",
   "docs": [
     {
       "label": "Entity registration",
-      "note": "Demo document, not a legal instrument. Placeholder for entity registration filing."
+      "note": "Illustrative material, not a legal instrument. Placeholder for entity registration filing."
     },
     {
       "label": "Audit letter",
-      "note": "Demo document, not a legal instrument. Placeholder for annual audit summary."
+      "note": "Illustrative material, not a legal instrument. Placeholder for annual audit summary."
     },
     {
       "label": "Identifier registry",
-      "note": "Demo document, not a legal instrument. Placeholder for identifier reference."
+      "note": "Illustrative material, not a legal instrument. Placeholder for identifier reference."
     }
   ],
   "externalLinks": [

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { buildBriefPrompt, buildInsightPrompt } from "../lib/ai/prompts";
 
-const FOOTER = "AI-generated · testnet demo data · not financial advice";
+const FOOTER = "AI-generated · testnet illustrative data · not financial advice";
 
 const assetSnapshot = {
   schemaVersion: "hadron-ai-snapshot-v1",

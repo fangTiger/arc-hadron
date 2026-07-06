@@ -66,11 +66,11 @@ Chain `category` 字符串照旧走 `displayCategoryForChainCategory` 映射，u
   "jurisdiction": "Delaware, US",
   "establishedYear": 2011,
   "focus": "Middle-market private credit",
-  "description": "Two-sentence demo blurb, mirrors asset-level stub tone. Not a legal entity.",
+  "description": "Two-sentence illustrative blurb, mirrors asset-level stub tone. Not a legal entity.",
   "docs": [
-    { "label": "Entity registration", "note": "Demo document, not a legal instrument. Placeholder for issuer registration filing." },
-    { "label": "Audit letter",       "note": "Demo document, not a legal instrument. Placeholder for annual audit summary." },
-    { "label": "ISIN registry",      "note": "Demo document, not a legal instrument. Placeholder for identifier reference." }
+    { "label": "Entity registration", "note": "Illustrative material, not a legal instrument. Placeholder for issuer registration filing." },
+    { "label": "Audit letter",       "note": "Illustrative material, not a legal instrument. Placeholder for annual audit summary." },
+    { "label": "ISIN registry",      "note": "Illustrative material, not a legal instrument. Placeholder for identifier reference." }
   ],
   "externalLinks": [
     { "label": "Website",     "href": "https://demo.hadron.local/meridian" },
@@ -81,7 +81,7 @@ Chain `category` 字符串照旧走 `displayCategoryForChainCategory` 映射，u
 
 约束：
 - `slug` 必须 kebab-case，与文件名一致
-- `docs` 三条固定，`note` 保持 stub 语气（"Demo document, not a legal instrument."）
+- `docs` 三条固定，`note` 保持 stub 语气（"Illustrative material, not a legal instrument."）
 - `externalLinks[].href` **强制** `demo.hadron.local` 域名（`issuers.ts` loader 校验）
 
 ### 1.3 资产 schema 变更（`web/content/assets/*.json`）
@@ -206,7 +206,7 @@ Issuer:  Meridian Credit Management LP  →
 
 | Issuer slug | displayName | shortName | jurisdiction | 挂载资产 |
 |---|---|---|---|---|
-| `us-treasury-desk` | US Treasury Desk (Demo) | UST | Washington DC, US | t-bill-2026-q3, us-t-note-2028 |
+| `us-treasury-desk` | US Treasury Desk | UST | Washington DC, US | t-bill-2026-q3, us-t-note-2028 |
 | `meridian-credit` | Meridian Credit Management LP | MERIDIAN | Delaware, US | meridian-sme-credit-a |
 | `atlas-receivables` | Atlas Receivables Partners | ATLAS | Singapore | atlas-trade-receivables-b, nexus-invoice-pool-2026-07 |
 | `harbor-real-estate` | Harbor Real Estate Partners | HARBOR | New York, US | marina-tower-12f, dockside-logistics-park |
@@ -221,16 +221,16 @@ Issuer:  Meridian Credit Management LP  →
 ### 3.4 新增 4 资产 + 2 新 issuer
 
 **Sovereign bonds** (2 资产):
-- `de-bund-10y`：German Bund 10Y Demo, apy 3.20%, totalShares 10M, price 100.00 USDC
-- `jp-jgb-5y`：JGB 5Y Demo, apy 0.80%, totalShares 10M, price 100.00 USDC
-- Issuer: `federal-central-treasury` (Federal Central Treasury Demo Desk, Berlin/Tokyo joint demo)
+- `de-bund-10y`：German Bund 10Y, apy 3.20%, totalShares 10M, price 100.00 USDC
+- `jp-jgb-5y`：JGB 5Y, apy 0.80%, totalShares 10M, price 100.00 USDC
+- Issuers: `germany-treasury-desk`（Germany Treasury Desk, Berlin）与 `japan-treasury-desk`（Japan Treasury Desk, Tokyo）
 
 **Corporate bonds** (2 资产):
 - `apex-industrials-2029`：Apex Industrials 2029, apy 5.40%, totalShares 5M, price 100.00 USDC
 - `helios-utility-2031`：Helios Utility Note 2031, apy 5.90%, totalShares 5M, price 100.00 USDC
 - Issuer: `apex-corporate-desk`（Apex Industrials Treasury）挂 `apex-industrials-2029`；`helios-infrastructure` 复用挂 `helios-utility-2031`（跨类别是 feature，profile 页 assets table 天然按 category 分组显示）
 
-**新增后总 issuer 数**：默认按 Open Questions 拆分 sovereign 为 `germany-treasury-demo` + `japan-treasury-demo` 两家 + `apex-corporate-desk` 一家 + `helios-infrastructure` 复用 = 9 + 3 = **12 个 issuer**。
+**新增后总 issuer 数**：默认按 Open Questions 拆分 sovereign 为 `germany-treasury-desk` + `japan-treasury-desk` 两家 + `apex-corporate-desk` 一家 + `helios-infrastructure` 复用 = 9 + 3 = **12 个 issuer**。
 
 ### 3.5 测试策略
 
@@ -274,7 +274,7 @@ Issuer:  Meridian Credit Management LP  →
 ## Open Questions
 
 - 现有 14 资产的 `issuer` 字符串迁移到哪些 issuer JSON —— 归并方案 §3.3 是初稿，Claude 审 Codex diff 时可能微调（如把 nexus-invoice 从 atlas-receivables 独立出来 as `nexus-finance`）。**决策权在 Claude，无需再问用户**。
-- 新增 sovereign 资产 issuer 是否拆成 `germany-treasury-demo` + `japan-treasury-demo` 两家（更真实），还是合并成 `federal-central-treasury` 一家占位 —— 倾向拆两家，profile 页密度不受影响（各挂 1 资产也可接受，因为主权级别叙事）。**Codex diff 里默认拆两家**。
+- 新增 sovereign 资产 issuer 是否拆成 `germany-treasury-desk` + `japan-treasury-desk` 两家（更真实），还是合并成 `federal-central-treasury` 一家占位 —— 倾向拆两家，profile 页密度不受影响（各挂 1 资产也可接受，因为主权级别叙事）。**Codex diff 里默认拆两家**。
 
 ---
 

@@ -16,8 +16,8 @@ describe("issuer metadata loader", () => {
       "goldstd-carbon",
       "helios-infrastructure",
       "axiom-fine-art",
-      "germany-treasury-demo",
-      "japan-treasury-demo",
+      "germany-treasury-desk",
+      "japan-treasury-desk",
       "apex-corporate-desk",
     ]);
   });
@@ -54,10 +54,10 @@ describe("issuer metadata loader", () => {
       "fiber-grid-metro-loop",
       "helios-utility-2031",
     ]);
-    expect(loadIssuerBySlug("germany-treasury-demo")?.assetIds).toEqual([
+    expect(loadIssuerBySlug("germany-treasury-desk")?.assetIds).toEqual([
       "de-bund-10y",
     ]);
-    expect(loadIssuerBySlug("japan-treasury-demo")?.assetIds).toEqual(["jp-jgb-5y"]);
+    expect(loadIssuerBySlug("japan-treasury-desk")?.assetIds).toEqual(["jp-jgb-5y"]);
     expect(loadIssuerBySlug("apex-corporate-desk")?.assetIds).toEqual([
       "apex-industrials-2029",
     ]);

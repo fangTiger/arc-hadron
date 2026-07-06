@@ -51,8 +51,8 @@ describe("batch-1 display category extensions", () => {
     const assets = seededExpansionAssets();
 
     expect(assets.map((asset) => asset.meta.issuerSlug)).toEqual([
-      "germany-treasury-demo",
-      "japan-treasury-demo",
+      "germany-treasury-desk",
+      "japan-treasury-desk",
       "apex-corporate-desk",
       "helios-infrastructure",
     ]);

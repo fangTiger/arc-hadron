@@ -2,30 +2,32 @@ import { describe, expect, test } from "vitest";
 import { validateAssetMeta } from "../../lib/metadata";
 
 const validAsset = {
-  slug: "demo-asset",
-  displayName: "Demo Asset",
-  ticker: "DEMO",
-  description: "Demo asset metadata.",
-  issuerSlug: "demo-issuer",
+  slug: "illustrative-asset",
+  displayName: "Illustrative Asset",
+  ticker: "ILUS",
+  description: "Illustrative asset metadata.",
+  issuerSlug: "illustrative-issuer",
   apyBps: 500,
   docs: [
     {
-      label: "Demo doc",
-      note: "Demo document, not a legal instrument. Placeholder metadata.",
+      label: "Illustrative doc",
+      note: "Illustrative document, not a legal instrument. Placeholder metadata.",
     },
     {
-      label: "Demo doc two",
-      note: "Demo document, not a legal instrument. Placeholder metadata.",
+      label: "Illustrative doc two",
+      note: "Illustrative document, not a legal instrument. Placeholder metadata.",
     },
   ],
 };
 
 describe("asset metadata issuerSlug validation", () => {
   test("fails when issuerSlug is missing", () => {
-    const { issuerSlug: _issuerSlug, ...missingIssuerSlug } = validAsset;
+    const missingIssuerSlug: Partial<typeof validAsset> = { ...validAsset };
 
-    expect(() => validateAssetMeta(missingIssuerSlug, new Set(["demo-issuer"]))).toThrow(
-      /demo-asset.*issuerSlug is required/,
+    delete missingIssuerSlug.issuerSlug;
+
+    expect(() => validateAssetMeta(missingIssuerSlug, new Set(["illustrative-issuer"]))).toThrow(
+      /illustrative-asset.*issuerSlug is required/,
     );
   });
 
@@ -33,8 +35,8 @@ describe("asset metadata issuerSlug validation", () => {
     expect(() =>
       validateAssetMeta(
         { ...validAsset, issuerSlug: "missing-issuer" },
-        new Set(["demo-issuer"]),
+        new Set(["illustrative-issuer"]),
       ),
-    ).toThrow(/demo-asset.*missing-issuer.*does not match a registered issuer/);
+    ).toThrow(/illustrative-asset.*missing-issuer.*does not match a registered issuer/);
   });
 });

@@ -10,7 +10,7 @@ const MOCK_INSIGHT_CHUNKS = [
   "## Liquidity\nOrder book depth is limited to a few seed listings around the issue price; ",
   "expect wide effective spreads on larger clips.\n\n",
   "## Risk flags\n- Sparse trade history limits signal quality\n- Seeded self-trades inflate apparent activity\n\n",
-  "---\nAI-generated · testnet demo data · not financial advice\n",
+  "---\nAI-generated · testnet illustrative data · not financial advice\n",
 ];
 
 /** mock 流内容：Market Brief 变体，让无 key 演示时简报也呈现正确的三节结构。 */
@@ -19,7 +19,7 @@ const MOCK_BRIEF_CHUNKS = [
   "Thin books amplify single-trade moves.\n\n",
   "## New listings\nA handful of secondary listings sit just above the primary offering price.\n\n",
   "## Notable trades\n- Primary-sale absorption dominates volume\n- Secondary crossings remain sporadic\n\n",
-  "---\nAI-generated · testnet demo data · not financial advice\n",
+  "---\nAI-generated · testnet illustrative data · not financial advice\n",
 ];
 
 interface MockStreamChunk {

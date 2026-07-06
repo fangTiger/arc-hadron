@@ -5,7 +5,7 @@
 AI 洞察能力：在资产详情页与市场页提供按需的、只读的 DeepSeek AI 分析（资产洞察 + 市场日报），以 SSE 流式渲染英文 markdown，配套按需生成、localStorage 缓存与数据指纹失效、滥用防护与无密钥降级；纯呈现层，不改动任何链上行为。
 ## Requirements
 ### Requirement: 资产 AI 洞察生成
-系统 SHALL 在资产详情页提供按需的 AI 洞察生成：用户点击 Generate 后，前端将该资产的链上数据快照（元数据、每份显示价、价格序列、24H 变动、挂单深度前 10 档、最近 20 条成交）POST 至服务端路由，服务端调用 DeepSeek 以 SSE 流式返回英文 markdown 简报（含 Outlook / Liquidity / Risk flags 三节与 "AI-generated · testnet demo data · not financial advice" 尾注）。
+系统 SHALL 在资产详情页提供按需的 AI 洞察生成：用户点击 Generate 后，前端将该资产的链上数据快照（元数据、每份显示价、价格序列、24H 变动、挂单深度前 10 档、最近 20 条成交）POST 至服务端路由，服务端调用 DeepSeek 以 SSE 流式返回英文 markdown 简报（含 Outlook / Liquidity / Risk flags 三节与 "AI-generated · testnet illustrative data · not financial advice" 尾注）。
 
 #### Scenario: 成功生成并流式渲染
 - **WHEN** 用户在已加载链上数据的详情页点击 Generate
@@ -80,4 +80,3 @@ DEEPSEEK_API_KEY MUST 仅存在于服务端环境变量（禁止 NEXT_PUBLIC 前
 #### Scenario: 资产页洞察不受影响
 - **WHEN** 用户在资产详情页查看资产洞察
 - **THEN** 洞察面板按原有布局完整展示，不施加紧凑限高
-

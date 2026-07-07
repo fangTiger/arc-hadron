@@ -39,6 +39,7 @@ const TOP_Y = 18;
 const BOTTOM_Y = 126;
 const UP_COLOR = "#34d399";
 const DOWN_COLOR = "#f87171";
+const GRID_Y = [42, 66, 90, 114];
 
 function formatUnitPrice(price: bigint): string {
   return formatUsdc(unitPriceToSharePrice(price));
@@ -192,10 +193,14 @@ export function DepthChartView({ book, isLoading, variant = "default" }: DepthCh
   const leftLabel = endLabel(book, "left");
   const midLabel = book.mid === null ? "MID —" : `MID ${formatUnitPrice(book.mid)}`;
   const rightLabel = endLabel(book, "right");
+  const gradientSuffix = variant === "compact" ? "compact" : "default";
+  const bidGradientId = `depth-bid-gradient-${gradientSuffix}`;
+  const askGradientId = `depth-ask-gradient-${gradientSuffix}`;
 
   return (
     <section
       className={isCompact ? "border border-border bg-panel p-2.5 sm:p-3" : "border border-border bg-panel p-5 sm:p-6"}
+      data-depth-chart-surface="exchange"
       data-depth-chart-variant={variant}
     >
       <div className="flex items-start justify-between gap-4">
@@ -217,14 +222,46 @@ export function DepthChartView({ book, isLoading, variant = "default" }: DepthCh
             viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
             width="100%"
           >
+            <defs>
+              <linearGradient data-depth-gradient="bid" id={bidGradientId} x1="1" x2="0" y1="0" y2="0">
+                <stop offset="0%" stopColor="rgba(52,211,153,0.32)" />
+                <stop offset="100%" stopColor="rgba(52,211,153,0.04)" />
+              </linearGradient>
+              <linearGradient data-depth-gradient="ask" id={askGradientId} x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0%" stopColor="rgba(248,113,113,0.32)" />
+                <stop offset="100%" stopColor="rgba(248,113,113,0.04)" />
+              </linearGradient>
+            </defs>
+            {GRID_Y.map((y) => (
+              <line
+                data-depth-grid="horizontal"
+                key={`grid:${y}`}
+                stroke="rgba(28, 35, 51, 0.52)"
+                strokeDasharray="2 6"
+                x1={LEFT_X}
+                x2={RIGHT_X}
+                y1={y}
+                y2={y}
+              />
+            ))}
             <line stroke="rgba(28, 35, 51, 0.86)" strokeDasharray="3 5" x1={MID_X} x2={MID_X} y1={TOP_Y} y2={BOTTOM_Y} />
             <line stroke="rgba(28, 35, 51, 0.78)" x1={LEFT_X} x2={RIGHT_X} y1={BOTTOM_Y} y2={BOTTOM_Y} />
+            {bidPoints.length > 0 ? (
+              <text fill={UP_COLOR} fontFamily="monospace" fontSize="8" x={LEFT_X} y="12">
+                BEST BID
+              </text>
+            ) : null}
+            {askPoints.length > 0 ? (
+              <text fill={DOWN_COLOR} fontFamily="monospace" fontSize="8" textAnchor="end" x={RIGHT_X} y="12">
+                BEST ASK
+              </text>
+            ) : null}
             {bidPoints.length > 0 ? (
               <>
                 <path
                   d={stepAreaPath(bidPoints)}
                   data-depth-side="bid"
-                  fill="rgba(52,211,153,0.18)"
+                  fill={`url(#${bidGradientId})`}
                   stroke="none"
                 />
                 <path d={stepLinePath(bidPoints)} fill="none" stroke={UP_COLOR} strokeWidth="2" />
@@ -235,7 +272,7 @@ export function DepthChartView({ book, isLoading, variant = "default" }: DepthCh
                 <path
                   d={stepAreaPath(askPoints)}
                   data-depth-side="ask"
-                  fill="rgba(248,113,113,0.18)"
+                  fill={`url(#${askGradientId})`}
                   stroke="none"
                 />
                 <path d={stepLinePath(askPoints)} fill="none" stroke={DOWN_COLOR} strokeWidth="2" />

@@ -342,9 +342,9 @@ describe("on-chain asset read state", () => {
     expect(html).toContain("data-asset-trading-workspace");
     expect(html).toContain("data-trade-rail");
     expect(html.indexOf("MARKET CAP")).toBeLessThan(html.indexOf("PRICE TREND"));
-    expect(html.indexOf("PRICE TREND")).toBeLessThan(html.indexOf("DEPTH CHART compact"));
+    expect(html.indexOf("PRICE TREND")).toBeLessThan(html.indexOf("ORDER BOOK"));
+    expect(html.indexOf("ORDER BOOK")).toBeLessThan(html.indexOf("DEPTH CHART compact"));
     expect(html.indexOf("DEPTH CHART compact")).toBeLessThan(html.indexOf("BUY PANEL"));
-    expect(html.indexOf("BUY PANEL")).toBeLessThan(html.indexOf("ORDER BOOK"));
     expect(html.indexOf("ORDER BOOK")).toBeLessThan(html.indexOf("SELL ORDERS"));
     expect(html.indexOf("SELL ORDERS")).toBeLessThan(html.indexOf("BUY ORDERS"));
     expect(html.indexOf("BUY ORDERS")).toBeLessThan(html.indexOf("ASSET DESCRIPTION"));
@@ -354,7 +354,7 @@ describe("on-chain asset read state", () => {
     expect(html).not.toContain("LEFT PLACE BID");
   });
 
-  test("keeps compact market depth above the sticky trade panel and wraps detail tables with anchors", () => {
+  test("keeps compact market depth with the order book and wraps detail tables with anchors", () => {
     const html = renderToStaticMarkup(
       <AssetDetailView
         assets={[assetView()]}
@@ -367,16 +367,24 @@ describe("on-chain asset read state", () => {
 
     const railIndex = html.indexOf("data-trade-rail");
     const railMarkup = html.slice(railIndex - 240, railIndex + 1200);
+    const orderFlowIndex = html.indexOf("data-order-flow");
+    const orderFlowMarkup = html.slice(orderFlowIndex, railIndex);
 
     expect(railIndex).toBeGreaterThanOrEqual(0);
-    expect(railMarkup).toContain("order-2");
-    expect(railMarkup).toContain("xl:order-3");
+    expect(railMarkup).toContain("order-3");
     expect(railMarkup).toContain("xl:sticky");
     expect(railMarkup).toContain("xl:top-24");
+    expect(orderFlowIndex).toBeGreaterThanOrEqual(0);
+    expect(orderFlowMarkup).toContain("ORDER BOOK");
+    expect(orderFlowMarkup).toContain("DEPTH CHART compact");
+    expect(orderFlowMarkup).not.toContain("BUY PANEL");
+    expect(html.indexOf("ORDER BOOK")).toBeLessThan(html.indexOf("DEPTH CHART compact"));
     expect(html.indexOf("DEPTH CHART compact")).toBeLessThan(html.indexOf("BUY PANEL"));
     expect(html).toContain("id=\"sell-orders\"");
     expect(html).toContain("id=\"buy-orders\"");
     expect(html).toContain("data-order-flow");
+    expect(html).toContain("data-order-details-layout=\"paired\"");
+    expect(html).toContain("xl:grid-cols-2");
   });
 
   test("renders asset yield panel with pending claim, distribution records, and deposit entry before trade history", () => {

@@ -78,12 +78,14 @@ interface TestElementProps {
   "data-column-role"?: string;
   "data-depth-bar"?: string;
   "data-depth-price"?: string;
-  "data-empty-side"?: string;
+  "data-best-level"?: string;
   "data-header-side"?: string;
+  "data-orderbook-layout"?: string;
+  "data-orderbook-surface"?: string;
   "data-own-badge"?: string;
-  "data-pair-index"?: string;
   "data-price"?: string;
   "data-row-side"?: string;
+  "data-spread-row"?: string;
   onClick?: () => void;
   style?: CSSProperties;
 }
@@ -135,21 +137,33 @@ function textContent(node: ReactNode): string {
 }
 
 describe("OrderBookView", () => {
-  test("renders mirrored side headers and aligns best bid and ask in the top row", () => {
+  test("renders a stacked ask-spread-bid ladder with best prices closest to the spread", () => {
     const element = (
       <OrderBookView book={orderBookFixture()} isLoading={false} onSelectPrice={vi.fn()} />
     );
+    const html = renderToStaticMarkup(element);
+    const layout = collectElements(element, (props) => props["data-orderbook-layout"] === "stacked");
     const bidHeaders = collectElements(element, (props) => props["data-header-side"] === "bid");
     const askHeaders = collectElements(element, (props) => props["data-header-side"] === "ask");
-    const topRow = collectElements(element, (props) => props["data-pair-index"] === "0")[0];
+    const askRows = collectElements(element, (props) => props["data-row-side"] === "ask");
+    const bidRows = collectElements(element, (props) => props["data-row-side"] === "bid");
 
-    expect(bidHeaders.map((header) => textContent(header))).toEqual(["TOTAL", "SIZE", "PRICE"]);
+    expect(layout).toHaveLength(1);
     expect(askHeaders.map((header) => textContent(header))).toEqual(["PRICE", "SIZE", "TOTAL"]);
-    expect(textContent(topRow)).toContain("110.00");
-    expect(textContent(topRow)).toContain("120.00");
+    expect(bidHeaders.map((header) => textContent(header))).toEqual(["PRICE", "SIZE", "TOTAL"]);
+    expect(askRows.map((row) => textContent(row))).toEqual([
+      expect.stringContaining("130.00"),
+      expect.stringContaining("120.00"),
+    ]);
+    expect(bidRows.map((row) => textContent(row))).toEqual([
+      expect.stringContaining("110.00"),
+      expect.stringContaining("100.00"),
+    ]);
+    expect(html.indexOf("120.00")).toBeLessThan(html.indexOf("MID 115.00"));
+    expect(html.indexOf("MID 115.00")).toBeLessThan(html.indexOf("110.00"));
   });
 
-  test("anchors depth bars at the middle seam with cumulative widths and side colors", () => {
+  test("renders cumulative depth bars in a single ladder column with side colors", () => {
     const element = (
       <OrderBookView book={orderBookFixture()} isLoading={false} onSelectPrice={vi.fn()} />
     );
@@ -169,12 +183,27 @@ describe("OrderBookView", () => {
     expect(bidBar.props.className).toContain("right-0");
     expect(bidBar.props.className).toContain("bg-up/15");
     expect(bidBar.props.style).toMatchObject({ width: "29.41%" });
-    expect(askBar.props.className).toContain("left-0");
+    expect(askBar.props.className).toContain("right-0");
     expect(askBar.props.className).toContain("bg-down/15");
     expect(askBar.props.style).toMatchObject({ width: "88.24%" });
   });
 
-  test("renders the center spread rail and degrades to an em dash for one-sided or empty books", () => {
+  test("marks the exchange-style surface and best bid/ask rows for fast scanning", () => {
+    const element = (
+      <OrderBookView book={orderBookFixture()} isLoading={false} onSelectPrice={vi.fn()} />
+    );
+    const surface = collectElements(
+      element,
+      (props) => props["data-orderbook-surface"] === "exchange-depth",
+    );
+    const bestRows = collectElements(element, (props) => props["data-best-level"] !== undefined);
+
+    expect(surface).toHaveLength(1);
+    expect(bestRows.map((row) => (row.props as TestElementProps)["data-best-level"])).toEqual(["ask", "bid"]);
+    expect(bestRows.every((row) => String(row.props.className).includes("shadow-"))).toBe(true);
+  });
+
+  test("renders the horizontal spread row and degrades to an em dash for one-sided or empty books", () => {
     const twoSidedHtml = renderToStaticMarkup(
       <OrderBookView book={orderBookFixture()} isLoading={false} onSelectPrice={vi.fn()} />,
     );
@@ -193,6 +222,7 @@ describe("OrderBookView", () => {
     );
 
     expect(twoSidedHtml).toContain("data-spread-state=\"ready\"");
+    expect(twoSidedHtml).toContain("data-spread-row=\"stacked\"");
     expect(twoSidedHtml).toContain("MID 115.00");
     expect(twoSidedHtml).toContain("SPREAD 10.00");
     expect(twoSidedHtml).toContain("8.7%");
@@ -202,17 +232,18 @@ describe("OrderBookView", () => {
     expect(emptyHtml).toContain(">—<");
   });
 
-  test("pads the shorter side with empty rows to preserve rank alignment", () => {
+  test("does not pad the shorter side in stacked layout", () => {
     const element = (
       <OrderBookView book={unevenOrderBookFixture()} isLoading={false} onSelectPrice={vi.fn()} />
     );
-    const rows = collectElements(element, (props) => props["data-pair-index"] !== undefined);
-    const bidPlaceholders = collectElements(element, (props) => props["data-empty-side"] === "bid");
+    const askRows = collectElements(element, (props) => props["data-row-side"] === "ask");
+    const bidRows = collectElements(element, (props) => props["data-row-side"] === "bid");
 
-    expect(rows).toHaveLength(3);
-    expect(bidPlaceholders).toHaveLength(2);
-    expect(textContent(rows[0])).toContain("110.00");
-    expect(textContent(rows[0])).toContain("120.00");
+    expect(askRows).toHaveLength(3);
+    expect(bidRows).toHaveLength(1);
+    expect(textContent(askRows[0])).toContain("140.00");
+    expect(textContent(askRows.at(-1) ?? askRows[0])).toContain("120.00");
+    expect(textContent(bidRows[0])).toContain("110.00");
   });
 
   test("renders an empty state without paired order rows", () => {
@@ -221,7 +252,6 @@ describe("OrderBookView", () => {
     );
 
     expect(html).toContain("No open orders");
-    expect(html).not.toContain("data-pair-index=");
     expect(html).not.toContain("data-row-side=");
   });
 

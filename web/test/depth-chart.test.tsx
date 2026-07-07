@@ -97,6 +97,34 @@ describe("DepthChartView", () => {
     expect(html).toContain("130.00");
   });
 
+  test("uses gradient fills and grid guides for an exchange-style depth chart", () => {
+    const html = renderToStaticMarkup(
+      <DepthChartView
+        book={buildOrderBook({
+          bids: [
+            bid({ id: 1n, pricePerShare: unitPriceFromSharePriceCents(110_00n), remaining: 50n }),
+            bid({ id: 2n, pricePerShare: unitPriceFromSharePriceCents(100_00n), remaining: 75n }),
+          ],
+          listings: [
+            listing({
+              id: 3n,
+              pricePerShare: unitPriceFromSharePriceCents(120_00n),
+              remaining: 100n,
+            }),
+          ],
+        })}
+        isLoading={false}
+      />,
+    );
+
+    expect(html).toContain("data-depth-chart-surface=\"exchange\"");
+    expect(html).toContain("data-depth-gradient=\"bid\"");
+    expect(html).toContain("data-depth-gradient=\"ask\"");
+    expect(html).toContain("data-depth-grid=\"horizontal\"");
+    expect(html).toContain("BEST BID");
+    expect(html).toContain("BEST ASK");
+  });
+
   test("renders a compact depth chart with tighter typography for the trade rail", () => {
     const html = renderToStaticMarkup(
       <DepthChartView

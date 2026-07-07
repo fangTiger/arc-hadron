@@ -427,22 +427,29 @@ export function AssetDetailView({
             <PriceChart asset={asset} events={events} />
           </div>
 
+          <div className="order-2 min-w-0 space-y-4" data-order-flow>
+            <OrderBook tokenId={asset.tokenId} onSelectPrice={scrollToOrders} />
+            <DepthChart tokenId={asset.tokenId} variant="compact" />
+          </div>
+
           <aside
-            className="order-2 min-w-0 space-y-4 xl:order-3 xl:sticky xl:top-24 xl:self-start"
+            className="order-3 min-w-0 space-y-4 xl:sticky xl:top-24 xl:self-start"
             data-trade-rail
           >
-            <DepthChart tokenId={asset.tokenId} variant="compact" />
             <BuyPanel asset={asset} />
           </aside>
+        </section>
 
-          <div className="order-3 min-w-0 space-y-5 xl:order-2" data-order-flow>
-            <OrderBook tokenId={asset.tokenId} onSelectPrice={scrollToOrders} />
-            <div className={ordersAnchorClassName("ask")} id="sell-orders">
-              <ListingsTable tokenId={asset.tokenId} />
-            </div>
-            <div className={ordersAnchorClassName("bid")} id="buy-orders">
-              <BidsTable tokenId={asset.tokenId} />
-            </div>
+        <section
+          aria-label="Order details"
+          className="grid gap-5 xl:grid-cols-2"
+          data-order-details-layout="paired"
+        >
+          <div className={ordersAnchorClassName("ask")} id="sell-orders">
+            <ListingsTable tokenId={asset.tokenId} />
+          </div>
+          <div className={ordersAnchorClassName("bid")} id="buy-orders">
+            <BidsTable tokenId={asset.tokenId} />
           </div>
         </section>
 

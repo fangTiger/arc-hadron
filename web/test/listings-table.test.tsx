@@ -20,6 +20,8 @@ const mockState = vi.hoisted(() => ({
   bids: [] as BidView[],
   buyListing: vi.fn(),
   buyPrimary: vi.fn(),
+  cancelBid: vi.fn(),
+  cancelBidStatus: "idle",
   cancelListing: vi.fn(),
   connect: vi.fn(),
   fillBid: vi.fn(),
@@ -128,6 +130,16 @@ vi.mock("@/lib/hooks/useCancelListing", () => ({
   }),
 }));
 
+vi.mock("@/lib/hooks/useCancelBid", () => ({
+  useCancelBid: () => ({
+    cancelBid: mockState.cancelBid,
+    errorText: undefined,
+    reset: vi.fn(),
+    status: mockState.cancelBidStatus,
+    txHash: undefined,
+  }),
+}));
+
 vi.mock("@/lib/hooks/useBids", () => ({
   useBids: () => ({
     bids: mockState.bids,
@@ -193,6 +205,8 @@ describe("secondary listings detail surface", () => {
     mockState.bids = [];
     mockState.fillBid = vi.fn();
     mockState.fillBidStatus = "idle";
+    mockState.cancelBid = vi.fn();
+    mockState.cancelBidStatus = "idle";
     mockState.isBidsLoading = false;
     mockState.isConnected = true;
     mockState.isCorrectChain = true;
@@ -405,6 +419,31 @@ describe("secondary listings detail surface", () => {
     expect(html).toContain("0x2222");
     expect(html).toContain("You");
     expect(html).toContain("Fill");
+    expect(html).toContain("Cancel");
+    expect(html).toContain("data-bid-order-action=\"cancel\"");
+  });
+
+  test("renders an asset-page cancel confirmation for my active bid", () => {
+    mockState.bids = [
+      {
+        active: true,
+        bidder: mockState.address,
+        id: 2n,
+        isOwn: true,
+        pricePerShare: unitPriceFromSharePriceCents(9_600n),
+        remaining: 125n,
+        tokenId: 1n,
+      },
+    ];
+
+    const html = renderWithToast(
+      <BidsTable initialConfirmCancelBidId={2n} tokenId={1n} />,
+    );
+
+    expect(html).toContain("Confirm cancel");
+    expect(html).toContain("Keep");
+    expect(html).toContain("data-bid-order-action=\"confirm-cancel\"");
+    expect(html).not.toContain("CONFIRM FILL");
   });
 
   test("renders the expanded fill form with full amount default and holding validation", () => {

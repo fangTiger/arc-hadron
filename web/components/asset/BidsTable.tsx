@@ -8,6 +8,7 @@ import { validateBidFill } from "@/lib/bid";
 import { HADRON_ASSETS_ABI, HADRON_ASSETS_ADDRESS } from "@/lib/contracts";
 import { formatShares, formatUsdc, shortAddress } from "@/lib/format";
 import { useBids, type BidView } from "@/lib/hooks/useBids";
+import { useCancelBid } from "@/lib/hooks/useCancelBid";
 import { useFillBid } from "@/lib/hooks/useFillBid";
 import type { ListForSaleStatus } from "@/lib/hooks/useListForSale";
 import { useNetworkGuard } from "@/lib/hooks/useNetworkGuard";
@@ -18,6 +19,7 @@ import { buildTxExplorerUrl, useToast } from "@/components/ui/TxToast";
 
 interface BidsTableProps {
   initialAmountInput?: string;
+  initialConfirmCancelBidId?: bigint;
   initialExpandedBidId?: bigint;
   tokenBalanceOverride?: bigint;
   tokenId: bigint;
@@ -143,15 +145,27 @@ function TransactionStatusPanel({
 
 export function BidsTable({
   initialAmountInput,
+  initialConfirmCancelBidId,
   initialExpandedBidId,
   tokenBalanceOverride,
   tokenId,
 }: BidsTableProps) {
   const [expandedBidId, setExpandedBidId] = useState<bigint | null>(initialExpandedBidId ?? null);
   const [amountInput, setAmountInput] = useState<string | null>(initialAmountInput ?? null);
+  const [confirmCancelBidId, setConfirmCancelBidId] = useState<bigint | null>(
+    initialConfirmCancelBidId ?? null,
+  );
+  const [activeCancelBidId, setActiveCancelBidId] = useState<bigint | null>(null);
   const { address, isConnected } = useAccount();
   const { isCorrectChain, switchToArc } = useNetworkGuard();
   const { bids, isLoading } = useBids(tokenId);
+  const {
+    cancelBid,
+    errorText: cancelErrorText,
+    reset: resetCancel,
+    status: cancelStatus,
+    txHash: cancelTxHash,
+  } = useCancelBid();
   const {
     errorText: fillErrorText,
     fillBid,
@@ -162,7 +176,9 @@ export function BidsTable({
   const queryClient = useQueryClient();
   const { pushError, pushSuccess } = useToast();
   const lastFillToastKey = useRef<string | null>(null);
+  const lastCancelToastKey = useRef<string | null>(null);
   const lastFillRefreshKey = useRef<string | null>(null);
+  const lastCancelRefreshKey = useRef<string | null>(null);
   const sortedBids = useMemo(() => [...bids].sort(compareBids), [bids]);
   const expandedBid = sortedBids.find((bid) => bid.id === expandedBidId) ?? null;
   const currentAmountInput = expandedBid
@@ -200,6 +216,7 @@ export function BidsTable({
     tokenBalanceQuery.isLoading,
   ]);
   const isBusy = isFillBusy(fillStatus);
+  const isCancelBusy = cancelStatus === "signing" || cancelStatus === "pending";
 
   useEffect(() => {
     if (fillStatus === "success" && fillTxHash) {
@@ -243,9 +260,50 @@ export function BidsTable({
     refetchTokenBalance,
   ]);
 
+  useEffect(() => {
+    if (cancelStatus === "success" && cancelTxHash) {
+      const key = `cancel-bid-success:${cancelTxHash}`;
+
+      if (lastCancelRefreshKey.current !== key) {
+        lastCancelRefreshKey.current = key;
+        void queryClient.invalidateQueries().catch(() => undefined);
+      }
+
+      if (lastCancelToastKey.current !== key) {
+        pushSuccess({ message: "Bid cancelled", txHash: cancelTxHash });
+        lastCancelToastKey.current = key;
+        setConfirmCancelBidId(null);
+        setActiveCancelBidId(null);
+      }
+
+      return;
+    }
+
+    if (cancelStatus === "error" && cancelErrorText) {
+      const key = `cancel-bid-error:${cancelErrorText}:${cancelTxHash ?? ""}`;
+
+      if (lastCancelToastKey.current !== key) {
+        pushError(cancelErrorText);
+        lastCancelToastKey.current = key;
+      }
+
+      return;
+    }
+
+    lastCancelToastKey.current = null;
+  }, [
+    cancelErrorText,
+    cancelStatus,
+    cancelTxHash,
+    pushError,
+    pushSuccess,
+    queryClient,
+  ]);
+
   function openFill(bid: BidView) {
     setExpandedBidId((current) => (current === bid.id ? null : bid.id));
     setAmountInput(sharesInputFromUnits(bid.remaining));
+    setConfirmCancelBidId(null);
     resetFill();
   }
 
@@ -278,6 +336,23 @@ export function BidsTable({
   function resetFillFlow() {
     lastFillToastKey.current = null;
     resetFill();
+  }
+
+  function requestCancel(bidId: bigint) {
+    if (confirmCancelBidId !== bidId) {
+      setConfirmCancelBidId(bidId);
+      setExpandedBidId(null);
+      resetCancel();
+      return;
+    }
+
+    if (!isCorrectChain) {
+      switchToArc();
+      return;
+    }
+
+    setActiveCancelBidId(bidId);
+    cancelBid(bidId);
   }
 
   const validationError = validation?.ok === false ? validation.errorText : null;
@@ -325,6 +400,8 @@ export function BidsTable({
             {sortedBids.map((bid) => {
               const isExpanded = expandedBidId === bid.id;
               const canFill = isConnected && !bid.isOwn && tokenBalance > 0n;
+              const isCancelTarget = activeCancelBidId === bid.id;
+              const isBidCancelBusy = isCancelTarget && isCancelBusy;
 
               return (
                 <Fragment key={bid.id.toString()}>
@@ -366,18 +443,66 @@ export function BidsTable({
                       </div>
                     </td>
                     <td className="px-4 py-4 align-middle">
-                      <GlowButton
-                        disabled={!canFill || isBusy}
-                        onClick={(event) => {
-                          stopRowNavigation(event);
-                          if (canFill) {
-                            openFill(bid);
-                          }
-                        }}
-                        size="sm"
-                      >
-                        Fill
-                      </GlowButton>
+                      {bid.isOwn ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                          {confirmCancelBidId === bid.id ? (
+                            <>
+                              <button
+                                className="h-8 border border-border bg-bg/50 px-3 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-text-dim transition-colors duration-200 hover:border-border-glow hover:text-text disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-muted"
+                                data-bid-order-action="confirm-cancel"
+                                disabled={isBidCancelBusy || (isCancelTarget && cancelStatus === "success")}
+                                onClick={(event) => {
+                                  stopRowNavigation(event);
+                                  requestCancel(bid.id);
+                                }}
+                                type="button"
+                              >
+                                {isBidCancelBusy
+                                  ? "Confirming..."
+                                  : isCancelTarget && cancelStatus === "success"
+                                    ? "Cancelled"
+                                    : "Confirm cancel"}
+                              </button>
+                              <SecondaryButton
+                                disabled={isCancelBusy}
+                                onClick={() => {
+                                  setConfirmCancelBidId(null);
+                                  setActiveCancelBidId(null);
+                                  resetCancel();
+                                }}
+                              >
+                                Keep
+                              </SecondaryButton>
+                            </>
+                          ) : (
+                            <button
+                              className="h-8 border border-border bg-bg/50 px-3 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-text-dim transition-colors duration-200 hover:border-border-glow hover:text-text disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-muted"
+                              data-bid-order-action="cancel"
+                              disabled={isCancelBusy}
+                              onClick={(event) => {
+                                stopRowNavigation(event);
+                                requestCancel(bid.id);
+                              }}
+                              type="button"
+                            >
+                              Cancel
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        <GlowButton
+                          disabled={!canFill || isBusy}
+                          onClick={(event) => {
+                            stopRowNavigation(event);
+                            if (canFill) {
+                              openFill(bid);
+                            }
+                          }}
+                          size="sm"
+                        >
+                          Fill
+                        </GlowButton>
+                      )}
                     </td>
                   </tr>
 

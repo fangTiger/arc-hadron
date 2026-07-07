@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type CSSProperties } from "react";
+import { useMemo } from "react";
 import { formatShares, formatUsdc } from "@/lib/format";
 import { useBids } from "@/lib/hooks/useBids";
 import { useListings } from "@/lib/hooks/useListings";
@@ -20,24 +20,23 @@ interface OrderBookViewProps {
   onSelectPrice?: (side: OrderBookSide) => void;
 }
 
-export interface PairedOrderBookLevel {
-  bid: OrderBookLevel | null;
-  ask: OrderBookLevel | null;
+export interface StackedOrderBookLevels {
+  asks: OrderBookLevel[];
+  bids: OrderBookLevel[];
 }
 
-export function pairLevels(
+export function stackLevels(
   bids: OrderBookLevel[],
   asks: OrderBookLevel[],
   options: { max: number },
-): PairedOrderBookLevel[] {
+): StackedOrderBookLevels {
   const bidLevels = bids.slice(0, options.max);
-  const askLevels = asks.slice(0, options.max);
-  const rowCount = Math.max(bidLevels.length, askLevels.length);
+  const askLevels = asks.slice(0, options.max).reverse();
 
-  return Array.from({ length: rowCount }, (_, index) => ({
-    ask: askLevels[index] ?? null,
-    bid: bidLevels[index] ?? null,
-  }));
+  return {
+    asks: askLevels,
+    bids: bidLevels,
+  };
 }
 
 const ORDER_BOOK_LEVEL_LIMIT = 12;
@@ -88,31 +87,15 @@ function HeaderCell({
 }
 
 function SideHeader({ side }: { side: OrderBookSide }) {
-  if (side === "bid") {
-    return (
-      <div className="grid grid-cols-2 border-b border-border bg-bg/60 px-2 py-2 font-mono text-[9px] uppercase tracking-[0.16em] text-muted sm:grid-cols-3">
-        <HeaderCell className="max-sm:hidden" role="total" side="bid">
-          TOTAL
-        </HeaderCell>
-        <HeaderCell className="text-right" role="size" side="bid">
-          SIZE
-        </HeaderCell>
-        <HeaderCell className="text-right" role="price" side="bid">
-          PRICE
-        </HeaderCell>
-      </div>
-    );
-  }
-
   return (
-    <div className="grid grid-cols-2 border-b border-border bg-bg/60 px-2 py-2 font-mono text-[9px] uppercase tracking-[0.16em] text-muted sm:grid-cols-3">
-      <HeaderCell role="price" side="ask">
+    <div className="grid grid-cols-[minmax(5.5rem,1fr)_minmax(4.5rem,0.8fr)] border-b border-border bg-bg/60 px-3 py-2 font-mono text-[9px] uppercase tracking-[0.16em] text-muted sm:grid-cols-[minmax(6rem,0.9fr)_minmax(5rem,0.7fr)_minmax(5rem,0.8fr)]">
+      <HeaderCell role="price" side={side}>
         PRICE
       </HeaderCell>
-      <HeaderCell className="text-right" role="size" side="ask">
+      <HeaderCell className="text-right" role="size" side={side}>
         SIZE
       </HeaderCell>
-      <HeaderCell className="text-right max-sm:hidden" role="total" side="ask">
+      <HeaderCell className="text-right max-sm:hidden" role="total" side={side}>
         TOTAL
       </HeaderCell>
     </div>
@@ -129,8 +112,10 @@ function DepthBar({
   side: OrderBookSide;
 }) {
   const isAsk = side === "ask";
-  const anchorClassName = isAsk ? "left-0" : "right-0";
-  const toneClassName = isAsk ? "bg-down/15" : "bg-up/15";
+  const anchorClassName = "right-0";
+  const toneClassName = isAsk
+    ? "bg-down/15 bg-linear-to-l from-down/20 to-down/5"
+    : "bg-up/15 bg-linear-to-l from-up/20 to-up/5";
 
   return (
     <span
@@ -163,91 +148,44 @@ function SizeCell({ level }: { level: OrderBookLevel }) {
   );
 }
 
-function EmptySideRow({ side }: { side: OrderBookSide }) {
-  const sideClassName =
-    side === "bid"
-      ? "grid-cols-2 px-2 sm:grid-cols-3"
-      : "grid-cols-2 px-2 sm:grid-cols-3";
-
-  return (
-    <div
-      aria-hidden="true"
-      className={`grid min-h-[42px] border-t border-border/70 bg-bg/15 py-2 ${sideClassName}`}
-      data-empty-side={side}
-    >
-      {side === "bid" ? (
-        <>
-          <span className="max-sm:hidden" data-column-role="total" />
-          <span />
-          <span />
-        </>
-      ) : (
-        <>
-          <span />
-          <span />
-          <span className="max-sm:hidden" data-column-role="total" />
-        </>
-      )}
-    </div>
-  );
-}
-
 function LevelRow({
+  isBest,
   level,
   maxCumulative,
   onSelectPrice,
   side,
 }: {
-  level: OrderBookLevel | null;
+  isBest?: boolean;
+  level: OrderBookLevel;
   maxCumulative: bigint;
   onSelectPrice?: (side: OrderBookSide) => void;
   side: OrderBookSide;
 }) {
-  if (level === null) {
-    return <EmptySideRow side={side} />;
-  }
-
   const isAsk = side === "ask";
   const tone = isAsk ? "text-down" : "text-up";
   const hoverClassName = isAsk ? "hover:bg-down/10" : "hover:bg-up/10";
+  const bestClassName = isBest
+    ? isAsk
+      ? "bg-down/10 shadow-[inset_2px_0_0_rgba(248,113,113,0.82)]"
+      : "bg-up/10 shadow-[inset_-2px_0_0_rgba(52,211,153,0.82)]"
+    : "";
   const buttonClassName = [
-    "group relative grid min-h-[42px] w-full grid-cols-2 overflow-hidden border-t border-border/70 px-2 py-2 font-mono text-[11px] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neon sm:grid-cols-3",
+    "group relative grid min-h-[34px] w-full grid-cols-[minmax(5.5rem,1fr)_minmax(4.5rem,0.8fr)] overflow-hidden border-t border-border/70 px-3 py-1.5 font-mono text-[11px] tabular-nums transition-colors duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neon sm:grid-cols-[minmax(6rem,0.9fr)_minmax(5rem,0.7fr)_minmax(5rem,0.8fr)]",
     hoverClassName,
+    bestClassName,
   ].join(" ");
-
-  if (side === "bid") {
-    return (
-      <button
-        className={buttonClassName}
-        data-price={level.price.toString()}
-        data-row-side="bid"
-        data-side="bid"
-        onClick={() => onSelectPrice?.("bid")}
-        type="button"
-      >
-        <DepthBar level={level} maxCumulative={maxCumulative} side="bid" />
-        <span className="relative max-sm:hidden text-left text-text" data-column-role="total">
-          {formatShares(level.cum)}
-        </span>
-        <SizeCell level={level} />
-        <span className={`relative flex min-w-0 items-center justify-end gap-2 text-right ${tone}`}>
-          <span>{formatUnitPrice(level.price)}</span>
-          {level.isOwn ? <OwnBadge /> : null}
-        </span>
-      </button>
-    );
-  }
 
   return (
     <button
       className={buttonClassName}
       data-price={level.price.toString()}
-      data-row-side="ask"
-      data-side="ask"
-      onClick={() => onSelectPrice?.("ask")}
+      data-best-level={isBest ? side : undefined}
+      data-row-side={side}
+      data-side={side}
+      onClick={() => onSelectPrice?.(side)}
       type="button"
     >
-      <DepthBar level={level} maxCumulative={maxCumulative} side="ask" />
+      <DepthBar level={level} maxCumulative={maxCumulative} side={side} />
       <span className={`relative flex min-w-0 items-center gap-2 text-left ${tone}`}>
         <span>{formatUnitPrice(level.price)}</span>
         {level.isOwn ? <OwnBadge /> : null}
@@ -263,21 +201,19 @@ function LevelRow({
 function SpreadRail({
   book,
   className = "",
-  style,
 }: {
   book: OrderBookModel;
   className?: string;
-  style?: CSSProperties;
 }) {
   if (book.mid === null || book.spread === null || book.spreadPct === null) {
     return (
       <div
         className={[
-          "flex min-h-[42px] flex-col items-center justify-center border-x border-t border-border/70 bg-bg/55 px-1 py-2 text-center font-mono text-[12px] uppercase tracking-[0.16em] text-muted",
+          "flex min-h-[42px] items-center justify-center border-y border-border bg-bg/70 px-3 py-2 text-center font-mono text-[12px] uppercase tracking-[0.16em] text-muted",
           className,
         ].join(" ")}
+        data-spread-row="stacked"
         data-spread-state="empty"
-        style={style}
       >
         —
       </div>
@@ -287,13 +223,13 @@ function SpreadRail({
   return (
     <div
       className={[
-        "flex min-h-[42px] flex-col items-center justify-center gap-1 border-x border-t border-border/70 bg-bg/70 px-1 py-2 text-center font-mono uppercase",
+        "flex min-h-[42px] items-center justify-center gap-3 border-y border-border bg-bg/75 px-3 py-2 text-center font-mono uppercase",
         className,
       ].join(" ")}
+      data-spread-row="stacked"
       data-spread-state="ready"
-      style={style}
     >
-      <span className="text-[10px] tracking-[0.14em] text-text">MID {formatUnitPrice(book.mid)}</span>
+      <span className="text-sm tracking-[0.08em] text-text">MID {formatUnitPrice(book.mid)}</span>
       <span className="text-[10px] tracking-[0.14em] text-muted">SPREAD {formatUnitPrice(book.spread)}</span>
       <span className="text-[10px] tracking-[0.14em] text-muted">{book.spreadPct.toFixed(1)}%</span>
     </div>
@@ -301,12 +237,8 @@ function SpreadRail({
 }
 
 export function OrderBookView({ book, isLoading, onSelectPrice }: OrderBookViewProps) {
-  const pairs = pairLevels(book.bids, book.asks, { max: ORDER_BOOK_LEVEL_LIMIT });
-  const hasOrders = pairs.length > 0;
-  const spreadStyle: CSSProperties = {
-    gridColumn: "2",
-    gridRow: `2 / span ${Math.max(pairs.length, 1)}`,
-  };
+  const levels = stackLevels(book.bids, book.asks, { max: ORDER_BOOK_LEVEL_LIMIT });
+  const hasOrders = levels.asks.length > 0 || levels.bids.length > 0;
 
   return (
     <section className="border border-border bg-panel p-5 sm:p-6">
@@ -321,36 +253,43 @@ export function OrderBookView({ book, isLoading, onSelectPrice }: OrderBookViewP
       </div>
 
       <div
-        className="mt-5 grid grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] overflow-hidden border border-border bg-bg/35 sm:grid-cols-[minmax(0,1fr)_92px_minmax(0,1fr)]"
-        data-orderbook-layout="bilateral"
+        className="mt-5 overflow-hidden border border-border bg-[linear-gradient(180deg,rgba(13,27,43,0.74),rgba(5,7,13,0.24))] shadow-[inset_0_1px_0_rgba(234,246,255,0.04)]"
+        data-orderbook-layout="stacked"
+        data-orderbook-surface="exchange-depth"
       >
-        <SideHeader side="bid" />
-        <div className="border-x border-b border-border bg-bg/60 px-1 py-2 text-center font-mono text-[9px] uppercase tracking-[0.16em] text-muted">
-          SPREAD
-        </div>
-        <SideHeader side="ask" />
-
         {hasOrders ? (
-          pairs.map((pair, index) => (
-            <div className="contents" data-pair-index={index.toString()} key={`pair:${index}`}>
-              <LevelRow
-                level={pair.bid}
-                maxCumulative={book.maxCumulative}
-                onSelectPrice={onSelectPrice}
-                side="bid"
-              />
-              {index === 0 ? <SpreadRail book={book} style={spreadStyle} /> : null}
-              <LevelRow
-                level={pair.ask}
-                maxCumulative={book.maxCumulative}
-                onSelectPrice={onSelectPrice}
-                side="ask"
-              />
+          <>
+            <div data-ladder-section="asks">
+              <SideHeader side="ask" />
+              {levels.asks.map((level, index) => (
+                <LevelRow
+                  isBest={index === levels.asks.length - 1}
+                  key={`ask:${level.price.toString()}`}
+                  level={level}
+                  maxCumulative={book.maxCumulative}
+                  onSelectPrice={onSelectPrice}
+                  side="ask"
+                />
+              ))}
             </div>
-          ))
+            <SpreadRail book={book} />
+            <div data-ladder-section="bids">
+              <SideHeader side="bid" />
+              {levels.bids.map((level, index) => (
+                <LevelRow
+                  isBest={index === 0}
+                  key={`bid:${level.price.toString()}`}
+                  level={level}
+                  maxCumulative={book.maxCumulative}
+                  onSelectPrice={onSelectPrice}
+                  side="bid"
+                />
+              ))}
+            </div>
+          </>
         ) : (
-          <div className="col-span-3 px-4 py-8 text-center">
-            <SpreadRail book={book} className="mx-auto mb-3 max-w-[92px] border border-border/70" />
+          <div className="px-4 py-8 text-center">
+            <SpreadRail book={book} className="mx-auto mb-3 max-w-[220px] border border-border/70" />
             <p className="text-sm text-muted">No open orders</p>
           </div>
         )}

@@ -14,12 +14,16 @@ import { unitPriceToSharePrice } from "@/lib/shares";
 
 interface DepthChartProps {
   tokenId: bigint;
+  variant?: DepthChartVariant;
 }
 
 interface DepthChartViewProps {
   book: OrderBookModel;
   isLoading: boolean;
+  variant?: DepthChartVariant;
 }
+
+type DepthChartVariant = "default" | "compact";
 
 interface ChartPoint {
   x: number;
@@ -148,7 +152,7 @@ function endLabel(book: OrderBookModel, side: "left" | "right"): string {
   return highestAsk === undefined ? "—" : formatUnitPrice(highestAsk);
 }
 
-export function DepthChartView({ book, isLoading }: DepthChartViewProps) {
+export function DepthChartView({ book, isLoading, variant = "default" }: DepthChartViewProps) {
   const series = buildDepthSeries(book);
   const bidDomain = priceDomain(series.bids);
   const askDomain = priceDomain(series.asks);
@@ -165,25 +169,51 @@ export function DepthChartView({ book, isLoading }: DepthChartViewProps) {
     side: "ask",
   });
   const hasDepth = bidPoints.length > 0 || askPoints.length > 0;
+  const isCompact = variant === "compact";
+  const labelClassName = isCompact
+    ? "sr-only"
+    : "font-mono text-[10px] uppercase tracking-[0.2em] text-neon-dim";
+  const headingClassName = isCompact
+    ? "font-mono text-[10px] uppercase tracking-[0.08em] text-text"
+    : "mt-2 font-mono text-[11px] uppercase tracking-[0.2em] text-text";
+  const statusClassName = isCompact
+    ? "border border-border bg-bg/60 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-muted"
+    : "border border-border bg-bg/60 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-muted";
+  const chartShellClassName = isCompact
+    ? "mt-2 border border-border bg-bg/35 p-1.5"
+    : "mt-5 border border-border bg-bg/35 p-3";
+  const chartClassName = isCompact ? "h-20 w-full" : "h-40 w-full";
+  const emptyClassName = isCompact
+    ? "mt-3 border border-dashed border-border bg-bg/35 p-4 text-center text-xs text-muted"
+    : "mt-5 border border-dashed border-border bg-bg/35 p-6 text-center text-sm text-muted";
+  const axisLabelsClassName = isCompact
+    ? "mt-1.5 grid grid-cols-3 gap-2 font-mono text-[10px] tabular-nums tracking-normal text-muted"
+    : "mt-3 grid grid-cols-3 gap-2 font-mono text-[10px] tabular-nums tracking-normal text-muted";
+  const leftLabel = endLabel(book, "left");
+  const midLabel = book.mid === null ? "MID —" : `MID ${formatUnitPrice(book.mid)}`;
+  const rightLabel = endLabel(book, "right");
 
   return (
-    <section className="border border-border bg-panel p-5 sm:p-6">
+    <section
+      className={isCompact ? "border border-border bg-panel p-2.5 sm:p-3" : "border border-border bg-panel p-5 sm:p-6"}
+      data-depth-chart-variant={variant}
+    >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-dim">MARKET DEPTH</p>
-          <h2 className="mt-2 font-mono text-[11px] uppercase tracking-[0.2em] text-text">DEPTH CHART</h2>
+          <p className={labelClassName}>MARKET DEPTH</p>
+          <h2 className={headingClassName}>DEPTH CHART</h2>
         </div>
-        <span className="border border-border bg-bg/60 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
+        <span className={statusClassName}>
           {isLoading ? "LOADING" : `${series.bids.length + series.asks.length} POINTS`}
         </span>
       </div>
 
       {hasDepth ? (
-        <div className="mt-5 border border-border bg-bg/35 p-3">
+        <div className={chartShellClassName}>
           <svg
             aria-label="Order book depth chart"
-            className="h-40 w-full"
-            preserveAspectRatio="none"
+            className={chartClassName}
+            preserveAspectRatio="xMidYMid meet"
             viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
             width="100%"
           >
@@ -211,42 +241,21 @@ export function DepthChartView({ book, isLoading }: DepthChartViewProps) {
                 <path d={stepLinePath(askPoints)} fill="none" stroke={DOWN_COLOR} strokeWidth="2" />
               </>
             ) : null}
-            {book.mid !== null ? (
-              <text
-                fill="#9ca3af"
-                fontFamily="var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace"
-                fontSize="10"
-                textAnchor="middle"
-                x={MID_X}
-                y={148}
-              >
-                MID {formatUnitPrice(book.mid)}
-              </text>
-            ) : null}
-            <text
-              fill="#7d8591"
-              fontFamily="var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace"
-              fontSize="10"
-              textAnchor="start"
-              x={LEFT_X}
-              y={148}
-            >
-              {endLabel(book, "left")}
-            </text>
-            <text
-              fill="#7d8591"
-              fontFamily="var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace"
-              fontSize="10"
-              textAnchor="end"
-              x={RIGHT_X}
-              y={148}
-            >
-              {endLabel(book, "right")}
-            </text>
           </svg>
+          <div className={axisLabelsClassName} data-depth-axis-labels>
+            <span className="truncate text-left" data-depth-label="left">
+              {leftLabel}
+            </span>
+            <span className="truncate text-center text-text-dim" data-depth-label="mid">
+              {midLabel}
+            </span>
+            <span className="truncate text-right" data-depth-label="right">
+              {rightLabel}
+            </span>
+          </div>
         </div>
       ) : (
-        <div className="mt-5 border border-dashed border-border bg-bg/35 p-6 text-center text-sm text-muted">
+        <div className={emptyClassName}>
           Awaiting order book depth
         </div>
       )}
@@ -254,10 +263,16 @@ export function DepthChartView({ book, isLoading }: DepthChartViewProps) {
   );
 }
 
-export default function DepthChart({ tokenId }: DepthChartProps) {
+export default function DepthChart({ tokenId, variant = "default" }: DepthChartProps) {
   const { bids, isLoading: isBidsLoading } = useBids(tokenId);
   const { isLoading: isListingsLoading, listings } = useListings(tokenId);
   const book = useMemo(() => buildOrderBook({ bids, listings }), [bids, listings]);
 
-  return <DepthChartView book={book} isLoading={isBidsLoading || isListingsLoading} />;
+  return (
+    <DepthChartView
+      book={book}
+      isLoading={isBidsLoading || isListingsLoading}
+      variant={variant}
+    />
+  );
 }

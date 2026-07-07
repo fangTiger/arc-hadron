@@ -75,4 +75,16 @@ describe("assistant asset context", () => {
 
     expect(html).toContain("ASSISTANT");
   });
+
+  test("renders the brand mark before HADRON without the decorative trailing dot", () => {
+    pathnameMock.mockReturnValue("/");
+
+    const html = renderToStaticMarkup(<TopBar />);
+    const markIndex = html.indexOf("data-brand-mark=\"true\"");
+    const brandIndex = html.indexOf(">HADRON<");
+
+    expect(markIndex).toBeGreaterThanOrEqual(0);
+    expect(brandIndex).toBeGreaterThan(markIndex);
+    expect(html).not.toContain("HADRON<span class=\"text-neon\">.</span>");
+  });
 });

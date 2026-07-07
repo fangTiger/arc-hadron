@@ -6,6 +6,7 @@ import type { AssetView } from "../lib/mappers";
 
 const useAiGenerationMock = vi.hoisted(() => vi.fn());
 const routerReplaceMock = vi.hoisted(() => vi.fn());
+const searchParamsMock = vi.hoisted(() => ({ value: "" }));
 
 vi.mock("@/lib/ai/useAiGeneration", () => ({
   useAiGeneration: useAiGenerationMock,
@@ -14,7 +15,7 @@ vi.mock("@/lib/ai/useAiGeneration", () => ({
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
   useRouter: () => ({ replace: routerReplaceMock }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => new URLSearchParams(searchParamsMock.value),
 }));
 
 vi.mock("@/components/market/ActivityPanel", () => ({
@@ -208,6 +209,7 @@ describe("MarketBrief", () => {
 
   test("mounts above the activity block on the market page", () => {
     useAiGenerationMock.mockReturnValue(aiState());
+    searchParamsMock.value = "";
 
     const html = renderToStaticMarkup(
       <HomeView
@@ -224,5 +226,65 @@ describe("MarketBrief", () => {
 
     expect(html.indexOf("MARKET BRIEF")).toBeGreaterThanOrEqual(0);
     expect(html.indexOf("MARKET BRIEF")).toBeLessThan(html.indexOf("ACTIVITY"));
+  });
+
+  test("does not expose the activity panel when there is no market activity", () => {
+    useAiGenerationMock.mockReturnValue(aiState());
+    searchParamsMock.value = "";
+
+    const html = renderToStaticMarkup(
+      <HomeView
+        assets={[assetView()]}
+        errorZh={undefined}
+        events={[]}
+        eventsError={undefined}
+        isAssetsLoading={false}
+        isEventsLoading={false}
+        marketListings={[]}
+        nowMs={NOW_MS}
+      />,
+    );
+
+    expect(html).toContain("MARKET BRIEF");
+    expect(html).not.toContain("ACTIVITY");
+  });
+
+  test("mounts a compact filter toolbar before the market table and secondary panels", () => {
+    useAiGenerationMock.mockReturnValue(aiState());
+    searchParamsMock.value = "q=nomatch";
+
+    const html = renderToStaticMarkup(
+      <HomeView
+        assets={[assetView()]}
+        errorZh={undefined}
+        events={[tradeEvent()]}
+        eventsError={undefined}
+        isAssetsLoading={false}
+        isEventsLoading={false}
+        marketListings={[listing()]}
+        nowMs={NOW_MS}
+      />,
+    );
+    const toolbarIndex = html.indexOf("data-market-filter-toolbar");
+    const tableIndex = html.indexOf("MARKET TABLE");
+    const workbenchIndex = html.indexOf("data-market-workbench");
+    const sideRailIndex = html.indexOf("data-market-side-rail");
+    const toolbarMarkup = html.slice(Math.max(0, toolbarIndex - 220), toolbarIndex + 1200);
+
+    expect(toolbarIndex).toBeGreaterThanOrEqual(0);
+    expect(workbenchIndex).toBeGreaterThan(toolbarIndex);
+    expect(sideRailIndex).toBeGreaterThan(tableIndex);
+    expect(toolbarMarkup).toContain("data-market-command-bar=\"true\"");
+    expect(toolbarMarkup).toContain("border-y");
+    expect(toolbarMarkup).not.toContain("bg-panel/75");
+    expect(toolbarMarkup).not.toContain("p-3 sm:p-4");
+    expect(html.indexOf("SEARCH ASSET / TICKER")).toBeGreaterThan(toolbarIndex);
+    expect(html.indexOf("CATEGORIES")).toBeGreaterThan(toolbarIndex);
+    expect(html.indexOf("Issuer")).toBeGreaterThan(toolbarIndex);
+    expect(html.indexOf("4-6%")).toBeGreaterThan(toolbarIndex);
+    expect(html.indexOf(">Reset<")).toBeGreaterThan(toolbarIndex);
+    expect(tableIndex).toBeGreaterThan(toolbarIndex);
+    expect(tableIndex).toBeLessThan(html.indexOf("MARKET BRIEF"));
+    expect(tableIndex).toBeLessThan(html.indexOf("ACTIVITY"));
   });
 });

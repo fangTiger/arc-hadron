@@ -8,6 +8,7 @@ import {
   formatListingPriceInput,
   ListForSaleForm,
 } from "@/components/trading/ListForSaleForm";
+import { PlaceBidPanel } from "@/components/asset/PlaceBidPanel";
 import { ARC_CHAIN_ID } from "@/lib/chain";
 import { HADRON_ASSETS_ABI, HADRON_ASSETS_ADDRESS } from "@/lib/contracts";
 import { formatShares, formatUsdc, shortAddress } from "@/lib/format";
@@ -51,7 +52,7 @@ export async function refreshPurchaseReads({
   await Promise.all([refetchBalance(), invalidateQueries()]);
 }
 
-type TradeMode = "buy" | "sell";
+type TradeMode = "buy" | "sell" | "bid";
 
 interface BuyPanelProps {
   asset: AssetView;
@@ -66,7 +67,7 @@ interface SellDraft {
 
 function tradeTabClassName(isActive: boolean) {
   return [
-    "h-9 flex-1 border px-3 font-mono text-[10px] font-semibold uppercase tracking-[0.2em]",
+    "h-7 flex-1 border px-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em]",
     "transition-colors duration-200",
     isActive
       ? "border-neon bg-neon/10 text-neon"
@@ -82,8 +83,8 @@ function TradeTabs({
   onChange: (mode: TradeMode) => void;
 }) {
   return (
-    <div aria-label="Trade mode" className="mb-5 grid grid-cols-2 gap-2" role="tablist">
-      {(["buy", "sell"] as const).map((mode) => (
+    <div aria-label="Trade mode" className="mb-3 grid grid-cols-3 gap-2" role="tablist">
+      {(["buy", "sell", "bid"] as const).map((mode) => (
         <button
           aria-selected={activeMode === mode}
           className={tradeTabClassName(activeMode === mode)}
@@ -371,101 +372,102 @@ export function BuyPanel({ asset, initialMode = "buy" }: BuyPanelProps) {
   }
 
   return (
-    <aside className="border border-border bg-panel p-5">
+    <aside className="border border-border bg-panel p-3" data-buy-panel-density="compact">
       <TradeTabs activeMode={activeMode} onChange={setActiveMode} />
 
       {activeMode === "buy" ? (
         <>
-          {bestAsk ? (
-            <div className="mb-5 border-b border-border pb-5">
-              <div className="flex items-center justify-between gap-4">
-                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">BEST ASK</p>
-                <p className="font-mono text-sm text-text">
-                  {formatUsdc(unitPriceToSharePrice(bestAsk.pricePerShare))} USDC
-                </p>
-              </div>
-              <p className="mt-2 text-right font-mono text-[10px] uppercase tracking-[0.18em] text-text-dim">
-                {formatShares(bestAsk.remaining)} SHARES
+          <div className="grid grid-cols-2 overflow-hidden border-y border-border bg-bg/25">
+            <div className="border-r border-border p-2.5">
+              <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted">BEST ASK</p>
+              <p className="mt-1.5 font-mono text-sm text-text">
+                {bestAsk ? `${formatUsdc(unitPriceToSharePrice(bestAsk.pricePerShare))} USDC` : "—"}
+              </p>
+              <p className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-text-dim">
+                {bestAsk ? `${formatShares(bestAsk.remaining)} SHARES` : "NO ASKS"}
               </p>
             </div>
-          ) : null}
-
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">PRIMARY OFFERING</p>
-            <p className="mt-4 font-mono text-4xl font-semibold leading-none text-text">
-              {offering ? formatUsdc(unitPriceToSharePrice(offering.pricePerShare)) : "—"}
-            </p>
-            <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.2em] text-text-dim">USDC / SHARE</p>
-            <p className="mt-5 font-mono text-[10px] uppercase tracking-[0.2em] text-neon-dim">
-              {offering ? `REMAINING ${formatShares(offering.remaining)} SHARES` : "NO ACTIVE OFFERING"}
-            </p>
+            <div className="p-2.5">
+              <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted">PRIMARY OFFERING</p>
+              <p className="mt-1.5 font-mono text-sm text-text">
+                {offering ? `${formatUsdc(unitPriceToSharePrice(offering.pricePerShare))} USDC` : "—"}
+              </p>
+              <p className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-neon-dim">
+                {offering ? `${formatShares(offering.remaining)} SHARES` : "NO OFFERING"}
+              </p>
+            </div>
           </div>
 
-          <label className="mt-8 block">
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">AMOUNT</span>
-            <input
-              className="mt-3 h-12 w-full border border-border bg-bg px-4 font-mono text-lg text-text outline-none transition-colors duration-200 placeholder:text-muted focus:border-neon disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-text-dim"
-              disabled={status === "signing" || status === "pending"}
-              inputMode="decimal"
-              onChange={(event) => setAmountInput(event.target.value)}
-              placeholder="1"
-              value={amountInput}
-            />
-          </label>
+          <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(128px,0.55fr)] sm:items-end">
+            <label className="block">
+              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">AMOUNT</span>
+              <input
+                className="mt-2 h-9 w-full border border-border bg-bg px-3 font-mono text-base text-text outline-none transition-colors duration-200 placeholder:text-muted focus:border-neon disabled:cursor-not-allowed disabled:bg-muted/20 disabled:text-text-dim"
+                disabled={status === "signing" || status === "pending"}
+                inputMode="decimal"
+                onChange={(event) => setAmountInput(event.target.value)}
+                placeholder="1"
+                value={amountInput}
+              />
+            </label>
+
+            <div
+              className={status === "success" || status === "error" ? "sm:col-span-2" : ""}
+              data-buy-primary-action
+            >
+              {status === "success" ? (
+                <div className="border border-up/70 bg-up/10 p-4">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-up">Purchase successful</p>
+                  {txHash ? (
+                    <a
+                      className="mt-3 inline-flex font-mono text-[11px] uppercase tracking-[0.2em] text-neon-dim underline-offset-4 transition-colors duration-200 hover:text-neon hover:underline"
+                      href={buildTxExplorerUrl(explorerUrl, txHash)}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      {shortAddress(txHash)}
+                    </a>
+                  ) : null}
+                  <SecondaryButton onClick={resetPurchase}>Buy again</SecondaryButton>
+                </div>
+              ) : status === "error" ? (
+                <div className="border border-down/70 bg-down/10 p-4">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-down">
+                    {errorText ?? "Transaction failed, please retry"}
+                  </p>
+                  <SecondaryButton onClick={resetPurchase}>Retry</SecondaryButton>
+                </div>
+              ) : (
+                <GlowButton
+                  className="w-full gap-2"
+                  disabled={isButtonDisabled}
+                  onClick={submitBuy}
+                  size="sm"
+                >
+                  {status === "pending" ? (
+                    <span className="size-3 animate-spin rounded-full border border-current border-t-transparent motion-reduce:animate-none" />
+                  ) : null}
+                  <span>{buttonLabel}</span>
+                  {status === "pending" && txHash ? <span className="text-[10px]">{shortAddress(txHash)}</span> : null}
+                </GlowButton>
+              )}
+            </div>
+          </div>
 
           {validationError ? <p className="mt-3 text-sm leading-6 text-down">{validationError}</p> : null}
 
-          <div className="mt-6 divide-y divide-border border-y border-border">
-            <div className="flex items-center justify-between gap-4 py-4">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">TOTAL</p>
-              <p className="font-mono text-sm text-text">{totalText}</p>
+          <div className="mt-3 grid grid-cols-2 gap-3 border-t border-border pt-2.5">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">TOTAL</p>
+              <p className="mt-1 font-mono text-sm text-text">{totalText}</p>
             </div>
-            <div className="flex items-center justify-between gap-4 py-4">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">BALANCE</p>
-              <p className="font-mono text-sm text-text-dim">{balanceText}</p>
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">BALANCE</p>
+              <p className="mt-1 font-mono text-sm text-text-dim">{balanceText}</p>
             </div>
-          </div>
-
-          <div className="mt-6">
-            {status === "success" ? (
-              <div className="border border-up/70 bg-up/10 p-4">
-                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-up">Purchase successful</p>
-                {txHash ? (
-                  <a
-                    className="mt-3 inline-flex font-mono text-[11px] uppercase tracking-[0.2em] text-neon-dim underline-offset-4 transition-colors duration-200 hover:text-neon hover:underline"
-                    href={buildTxExplorerUrl(explorerUrl, txHash)}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    {shortAddress(txHash)}
-                  </a>
-                ) : null}
-                <SecondaryButton onClick={resetPurchase}>Buy again</SecondaryButton>
-              </div>
-            ) : status === "error" ? (
-              <div className="border border-down/70 bg-down/10 p-4">
-                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-down">
-                  {errorText ?? "Transaction failed, please retry"}
-                </p>
-                <SecondaryButton onClick={resetPurchase}>Retry</SecondaryButton>
-              </div>
-            ) : (
-              <GlowButton
-                className="w-full gap-2"
-                disabled={isButtonDisabled}
-                onClick={submitBuy}
-                size="md"
-              >
-                {status === "pending" ? (
-                  <span className="size-3 animate-spin rounded-full border border-current border-t-transparent motion-reduce:animate-none" />
-                ) : null}
-                <span>{buttonLabel}</span>
-                {status === "pending" && txHash ? <span className="text-[10px]">{shortAddress(txHash)}</span> : null}
-              </GlowButton>
-            )}
           </div>
         </>
-      ) : (
+      ) : activeMode === "sell" ? (
         <div>
           <div className="border-b border-border pb-5">
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">SECONDARY SELL</p>
@@ -516,6 +518,8 @@ export function BuyPanel({ asset, initialMode = "buy" }: BuyPanelProps) {
             />
           )}
         </div>
+      ) : (
+        <PlaceBidPanel asset={asset} variant="embedded" />
       )}
     </aside>
   );

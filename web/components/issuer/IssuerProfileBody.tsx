@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { IssuerActivityListView } from "@/components/issuer/IssuerActivityList";
 import { IssuerAssetsTable } from "@/components/issuer/IssuerAssetsTable";
 import { IssuerDocsCard } from "@/components/issuer/IssuerDocsCard";
@@ -10,7 +10,20 @@ import { useAssets } from "@/lib/hooks/useAssets";
 import { useMarketEvents } from "@/lib/hooks/useMarketEvents";
 import { computeIssuerKpis, type Issuer } from "@/lib/issuers";
 
+const subscribeToHydration = () => () => undefined;
+const getClientHydrationSnapshot = () => true;
+const getServerHydrationSnapshot = () => false;
+
+function useHasHydrated() {
+  return useSyncExternalStore(
+    subscribeToHydration,
+    getClientHydrationSnapshot,
+    getServerHydrationSnapshot,
+  );
+}
+
 export function IssuerProfileBody({ issuer }: { issuer: Issuer }) {
+  const hasHydrated = useHasHydrated();
   const { assets, errorZh, isLoading: isAssetsLoading } = useAssets();
   const { events, isLoading: isEventsLoading, nowMs } = useMarketEvents();
   const issuerAssets = useMemo(() => {
@@ -29,7 +42,7 @@ export function IssuerProfileBody({ issuer }: { issuer: Issuer }) {
         kpis={{
           ...kpis,
           assetsCount: issuer.assetIds.length,
-          cumulativeVolumeUsdc: isEventsLoading ? undefined : kpis.cumulativeVolumeUsdc,
+          cumulativeVolumeUsdc: !hasHydrated || isEventsLoading ? undefined : kpis.cumulativeVolumeUsdc,
         }}
       />
 

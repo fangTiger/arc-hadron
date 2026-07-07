@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { AssistantDock } from "@/components/assistant/AssistantDock";
 import { useNetworkGuard } from "@/lib/hooks/useNetworkGuard";
@@ -9,6 +10,7 @@ import { WalletButton } from "./WalletButton";
 const navItems = [
   { href: "/", label: "MARKET" },
   { href: "/portfolio", label: "PORTFOLIO" },
+  { href: "/developers/api", label: "API" },
 ];
 
 function NetworkBadge() {
@@ -38,8 +40,20 @@ export function TopBar() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-bg/78 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
-        <Link className="font-mono text-lg font-semibold tracking-[0.25em] text-text" href="/">
-          HADRON<span className="text-neon">.</span>
+        <Link
+          className="inline-flex items-center gap-2 font-mono text-lg font-semibold tracking-[0.22em] text-text"
+          href="/"
+        >
+          <Image
+            alt=""
+            aria-hidden="true"
+            className="size-6 shrink-0"
+            data-brand-mark
+            height={24}
+            src="/favicon.ico"
+            width={24}
+          />
+          <span>HADRON</span>
         </Link>
 
         <div className="hidden h-5 w-px bg-border md:block" />

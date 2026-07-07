@@ -35,11 +35,11 @@ const yieldMockState = vi.hoisted(() => ({
 }));
 
 vi.mock("../components/asset/BuyPanel", () => ({
-  BuyPanel: () => <aside>BUY PANEL</aside>,
+  BuyPanel: () => <aside>BUY PANEL BID MODE</aside>,
 }));
 
 vi.mock("../components/asset/DepthChart", () => ({
-  default: () => <section>DEPTH CHART</section>,
+  default: ({ variant }: { variant?: string }) => <section>DEPTH CHART {variant}</section>,
 }));
 
 vi.mock("../components/asset/ListingsTable", () => ({
@@ -55,7 +55,7 @@ vi.mock("../components/asset/BidsTable", () => ({
 }));
 
 vi.mock("../components/asset/PlaceBidPanel", () => ({
-  PlaceBidPanel: () => <section>PLACE BID</section>,
+  PlaceBidPanel: () => <section>LEFT PLACE BID</section>,
 }));
 
 vi.mock("@tanstack/react-query", () => ({
@@ -232,10 +232,14 @@ describe("on-chain asset read state", () => {
         nowMs={Date.UTC(2026, 6, 2, 12)}
       />,
     );
+    const headerIndex = html.indexOf("data-asset-price-header=\"compact\"");
+    const headerMarkup = html.slice(headerIndex, html.indexOf("data-asset-trading-workspace"));
 
     expect(html).toContain("2.00");
     expect(html).toContain("24H");
     expect(html).toContain("MARKET CAP");
+    expect(headerIndex).toBeGreaterThanOrEqual(0);
+    expect(headerMarkup).not.toContain("text-5xl");
     expect(html).toContain("TRADE HISTORY");
     expect(html).toContain("COUNTERPARTY");
     expect(html).toContain("PRIMARY SALE");
@@ -254,8 +258,10 @@ describe("on-chain asset read state", () => {
       />,
     );
 
-    expect(html).toContain("Issuer:");
+    expect(html).toContain("ISSUER");
     expect(html).toContain("href=\"/issuers/us-treasury-desk\"");
+    expect(html).toContain("aria-label=\"Open issuer profile: Hadron Treasury Desk\"");
+    expect(html).toContain("VIEW PROFILE");
     expect(html).toContain("Hadron Treasury Desk");
   });
 
@@ -322,7 +328,7 @@ describe("on-chain asset read state", () => {
     expect(html.slice(html.indexOf("TRADE HISTORY"))).not.toContain("0x0000…00ff");
   });
 
-  test("mounts buy orders and place bid controls between sell orders and trade history", () => {
+  test("mounts a three-column trading workspace before browsing content", () => {
     const html = renderToStaticMarkup(
       <AssetDetailView
         assets={[assetView()]}
@@ -333,12 +339,22 @@ describe("on-chain asset read state", () => {
       />,
     );
 
+    expect(html).toContain("data-asset-trading-workspace");
+    expect(html).toContain("data-trade-rail");
+    expect(html.indexOf("MARKET CAP")).toBeLessThan(html.indexOf("PRICE TREND"));
+    expect(html.indexOf("PRICE TREND")).toBeLessThan(html.indexOf("DEPTH CHART compact"));
+    expect(html.indexOf("DEPTH CHART compact")).toBeLessThan(html.indexOf("BUY PANEL"));
+    expect(html.indexOf("BUY PANEL")).toBeLessThan(html.indexOf("ORDER BOOK"));
+    expect(html.indexOf("ORDER BOOK")).toBeLessThan(html.indexOf("SELL ORDERS"));
     expect(html.indexOf("SELL ORDERS")).toBeLessThan(html.indexOf("BUY ORDERS"));
-    expect(html.indexOf("BUY ORDERS")).toBeLessThan(html.indexOf("PLACE BID"));
-    expect(html.indexOf("PLACE BID")).toBeLessThan(html.indexOf("TRADE HISTORY"));
+    expect(html.indexOf("BUY ORDERS")).toBeLessThan(html.indexOf("ASSET DESCRIPTION"));
+    expect(html.indexOf("ASSET DESCRIPTION")).toBeLessThan(html.indexOf("ASSET INSIGHT"));
+    expect(html.indexOf("ASSET INSIGHT")).toBeLessThan(html.indexOf("Pending yield"));
+    expect(html.indexOf("Pending yield")).toBeLessThan(html.indexOf("TRADE HISTORY"));
+    expect(html).not.toContain("LEFT PLACE BID");
   });
 
-  test("mounts order book and depth chart in the right rail and wraps detail tables with anchors", () => {
+  test("keeps compact market depth above the sticky trade panel and wraps detail tables with anchors", () => {
     const html = renderToStaticMarkup(
       <AssetDetailView
         assets={[assetView()]}
@@ -349,11 +365,18 @@ describe("on-chain asset read state", () => {
       />,
     );
 
-    expect(html.indexOf("ORDER BOOK")).toBeLessThan(html.indexOf("DEPTH CHART"));
-    expect(html.indexOf("DEPTH CHART")).toBeLessThan(html.indexOf("BUY PANEL"));
+    const railIndex = html.indexOf("data-trade-rail");
+    const railMarkup = html.slice(railIndex - 240, railIndex + 1200);
+
+    expect(railIndex).toBeGreaterThanOrEqual(0);
+    expect(railMarkup).toContain("order-2");
+    expect(railMarkup).toContain("xl:order-3");
+    expect(railMarkup).toContain("xl:sticky");
+    expect(railMarkup).toContain("xl:top-24");
+    expect(html.indexOf("DEPTH CHART compact")).toBeLessThan(html.indexOf("BUY PANEL"));
     expect(html).toContain("id=\"sell-orders\"");
     expect(html).toContain("id=\"buy-orders\"");
-    expect(html).toContain("space-y-6");
+    expect(html).toContain("data-order-flow");
   });
 
   test("renders asset yield panel with pending claim, distribution records, and deposit entry before trade history", () => {
@@ -417,7 +440,7 @@ describe("on-chain asset read state", () => {
     expect(html).toContain("3.50 USDC");
     expect(html).not.toContain("99.00 USDC");
     expect(html).toContain("Distribute");
-    expect(html.indexOf("PLACE BID")).toBeLessThan(html.indexOf("Pending yield: 3.25 USDC"));
+    expect(html.indexOf("BUY ORDERS")).toBeLessThan(html.indexOf("Pending yield: 3.25 USDC"));
     expect(html.indexOf("Pending yield: 3.25 USDC")).toBeLessThan(html.indexOf("TRADE HISTORY"));
   });
 

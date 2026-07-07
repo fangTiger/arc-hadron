@@ -8,7 +8,6 @@ import { BuyPanel } from "@/components/asset/BuyPanel";
 import DepthChart from "@/components/asset/DepthChart";
 import { ListingsTable } from "@/components/asset/ListingsTable";
 import OrderBook, { type OrderBookSide } from "@/components/asset/OrderBook";
-import { PlaceBidPanel } from "@/components/asset/PlaceBidPanel";
 import { PriceChart } from "@/components/asset/PriceChart";
 import { YieldPanel } from "@/components/asset/YieldPanel";
 import { InsightPanel } from "@/components/ai/InsightPanel";
@@ -32,16 +31,19 @@ const ORDER_HIGHLIGHT_MS = 1_200;
 
 function AssetDetailSkeleton() {
   return (
-    <main className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] lg:px-8">
-      <div className="space-y-8">
-        <Skeleton className="h-[560px]" />
-        <Skeleton className="h-[240px]" />
-        <Skeleton className="h-[240px]" tone="soft" />
+    <main className="mx-auto w-full max-w-[1480px] px-4 py-10 sm:px-6 lg:px-8">
+      <div className="space-y-6">
+        <Skeleton className="h-[220px]" />
+        <section className="grid gap-5 xl:grid-cols-[minmax(360px,1.15fr)_minmax(360px,1fr)_minmax(320px,0.72fr)] xl:items-start">
+          <Skeleton className="h-[360px]" />
+          <Skeleton className="h-[520px]" tone="soft" />
+          <aside className="space-y-4 xl:sticky xl:top-24">
+            <Skeleton className="h-[220px]" tone="soft" />
+            <Skeleton className="h-[420px]" tone="soft" />
+            <p className="sr-only">REMAINING SHARES</p>
+          </aside>
+        </section>
       </div>
-      <aside className="lg:sticky lg:top-24">
-        <Skeleton className="h-[420px]" tone="soft" />
-        <p className="sr-only">REMAINING SHARES</p>
-      </aside>
     </main>
   );
 }
@@ -105,64 +107,72 @@ function AssetPriceHeader({
   const marketCap = asset.totalShares * price;
 
   return (
-    <section className="border border-border bg-panel p-5 sm:p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <section
+      className="border border-border bg-panel px-4 py-4 sm:px-5"
+      data-asset-price-header="compact"
+    >
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-dim">
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-neon-dim">
             {asset.meta.ticker} / TOKEN #{asset.tokenId.toString()}
           </p>
-          <h1 className="mt-3 text-2xl font-semibold text-text sm:text-3xl">
+          <h1 className="mt-2 text-xl font-semibold text-text sm:text-2xl">
             {asset.meta.displayName}
           </h1>
-          <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.18em] text-neon-dim">
-            Issuer:{" "}
+          <div className="mt-3 flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em]">
+            <span className="text-muted">ISSUER</span>
             {asset.meta.issuerSlug ? (
               <Link
-                className="underline-offset-4 transition-colors duration-200 hover:text-neon hover:underline"
+                aria-label={`Open issuer profile: ${asset.meta.issuer}`}
+                className="group inline-flex items-center gap-2 border border-border bg-bg/55 px-2.5 py-1.5 text-neon-dim transition-colors duration-200 hover:border-neon/60 hover:bg-neon/10 hover:text-neon focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neon"
                 href={`/issuers/${asset.meta.issuerSlug}`}
               >
-                {asset.meta.issuer}
+                <span>{asset.meta.issuer}</span>
+                <span className="border-l border-border pl-2 text-[9px] tracking-[0.1em] text-muted transition-colors duration-200 group-hover:text-neon">
+                  VIEW PROFILE
+                </span>
               </Link>
             ) : (
-              <span>{asset.meta.issuer}</span>
+              <span className="text-neon-dim">{asset.meta.issuer}</span>
             )}
-          </p>
+          </div>
         </div>
-        <span
-          className={[
-            "w-fit border px-3 py-2 font-mono text-[10px] uppercase tracking-[0.16em]",
-            changeClassName(change.changePct),
-          ].join(" ")}
-        >
-          24H {change.changePct.toFixed(2)}%
-        </span>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between lg:justify-end">
+          <span
+            className={[
+              "w-fit border px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em]",
+              changeClassName(change.changePct),
+            ].join(" ")}
+          >
+            24H {change.changePct.toFixed(2)}%
+          </span>
+          <div className="sm:text-right">
+            <p className="font-mono text-3xl font-semibold leading-none text-text sm:text-4xl">
+              {formatUsdc(unitPriceToSharePrice(price))}
+            </p>
+            <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
+              USDC / SHARE
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="mt-6 flex flex-wrap items-end gap-x-4 gap-y-2">
-        <p className="font-mono text-5xl font-semibold leading-none text-text sm:text-6xl">
-          {formatUsdc(unitPriceToSharePrice(price))}
-        </p>
-        <p className="pb-1 font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
-          USDC / SHARE
-        </p>
-      </div>
-
-      <dl className="mt-6 grid gap-3 border-t border-border pt-5 font-mono text-[10px] uppercase tracking-[0.16em] sm:grid-cols-4">
+      <dl className="mt-4 grid gap-3 border-t border-border pt-4 font-mono text-[10px] uppercase tracking-[0.14em] sm:grid-cols-4">
         <div>
           <dt className="text-muted">YIELD</dt>
-          <dd className="mt-2 text-sm text-gold">{formatApyBps(asset.meta.apyBps)}</dd>
+          <dd className="mt-1.5 text-sm text-gold">{formatApyBps(asset.meta.apyBps)}</dd>
         </div>
         <div>
           <dt className="text-muted">AVAILABLE</dt>
-          <dd className="mt-2 text-sm text-text">{formatShares(available)}</dd>
+          <dd className="mt-1.5 text-sm text-text">{formatShares(available)}</dd>
         </div>
         <div>
           <dt className="text-muted">MARKET CAP</dt>
-          <dd className="mt-2 text-sm text-text">{formatUsdc(marketCap, { compact: true })}</dd>
+          <dd className="mt-1.5 text-sm text-text">{formatUsdc(marketCap, { compact: true })}</dd>
         </div>
         <div>
           <dt className="text-muted">TOTAL SHARES</dt>
-          <dd className="mt-2 text-sm text-text">{formatShares(asset.totalShares)}</dd>
+          <dd className="mt-1.5 text-sm text-text">{formatShares(asset.totalShares)}</dd>
         </div>
       </dl>
     </section>
@@ -404,32 +414,53 @@ export function AssetDetailView({
   }
 
   return (
-    <main className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] lg:px-8">
-      <div className="space-y-8">
+    <main className="mx-auto w-full max-w-[1480px] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="space-y-6">
         <AssetPriceHeader asset={asset} events={events} nowMs={nowMs} />
-        <PriceChart asset={asset} events={events} />
-        <AssetProfile asset={asset} />
-        <InsightPanel asset={asset} events={events} listings={assetListings} nowMs={nowMs} />
-        <div className={ordersAnchorClassName("ask")} id="sell-orders">
-          <ListingsTable tokenId={asset.tokenId} />
-        </div>
-        <div className={ordersAnchorClassName("bid")} id="buy-orders">
-          <BidsTable tokenId={asset.tokenId} />
-        </div>
-        <PlaceBidPanel asset={asset} />
-        <YieldPanel asset={asset} events={events} nowMs={nowMs} />
-        <TradeHistoryTable
-          asset={asset}
-          events={events}
-          isLoading={isEventsLoading}
-          nowMs={nowMs}
-        />
-      </div>
 
-      <div className="space-y-6 lg:sticky lg:top-24">
-        <OrderBook tokenId={asset.tokenId} onSelectPrice={scrollToOrders} />
-        <DepthChart tokenId={asset.tokenId} />
-        <BuyPanel asset={asset} />
+        <section
+          aria-label="Trading workspace"
+          className="grid gap-5 xl:grid-cols-[minmax(360px,1.15fr)_minmax(360px,1fr)_minmax(320px,0.72fr)] xl:items-start"
+          data-asset-trading-workspace
+        >
+          <div className="order-1 min-w-0" data-price-flow>
+            <PriceChart asset={asset} events={events} />
+          </div>
+
+          <aside
+            className="order-2 min-w-0 space-y-4 xl:order-3 xl:sticky xl:top-24 xl:self-start"
+            data-trade-rail
+          >
+            <DepthChart tokenId={asset.tokenId} variant="compact" />
+            <BuyPanel asset={asset} />
+          </aside>
+
+          <div className="order-3 min-w-0 space-y-5 xl:order-2" data-order-flow>
+            <OrderBook tokenId={asset.tokenId} onSelectPrice={scrollToOrders} />
+            <div className={ordersAnchorClassName("ask")} id="sell-orders">
+              <ListingsTable tokenId={asset.tokenId} />
+            </div>
+            <div className={ordersAnchorClassName("bid")} id="buy-orders">
+              <BidsTable tokenId={asset.tokenId} />
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(340px,0.75fr)] lg:items-start">
+          <div className="space-y-6">
+            <AssetProfile asset={asset} />
+            <InsightPanel asset={asset} events={events} listings={assetListings} nowMs={nowMs} />
+          </div>
+          <div className="space-y-6">
+            <YieldPanel asset={asset} events={events} nowMs={nowMs} />
+            <TradeHistoryTable
+              asset={asset}
+              events={events}
+              isLoading={isEventsLoading}
+              nowMs={nowMs}
+            />
+          </div>
+        </section>
       </div>
     </main>
   );

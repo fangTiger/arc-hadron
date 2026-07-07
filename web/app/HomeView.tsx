@@ -15,6 +15,7 @@ import type { TradeEvent } from "@/lib/events";
 import { filterAssets, isYieldBucket, type YieldBucket } from "@/lib/filterAssets";
 import type { ListingView } from "@/lib/hooks/useListings";
 import { listIssuers } from "@/lib/issuers";
+import { eventsForAssets } from "@/lib/marketMetrics";
 import type { AssetView } from "@/lib/mappers";
 
 const VALID_CATEGORY_VALUES = new Set(CATEGORY_TAB_OPTIONS.map((option) => option.value));
@@ -100,6 +101,7 @@ export function HomeView({
     selectedIssuerSlug !== null ||
     yieldBucket !== null ||
     query.trim().length > 0;
+  const hasMarketActivity = eventsForAssets(events, assets).length > 0;
   const emptyState =
     hasActiveFilters && filteredAssets.length === 0 ? (
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -115,8 +117,8 @@ export function HomeView({
     ) : undefined;
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 pb-24 pt-6 text-text sm:px-6 lg:px-8">
-      <div className="space-y-5">
+    <main className="mx-auto w-full max-w-[1440px] px-4 pb-24 pt-6 text-text sm:px-6 lg:px-8">
+      <div className="space-y-6">
         <StatsStrip
           assets={assets}
           events={events}
@@ -124,42 +126,66 @@ export function HomeView({
           nowMs={nowMs}
         />
 
-        <section className="space-y-3">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <CategoryTabs
-              onChange={(nextCategory) => replaceQueryParam("category", nextCategory)}
-              value={category}
-            />
-            <label className="block w-full lg:max-w-xs">
+        <section
+          aria-label="Market filters"
+          className="border-y border-border/80 py-4"
+          data-market-command-bar
+          data-market-filter-toolbar
+        >
+          <div className="grid gap-4 xl:grid-cols-[minmax(260px,380px)_minmax(0,1fr)] xl:items-center">
+            <label className="block w-full">
               <span className="sr-only">Search assets</span>
               <input
-                className="h-10 w-full border border-border bg-panel/80 px-3 font-mono text-[11px] uppercase tracking-[0.16em] text-text outline-none transition-colors duration-200 placeholder:text-muted focus:border-neon"
+                className="h-11 w-full border border-border bg-bg/75 px-3 font-mono text-[11px] uppercase tracking-[0.14em] text-text outline-none transition-colors duration-200 placeholder:text-muted focus:border-neon"
                 onChange={(event) => replaceQueryParam("q", event.target.value)}
                 placeholder="SEARCH ASSET / TICKER"
                 value={query}
               />
             </label>
+
+            <div className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none] [&>div]:w-max [&>div]:flex-nowrap xl:[&>div]:justify-end">
+              <CategoryTabs
+                onChange={(nextCategory) => replaceQueryParam("category", nextCategory)}
+                value={category}
+              />
+            </div>
           </div>
-          <div className="space-y-3">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <span className="w-20 font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
-                Issuer:
-              </span>
-              <ExploreIssuerFilter
-                issuers={issuerOptions}
-                onChange={(slug) => replaceQueryParam("issuer", slug)}
-                selectedSlug={selectedIssuerSlug}
-              />
+
+          <div className="mt-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:gap-5">
+              <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
+                <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+                  Issuer
+                </span>
+                <div className="min-w-0 flex-1">
+                  <ExploreIssuerFilter
+                    issuers={issuerOptions}
+                    onChange={(slug) => replaceQueryParam("issuer", slug)}
+                    selectedSlug={selectedIssuerSlug}
+                  />
+                </div>
+              </div>
+              <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
+                <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+                  Yield
+                </span>
+                <div className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none] [&>div]:w-max [&>div]:flex-nowrap">
+                  <ExploreYieldFilter
+                    onChange={(bucket) => replaceQueryParam("yield", bucket)}
+                    selected={yieldBucket}
+                  />
+                </div>
+              </div>
             </div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <span className="w-20 font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
-                Yield:
-              </span>
-              <ExploreYieldFilter
-                onChange={(bucket) => replaceQueryParam("yield", bucket)}
-                selected={yieldBucket}
-              />
-            </div>
+            {hasActiveFilters ? (
+              <button
+                className="inline-flex h-10 w-fit items-center justify-center border border-neon/50 bg-neon/12 px-4 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-neon transition-colors duration-200 hover:border-neon hover:bg-neon/20"
+                onClick={resetFilters}
+                type="button"
+              >
+                Reset
+              </button>
+            ) : null}
           </div>
         </section>
 
@@ -169,7 +195,10 @@ export function HomeView({
           </p>
         ) : null}
 
-        <section className="flex flex-col gap-5 lg:flex-row lg:items-start">
+        <section
+          className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start"
+          data-market-workbench
+        >
           <div className="min-w-0 flex-1">
             <MarketTable
               assets={filteredAssets}
@@ -180,14 +209,16 @@ export function HomeView({
               nowMs={nowMs}
             />
           </div>
-          <div className="w-full space-y-5 lg:w-[280px] lg:shrink-0">
+          <div className="w-full space-y-5 xl:sticky xl:top-24 xl:shrink-0" data-market-side-rail>
             <MarketBrief
               assets={assets}
               events={events}
               listings={marketListings}
               nowMs={nowMs}
             />
-            <ActivityPanel assets={assets} events={events} nowMs={nowMs} />
+            {hasMarketActivity ? (
+              <ActivityPanel assets={assets} events={events} nowMs={nowMs} />
+            ) : null}
           </div>
         </section>
       </div>

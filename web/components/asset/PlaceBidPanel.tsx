@@ -20,6 +20,7 @@ interface PlaceBidPanelProps {
   asset: AssetView;
   initialAmountInput?: string;
   initialPriceInput?: string;
+  variant?: "standalone" | "embedded";
 }
 
 function SecondaryButton({
@@ -48,6 +49,7 @@ export function PlaceBidPanel({
   asset,
   initialAmountInput = "1",
   initialPriceInput,
+  variant = "standalone",
 }: PlaceBidPanelProps) {
   const defaultPriceInput = asset.offering ? formatListingPriceInput(asset.offering.pricePerShare) : "";
   const [amountInput, setAmountInput] = useState(initialAmountInput);
@@ -186,8 +188,10 @@ export function PlaceBidPanel({
     isButtonDisabled = true;
   }
 
+  const isEmbedded = variant === "embedded";
+
   return (
-    <section className="border border-border bg-panel p-6">
+    <section className={isEmbedded ? "" : "border border-border bg-panel p-6"}>
       <div className="border-b border-border pb-5">
         <p className={labelClassName()}>PLACE BID</p>
         <h2 className="mt-3 text-xl font-semibold text-text">Open a buy order</h2>

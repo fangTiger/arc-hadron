@@ -291,13 +291,31 @@ describe("secondary listings detail surface", () => {
 
   test("renders the BuyPanel trade tabs with BUY selected by default", () => {
     const html = renderWithToast(<BuyPanel asset={assetView()} />);
+    const actionIndex = html.indexOf("data-buy-primary-action");
 
     expect(html).toContain("role=\"tablist\"");
+    expect(html).toContain("data-buy-panel-density=\"compact\"");
     expect(html).toContain(">BUY<");
     expect(html).toContain(">SELL<");
+    expect(html).toContain(">BID<");
     expect(html).toContain("aria-selected=\"true\"");
     expect(html).toContain("PRIMARY OFFERING");
     expect(html).toContain("BEST ASK");
+    expect(actionIndex).toBeGreaterThan(html.indexOf("AMOUNT"));
+    expect(actionIndex).toBeLessThan(html.indexOf("BALANCE"));
+  });
+
+  test("renders the Bid tab by embedding the place bid flow", () => {
+    mockState.balance = 500n * USDC;
+
+    const html = renderWithToast(<BuyPanel asset={assetView()} initialMode="bid" />);
+
+    expect(html).toContain(">BID<");
+    expect(html).toContain("aria-selected=\"true\"");
+    expect(html).toContain("PLACE BID");
+    expect(html).toContain("Open a buy order");
+    expect(html).toContain("ESCROW TOTAL");
+    expect(html).not.toContain("SECONDARY SELL");
   });
 
   test("renders the Sell tab with wallet holdings, MAX, best ask price, and estimated proceeds", () => {

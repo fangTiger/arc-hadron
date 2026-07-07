@@ -96,4 +96,27 @@ describe("DepthChartView", () => {
     expect(html).toContain("100.00");
     expect(html).toContain("130.00");
   });
+
+  test("renders a compact depth chart with tighter typography for the trade rail", () => {
+    const html = renderToStaticMarkup(
+      <DepthChartView
+        book={buildOrderBook({
+          bids: [bid()],
+          listings: [listing()],
+        })}
+        isLoading={false}
+        variant="compact"
+      />,
+    );
+
+    expect(html).toContain("data-depth-chart-variant=\"compact\"");
+    expect(html).toContain("preserveAspectRatio=\"xMidYMid meet\"");
+    expect(html).toContain("data-depth-axis-labels=\"true\"");
+    expect(html).toContain("h-20");
+    expect(html).toContain("tabular-nums");
+    expect(html).toContain("tracking-[0.08em]");
+    expect(html).not.toContain("h-28");
+    expect(html).not.toContain("h-40");
+    expect(html).not.toContain("tracking-[0.2em]");
+  });
 });

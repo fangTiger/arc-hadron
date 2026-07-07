@@ -212,7 +212,7 @@ describe("InsightPanel", () => {
     expect([streaming, done, stale, failed].join("\n")).not.toContain("testnet demo data");
   });
 
-  test("mounts between the asset profile and sell orders on the asset page", () => {
+  test("mounts after order details on the asset page", () => {
     useAiGenerationMock.mockReturnValue(aiState());
 
     const html = renderToStaticMarkup(
@@ -226,7 +226,8 @@ describe("InsightPanel", () => {
       />,
     );
 
+    expect(html.indexOf("SELL ORDERS")).toBeLessThan(html.indexOf("BUY ORDERS"));
+    expect(html.indexOf("BUY ORDERS")).toBeLessThan(html.indexOf("ASSET DESCRIPTION"));
     expect(html.indexOf("ASSET DESCRIPTION")).toBeLessThan(html.indexOf("ASSET INSIGHT"));
-    expect(html.indexOf("ASSET INSIGHT")).toBeLessThan(html.indexOf("SELL ORDERS"));
   });
 });

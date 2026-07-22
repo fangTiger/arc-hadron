@@ -249,6 +249,17 @@ async function readCount(client: PublicQueryClient, contract: {
   return asSafeCount(value, contract.functionName);
 }
 
+async function readOptionalCount(
+  client: PublicQueryClient,
+  contract: { address: Address; abi: Abi; functionName: string },
+): Promise<number> {
+  try {
+    return await readCount(client, contract);
+  } catch {
+    return 0;
+  }
+}
+
 async function readMany(
   client: PublicQueryClient,
   contract: { address: Address; abi: Abi; functionName: string },
@@ -290,7 +301,7 @@ export async function loadAssetsPayload({ client }: LoadOptions = {}) {
       abi: HADRON_ASSETS_ABI,
       functionName: "assetCount",
     }),
-    readCount(queryClient, {
+    readOptionalCount(queryClient, {
       address: HADRON_MARKET_ADDRESS,
       abi: HADRON_MARKET_ABI,
       functionName: "offeringCount",

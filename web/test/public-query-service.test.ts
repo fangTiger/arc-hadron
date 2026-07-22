@@ -155,6 +155,29 @@ describe("public query service", () => {
     ]);
   });
 
+  test("returns asset data without offerings when the offering count read fails", async () => {
+    const partialClient = fakeClient();
+    const baseReadContract = partialClient.readContract;
+
+    partialClient.readContract = async (input) => {
+      if (input.functionName === "offeringCount") {
+        throw new Error("Arc RPC timeout");
+      }
+
+      return baseReadContract(input);
+    };
+
+    const payload = await loadAssetsPayload({ client: partialClient });
+
+    expect(payload.data).toEqual([
+      expect.objectContaining({
+        name: "US T-BILL 2026-Q3",
+        offering: null,
+        tokenId: "1",
+      }),
+    ]);
+  });
+
   test("filters listings by tokenId and keeps active listings sorted by price", async () => {
     const payload = await loadListingsPayload({ client: fakeClient(), tokenId: 1n });
 

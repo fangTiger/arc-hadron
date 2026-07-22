@@ -1,0 +1,22 @@
+{
+  "slug": "usdc-treasury-mmf-a",
+  "displayName": "USDC Treasury MMF A",
+  "ticker": "MMF-A",
+  "description": "A reference money-market fund asset referencing short-duration treasury and repo exposure for accounts that prioritize liquid yield. Disclosures focus on portfolio duration, liquidity gates, and settlement cadence.",
+  "issuerSlug": "northstar-liquidity",
+  "apyBps": 430,
+  "docs": [
+    {
+      "label": "Fund summary",
+      "note": "Illustrative material, not a legal instrument. Summarizes portfolio composition, target duration, and cash-management assumptions."
+    },
+    {
+      "label": "Liquidity memo",
+      "note": "Illustrative material, not a legal instrument. Describes reference liquidity buffers, settlement cadence, and redemption controls."
+    },
+    {
+      "label": "Risk disclosure",
+      "note": "Illustrative material, not a legal instrument. Lists rate, counterparty, and liquidity risks for reference review."
+    }
+  ]
+}

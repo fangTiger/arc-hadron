@@ -1,0 +1,22 @@
+{
+  "slug": "streaming-royalty-basket-2026",
+  "displayName": "Streaming Royalty Basket 2026",
+  "ticker": "STREAM",
+  "description": "A reference music-royalty asset referencing diversified streaming receivables from multiple catalog administrators. Disclosures focus on reporting cadence, rights verification, and platform mix assumptions.",
+  "issuerSlug": "tempo-royalty-vault",
+  "apyBps": 690,
+  "docs": [
+    {
+      "label": "Royalty basket summary",
+      "note": "Illustrative material, not a legal instrument. Summarizes reference catalog administrators, platform mix, and payment cadence assumptions."
+    },
+    {
+      "label": "Rights memo",
+      "note": "Illustrative material, not a legal instrument. Describes illustrative rights verification and collection controls."
+    },
+    {
+      "label": "Risk disclosure",
+      "note": "Illustrative material, not a legal instrument. Lists platform, rights, and reporting-lag risks for reference review."
+    }
+  ]
+}

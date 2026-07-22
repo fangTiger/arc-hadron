@@ -1,5 +1,9 @@
 # portfolio Specification
 
+## Purpose
+
+定义 Hadron Web 的持仓、成本、挂单转售入口和我的挂单管理体验，使用户能从链上数据重建个人资产状态。
+
 ## Requirements
 
 ### Requirement: 持仓展示

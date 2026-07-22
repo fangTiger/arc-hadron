@@ -21,8 +21,13 @@ interface FetchLogsInBlockRangeInput<TLog> {
 }
 
 interface ChunkLogsResult<TLog> {
+  error?: unknown;
   failed: boolean;
   logs: readonly TLog[];
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function warnSkippedLogChunk(chunk: LogChunk, error: unknown): void {
@@ -49,7 +54,7 @@ async function getChunkLogsWithRetry<TLog>(
       }
 
       warnSkippedLogChunk(chunk, error);
-      return { failed: true, logs: [] };
+      return { error, failed: true, logs: [] };
     }
   }
 
@@ -68,6 +73,7 @@ export async function fetchLogsInChunks<TLog>({
 
   const workerCount = Math.min(Math.max(1, concurrency), chunks.length);
   const results: TLog[][] = Array.from({ length: chunks.length }, () => []);
+  let firstError: unknown;
   let failedChunks = 0;
   let nextIndex = 0;
 
@@ -81,6 +87,7 @@ export async function fetchLogsInChunks<TLog>({
 
         if (result.failed) {
           failedChunks += 1;
+          firstError ??= result.error;
         }
 
         results[index] = [...result.logs];
@@ -89,7 +96,9 @@ export async function fetchLogsInChunks<TLog>({
   );
 
   if (failedChunks === chunks.length) {
-    throw new Error("Failed to load market event logs for all requested block ranges.");
+    const suffix = firstError === undefined ? "" : ` ${errorMessage(firstError)}`;
+
+    throw new Error(`Failed to load market event logs for all requested block ranges.${suffix}`);
   }
 
   return results.flat();

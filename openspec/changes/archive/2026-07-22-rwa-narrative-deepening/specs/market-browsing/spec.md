@@ -4,9 +4,9 @@
 
 ### Requirement: 市场首页目录
 
-首页 SHALL 为**交易所式数据密度布局**：落地即市场数据，无营销式 hero。组成：内联小字统计条、**类别筛选 chips（10 个展示类别）**+ 资产搜索框、**Issuer filter（下拉，默认 All Issuers）**、**Yield bucket（4 chip 互斥单选：`<4%` / `4-6%` / `6-10%` / `>10%`）**、**可排序资产表格**（每行：Ticker 徽章、名称、单价、24H 变动、收益率、可购余量、市值、迷你走势线、Trade 按钮）、右侧常驻链上活动面板、底部横向滚动 LIVE 事件条（活动数据行为由 `activity-feed` 能力定义）。**全部 UI 文案为英文**。视觉：深空底色、小号 mono 数字、紧凑行距，光晕基本归零（霓虹青仅作 ticker/选中态点缀）。
+首页 SHALL 为**交易所式数据密度布局**：落地即市场数据，无营销式 hero。组成：内联小字统计条、**类别筛选 chips（14 个展示类别）**+ 资产搜索框、**Issuer filter（下拉，默认 All Issuers）**、**Yield bucket（4 chip 互斥单选：`<4%` / `4-6%` / `6-10%` / `>10%`）**、**可排序资产表格**（每行：Ticker 徽章、名称、单价、24H 变动、收益率、可购余量、市值、迷你走势线、Trade 按钮）、右侧常驻链上活动面板、底部横向滚动 LIVE 事件条（活动数据行为由 `activity-feed` 能力定义）。**全部 UI 文案为英文**。视觉：深空底色、小号 mono 数字、紧凑行距，光晕基本归零（霓虹青仅作 ticker/选中态点缀）。
 
-**类别 chips SHALL 包含 10 个类别**：TREASURIES · SOVEREIGN BONDS · CORPORATE BONDS · PRIVATE CREDIT · REAL ESTATE · COMMODITIES · CARBON · INFRASTRUCTURE · ART & COLLECTIBLES · INVOICE FINANCING（加 ALL 共 11 chips）。
+**类别 chips SHALL 包含 14 个类别**：TREASURIES · SOVEREIGN BONDS · CORPORATE BONDS · MONEY MARKET FUNDS · PRIVATE CREDIT · MORTGAGES · REAL ESTATE · EQUIPMENT FINANCE · COMMODITIES · CARBON · INFRASTRUCTURE · MUSIC ROYALTIES · ART & COLLECTIBLES · INVOICE FINANCING（加 ALL 共 15 chips）。
 
 **多维过滤 SHALL 取交集（AND）**，URL 状态包含 `?category=&issuer=&yield=`，可分享。
 
@@ -32,6 +32,10 @@
 #### Scenario: 多维过滤组合
 - **WHEN** 用户同时选 `Category=Corporate Bonds` + `Issuer=Apex` + `Yield=4-6%`
 - **THEN** 表格显示三条件交集，URL 为 `?category=corporate-bonds&issuer=apex-corporate-desk&yield=4-6`
+
+#### Scenario: 扩展 RWA 品类浏览
+- **WHEN** 用户切换到 `MONEY MARKET FUNDS` / `MORTGAGES` / `EQUIPMENT FINANCE` / `MUSIC ROYALTIES` 任一类别 chip
+- **THEN** 表格只显示对应链上 category 的资产，且每个新增类别在种子数据中至少有 2 条资产
 
 #### Scenario: 过滤后无匹配
 - **WHEN** 组合过滤下无资产匹配

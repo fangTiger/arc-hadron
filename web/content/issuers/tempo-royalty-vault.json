@@ -1,0 +1,33 @@
+{
+  "slug": "tempo-royalty-vault",
+  "displayName": "Tempo Royalty Vault",
+  "shortName": "TEMPO",
+  "jurisdiction": "Nashville, US",
+  "establishedYear": 2016,
+  "focus": "Music catalog royalties and streaming receivables",
+  "description": "Reference issuer profile for royalty-backed assets tied to diversified entertainment cash flows. This metadata is illustrative and not a legal entity record.",
+  "docs": [
+    {
+      "label": "Entity registration",
+      "note": "Illustrative material, not a legal instrument. Placeholder for entity registration filing."
+    },
+    {
+      "label": "Audit letter",
+      "note": "Illustrative material, not a legal instrument. Placeholder for annual audit summary."
+    },
+    {
+      "label": "Identifier registry",
+      "note": "Illustrative material, not a legal instrument. Placeholder for identifier reference."
+    }
+  ],
+  "externalLinks": [
+    {
+      "label": "Website",
+      "href": "https://demo.hadron.local/tempo-royalty-vault"
+    },
+    {
+      "label": "Disclosures",
+      "href": "https://demo.hadron.local/tempo-royalty-vault/disclosures"
+    }
+  ]
+}

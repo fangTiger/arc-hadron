@@ -1,10 +1,12 @@
-import { describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test } from "vitest";
 import {
   loadAssetsPayload,
   loadListingsPayload,
+  loadStatusPayload,
   loadTradesPayload,
   type PublicQueryClient,
 } from "../lib/api/publicQuery";
+import { resetEventIndexForTest } from "../lib/eventIndex";
 
 const SELLER = "0x1111111111111111111111111111111111111111";
 const BUYER = "0x2222222222222222222222222222222222222222";
@@ -78,6 +80,10 @@ function fakeClient(): PublicQueryClient {
 }
 
 describe("public query service", () => {
+  beforeEach(() => {
+    resetEventIndexForTest();
+  });
+
   test("serializes assets with metadata and string bigint fields", async () => {
     const payload = await loadAssetsPayload({ client: fakeClient() });
 
@@ -113,7 +119,12 @@ describe("public query service", () => {
   });
 
   test("returns recent trades with timestamps and string bigint fields", async () => {
-    const payload = await loadTradesPayload({ client: fakeClient(), limit: 10, tokenId: 1n });
+    const payload = await loadTradesPayload({
+      client: fakeClient(),
+      limit: 10,
+      tokenId: 1n,
+      type: "purchased",
+    });
 
     expect(payload.data).toEqual([
       expect.objectContaining({
@@ -127,5 +138,24 @@ describe("public query service", () => {
         type: "purchased",
       }),
     ]);
+  });
+
+  test("returns event index status with string block fields", async () => {
+    const client = fakeClient();
+
+    await loadTradesPayload({ client, limit: 10, tokenId: 1n });
+    const payload = await loadStatusPayload({ client });
+
+    expect(payload.data).toEqual(
+      expect.objectContaining({
+        cachedEvents: 1,
+        chainId: 5042002,
+        indexedBlock: (EVENT_BLOCK + 3n).toString(),
+        lagBlocks: "0",
+        lastError: null,
+        latestBlock: (EVENT_BLOCK + 3n).toString(),
+      }),
+    );
+    expect(typeof payload.data.lastIndexedAt).toBe("string");
   });
 });

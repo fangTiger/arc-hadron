@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { validateAssetMeta } from "../../lib/metadata";
+import { metaBySlug, validateAssetMeta } from "../../lib/metadata";
 
 const validAsset = {
   slug: "illustrative-asset",
@@ -38,5 +38,57 @@ describe("asset metadata issuerSlug validation", () => {
         new Set(["illustrative-issuer"]),
       ),
     ).toThrow(/illustrative-asset.*missing-issuer.*does not match a registered issuer/);
+  });
+
+  test("loads the seeded breadth expansion asset metadata", () => {
+    expect(metaBySlug("hadron://assets/usdc-treasury-mmf-a")).toMatchObject({
+      issuerSlug: "northstar-liquidity",
+      ticker: "MMF-A",
+    });
+    expect(metaBySlug("hadron://assets/sgd-liquidity-note-2026")).toMatchObject({
+      issuerSlug: "northstar-liquidity",
+      ticker: "SGD-LIQ",
+    });
+    expect(metaBySlug("hadron://assets/prime-mortgage-pool-2026-08")).toMatchObject({
+      issuerSlug: "civic-home-loans",
+      ticker: "MORT-A",
+    });
+    expect(metaBySlug("hadron://assets/sunbelt-rental-mortgage-b")).toMatchObject({
+      issuerSlug: "civic-home-loans",
+      ticker: "MORT-B",
+    });
+    expect(metaBySlug("hadron://assets/gpu-lease-2027")).toMatchObject({
+      issuerSlug: "ironvale-equipment-trust",
+      ticker: "GPU-27",
+    });
+    expect(metaBySlug("hadron://assets/railcar-lease-pool-2028")).toMatchObject({
+      issuerSlug: "ironvale-equipment-trust",
+      ticker: "RAIL-28",
+    });
+    expect(metaBySlug("hadron://assets/indie-catalog-royalty-a")).toMatchObject({
+      issuerSlug: "tempo-royalty-vault",
+      ticker: "SONG-A",
+    });
+    expect(metaBySlug("hadron://assets/streaming-royalty-basket-2026")).toMatchObject({
+      issuerSlug: "tempo-royalty-vault",
+      ticker: "STREAM",
+    });
+  });
+
+  test("keeps seeded breadth expansion docs complete", () => {
+    const slugs = [
+      "usdc-treasury-mmf-a",
+      "sgd-liquidity-note-2026",
+      "prime-mortgage-pool-2026-08",
+      "sunbelt-rental-mortgage-b",
+      "gpu-lease-2027",
+      "railcar-lease-pool-2028",
+      "indie-catalog-royalty-a",
+      "streaming-royalty-basket-2026",
+    ];
+
+    expect(slugs.map((slug) => metaBySlug(slug).docs)).toEqual(
+      slugs.map(() => expect.arrayContaining([expect.any(Object), expect.any(Object), expect.any(Object)])),
+    );
   });
 });

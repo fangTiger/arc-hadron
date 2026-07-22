@@ -1,0 +1,22 @@
+{
+  "slug": "indie-catalog-royalty-a",
+  "displayName": "Indie Catalog Royalty A",
+  "ticker": "SONG-A",
+  "description": "A reference music-royalty asset referencing a diversified independent catalog with historical streaming income. Disclosures focus on royalty statements, platform concentration, and collection lag assumptions.",
+  "issuerSlug": "tempo-royalty-vault",
+  "apyBps": 620,
+  "docs": [
+    {
+      "label": "Catalog summary",
+      "note": "Illustrative material, not a legal instrument. Summarizes reference track count, historical royalty mix, and platform exposure assumptions."
+    },
+    {
+      "label": "Royalty statement",
+      "note": "Illustrative material, not a legal instrument. Describes illustrative collection timing and reporting controls."
+    },
+    {
+      "label": "Risk disclosure",
+      "note": "Illustrative material, not a legal instrument. Lists platform, rights, and royalty collection risks for reference review."
+    }
+  ]
+}

@@ -6,16 +6,24 @@ import dockside from "../content/assets/dockside-logistics-park.json";
 import fiber from "../content/assets/fiber-grid-metro-loop.json";
 import gold from "../content/assets/gold-ounce-4.json";
 import goldOffset from "../content/assets/gold-standard-offset-bundle.json";
+import gpuLease from "../content/assets/gpu-lease-2027.json";
 import heliosUtility from "../content/assets/helios-utility-2031.json";
+import indieCatalogRoyalty from "../content/assets/indie-catalog-royalty-a.json";
 import invoicePool from "../content/assets/nexus-invoice-pool-2026-07.json";
 import jgb5y from "../content/assets/jp-jgb-5y.json";
 import marina from "../content/assets/marina-tower-12f.json";
 import meridianCredit from "../content/assets/meridian-sme-credit-a.json";
+import mortgagePool from "../content/assets/prime-mortgage-pool-2026-08.json";
+import railcarLease from "../content/assets/railcar-lease-pool-2028.json";
 import receivables from "../content/assets/atlas-trade-receivables-b.json";
+import sgdLiquidity from "../content/assets/sgd-liquidity-note-2026.json";
 import silver from "../content/assets/silver-bullion-vault-2.json";
 import solar from "../content/assets/solar-farm-basin-2.json";
+import streamingRoyalty from "../content/assets/streaming-royalty-basket-2026.json";
+import sunbeltMortgage from "../content/assets/sunbelt-rental-mortgage-b.json";
 import tBill from "../content/assets/t-bill-2026-q3.json";
 import tNote from "../content/assets/us-t-note-2028.json";
+import treasuryMmf from "../content/assets/usdc-treasury-mmf-a.json";
 import { issuerForAsset, registeredIssuerSlugs } from "./issuers";
 
 export interface AssetMeta {
@@ -114,6 +122,14 @@ const ASSET_META_BY_SLUG = new Map<string, AssetMeta>(
     jgb5y,
     apexIndustrials,
     heliosUtility,
+    treasuryMmf,
+    sgdLiquidity,
+    mortgagePool,
+    sunbeltMortgage,
+    gpuLease,
+    railcarLease,
+    indieCatalogRoyalty,
+    streamingRoyalty,
   ].map((meta) => {
     const hydrated = hydrateAssetMeta(meta);
 

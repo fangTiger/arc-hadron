@@ -1,0 +1,33 @@
+{
+  "slug": "northstar-liquidity",
+  "displayName": "Northstar Liquidity Management",
+  "shortName": "NORTHSTAR",
+  "jurisdiction": "New York, US",
+  "establishedYear": 2018,
+  "focus": "Money market funds and short-duration liquidity sleeves",
+  "description": "Reference issuer profile for cash-management funds and tokenized liquidity notes. This metadata is illustrative and not a legal entity record.",
+  "docs": [
+    {
+      "label": "Entity registration",
+      "note": "Illustrative material, not a legal instrument. Placeholder for entity registration filing."
+    },
+    {
+      "label": "Audit letter",
+      "note": "Illustrative material, not a legal instrument. Placeholder for annual audit summary."
+    },
+    {
+      "label": "Identifier registry",
+      "note": "Illustrative material, not a legal instrument. Placeholder for identifier reference."
+    }
+  ],
+  "externalLinks": [
+    {
+      "label": "Website",
+      "href": "https://demo.hadron.local/northstar-liquidity"
+    },
+    {
+      "label": "Disclosures",
+      "href": "https://demo.hadron.local/northstar-liquidity/disclosures"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "slug": "gpu-lease-2027",
+  "displayName": "GPU Lease 2027",
+  "ticker": "GPU-27",
+  "description": "A reference equipment-finance asset referencing leased accelerator hardware with contracted utilization. Disclosures focus on lessee concentration, depreciation, and maintenance reserve assumptions.",
+  "issuerSlug": "ironvale-equipment-trust",
+  "apyBps": 940,
+  "docs": [
+    {
+      "label": "Lease schedule",
+      "note": "Illustrative material, not a legal instrument. Summarizes reference lease terms, utilization, and lessee concentration assumptions."
+    },
+    {
+      "label": "Maintenance memo",
+      "note": "Illustrative material, not a legal instrument. Describes illustrative hardware maintenance and replacement reserve assumptions."
+    },
+    {
+      "label": "Risk disclosure",
+      "note": "Illustrative material, not a legal instrument. Lists obsolescence, counterparty, and utilization risks for reference review."
+    }
+  ]
+}

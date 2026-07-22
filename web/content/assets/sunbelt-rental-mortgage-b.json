@@ -1,0 +1,22 @@
+{
+  "slug": "sunbelt-rental-mortgage-b",
+  "displayName": "Sunbelt Rental Mortgage B",
+  "ticker": "MORT-B",
+  "description": "A reference mortgage-backed asset referencing rental-home loans across high-growth Sunbelt markets. Disclosures focus on rental coverage, geographic concentration, and refinancing assumptions.",
+  "issuerSlug": "civic-home-loans",
+  "apyBps": 830,
+  "docs": [
+    {
+      "label": "Collateral summary",
+      "note": "Illustrative material, not a legal instrument. Summarizes rental coverage, property mix, and regional exposure assumptions."
+    },
+    {
+      "label": "Servicer report",
+      "note": "Illustrative material, not a legal instrument. Describes illustrative payment collection and borrower monitoring controls."
+    },
+    {
+      "label": "Risk disclosure",
+      "note": "Illustrative material, not a legal instrument. Lists vacancy, rate, and refinancing risks for reference review."
+    }
+  ]
+}

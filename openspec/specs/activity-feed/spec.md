@@ -1,5 +1,9 @@
 # activity-feed Specification
 
+## Purpose
+
+定义 Hadron Web 的链上实时动态流、事件展示口径、去重和 RPC 失败退避要求，确保市场活动只来自真实链上事件。
+
 ## Requirements
 
 ### Requirement: 链上实时动态流

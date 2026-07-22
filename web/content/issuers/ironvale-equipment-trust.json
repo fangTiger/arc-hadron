@@ -1,0 +1,33 @@
+{
+  "slug": "ironvale-equipment-trust",
+  "displayName": "Ironvale Equipment Trust",
+  "shortName": "IRONVALE",
+  "jurisdiction": "Chicago, US",
+  "establishedYear": 2009,
+  "focus": "Equipment lease receivables and transportation assets",
+  "description": "Reference issuer profile for equipment-finance cash flows backed by lease contracts. This metadata is illustrative and not a legal entity record.",
+  "docs": [
+    {
+      "label": "Entity registration",
+      "note": "Illustrative material, not a legal instrument. Placeholder for entity registration filing."
+    },
+    {
+      "label": "Audit letter",
+      "note": "Illustrative material, not a legal instrument. Placeholder for annual audit summary."
+    },
+    {
+      "label": "Identifier registry",
+      "note": "Illustrative material, not a legal instrument. Placeholder for identifier reference."
+    }
+  ],
+  "externalLinks": [
+    {
+      "label": "Website",
+      "href": "https://demo.hadron.local/ironvale-equipment-trust"
+    },
+    {
+      "label": "Disclosures",
+      "href": "https://demo.hadron.local/ironvale-equipment-trust/disclosures"
+    }
+  ]
+}

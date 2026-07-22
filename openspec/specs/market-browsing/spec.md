@@ -1,27 +1,63 @@
 # market-browsing Specification
 
+## Purpose
+
+定义 Hadron Web 的市场首页、资产详情页和未连接钱包只读浏览体验，确保 RWA 资产目录、过滤、排序和走势展示口径一致。
+
 ## Requirements
 
 ### Requirement: 市场首页目录
-首页 SHALL 为**交易所式数据密度布局**（2026-07-02 用户验收反馈修订）：落地即市场数据，无营销式 hero。组成：内联小字统计条、类别筛选 chips（8 个展示类别）+ 资产搜索框、**可排序资产表格**（每行：Ticker 徽章、名称、单价、24H 变动、收益率、可购余量、市值、迷你走势线、Trade 按钮）、右侧常驻链上活动面板、底部横向滚动 LIVE 事件条（活动数据行为由 `activity-feed` 能力定义）。**全部 UI 文案为英文**。视觉：深空底色、小号 mono 数字、紧凑行距，光晕基本归零（霓虹青仅作 ticker/选中态点缀）。统计口径 SHALL 为：
+首页 SHALL 为**交易所式数据密度布局**：落地即市场数据，无营销式 hero。组成：内联小字统计条、**类别筛选 chips（14 个展示类别）**+ 资产搜索框、**Issuer filter（下拉，默认 All Issuers）**、**Yield bucket（4 chip 互斥单选：`<4%` / `4-6%` / `6-10%` / `>10%`）**、**可排序资产表格**（每行：Ticker 徽章、名称、单价、24H 变动、收益率、可购余量、市值、迷你走势线、Trade 按钮）、右侧常驻链上活动面板、底部横向滚动 LIVE 事件条（活动数据行为由 `activity-feed` 能力定义）。**全部 UI 文案为英文**。视觉：深空底色、小号 mono 数字、紧凑行距，光晕基本归零（霓虹青仅作 ticker/选中态点缀）。
+
+类别 chips SHALL 包含 14 个类别：TREASURIES · SOVEREIGN BONDS · CORPORATE BONDS · MONEY MARKET FUNDS · PRIVATE CREDIT · MORTGAGES · REAL ESTATE · EQUIPMENT FINANCE · COMMODITIES · CARBON · INFRASTRUCTURE · MUSIC ROYALTIES · ART & COLLECTIBLES · INVOICE FINANCING（加 ALL 共 15 chips）。
+
+多维过滤 SHALL 取交集（AND），URL 状态包含 `?category=&issuer=&yield=`，可分享。
+
+统计条口径 SHALL 保持全局，MUST 不随过滤重算：
 - **TVL** = Σ(每资产 `totalShares` × 该资产最新成交价，无成交则发行价)；
 - **24H 成交量** = 过去 24 小时 `PrimarySale` + `Purchased` 事件金额合计，无成交为 0；
 - **平均收益率** = 各资产静态元数据 `apy` 字段的算术平均。
 
-#### Scenario: 浏览与筛选
+#### Scenario: 类别浏览与搜索
 - **WHEN** 用户访问首页并切换类别 chip 或输入搜索词
-- **THEN** 资产表格按类别/名称过滤，统计条数值按上述口径由链上数据与静态元数据计算
+- **THEN** 资产表格按类别/名称过滤，统计条数值按上述全局口径不变
+
+#### Scenario: Issuer filter
+- **WHEN** 用户在下拉里选中某 issuer
+- **THEN** 资产表格只显示该 issuer 名下资产，URL 追加 `?issuer=<slug>`；统计条保持全局
+
+#### Scenario: Yield bucket 互斥单选
+- **WHEN** 用户点选 `Yield=6-10%` chip
+- **THEN** 表格只显示 `apyBps ∈ [600, 1000)` 的资产
+- **AND WHEN** 用户再次点击同一 chip
+- **THEN** 取消选中，恢复"任意收益率"
+
+#### Scenario: 多维过滤组合
+- **WHEN** 用户同时选 `Category=Corporate Bonds` + `Issuer=Apex` + `Yield=4-6%`
+- **THEN** 表格显示三条件交集，URL 为 `?category=corporate-bonds&issuer=apex-corporate-desk&yield=4-6`
+
+#### Scenario: 扩展 RWA 品类浏览
+- **WHEN** 用户切换到 `MONEY MARKET FUNDS` / `MORTGAGES` / `EQUIPMENT FINANCE` / `MUSIC ROYALTIES` 任一类别 chip
+- **THEN** 表格只显示对应链上 category 的资产，且每个新增类别在种子数据中至少有 2 条资产
+
+#### Scenario: 过滤后无匹配
+- **WHEN** 组合过滤下无资产匹配
+- **THEN** 表格显示空态提示 "No assets match current filters. Reset filters."
 
 #### Scenario: 表格排序
 - **WHEN** 用户点击价格/收益率/市值等列头
-- **THEN** 表格按该列升/降序重排
+- **THEN** 表格按该列升/降序重排（过滤集内排序）
 
 ### Requirement: 资产详情页
-详情页 SHALL 展示：资产档案与元数据文档、一级购买面板（价格/余量）、二级挂单表、价格走势图（lightweight-charts）、交易历史表（每条含 Arc explorer 链接）。
+详情页 SHALL 展示：资产档案与元数据文档、**Issuer 跳转入口（header 或 sidebar 显示 `Issuer: <displayName>` 可点击跳转 `/issuers/[slug]`）**、一级购买面板（价格/余量）、二级挂单表、价格走势图（lightweight-charts）、交易历史表（每条含 Arc explorer 链接）。
 
 #### Scenario: 查看资产详情
 - **WHEN** 用户从首页点击资产卡片
-- **THEN** 详情页展示该资产链上档案、活跃挂单与历史成交，历史记录点击可跳转 explorer
+- **THEN** 详情页展示该资产链上档案、活跃挂单、历史成交与 issuer 跳转入口；历史记录点击可跳转 explorer
+
+#### Scenario: Issuer 跳转
+- **WHEN** 用户在资产详情页点击 issuer 名称
+- **THEN** 跳转到 `/issuers/[slug]` 页面
 
 ### Requirement: 未连接钱包的只读模式
 系统 SHALL 允许未连接钱包的访客浏览首页、详情、动态流的全部只读内容；交易类按钮 MUST 引导连接钱包而非直接报错。

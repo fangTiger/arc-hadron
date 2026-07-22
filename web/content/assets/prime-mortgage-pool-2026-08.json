@@ -1,0 +1,22 @@
+{
+  "slug": "prime-mortgage-pool-2026-08",
+  "displayName": "Prime Mortgage Pool 2026-08",
+  "ticker": "MORT-A",
+  "description": "A reference mortgage pool asset referencing diversified prime residential loans with scheduled principal and interest cash flows. Disclosures focus on loan seasoning, geography, and servicer reporting assumptions.",
+  "issuerSlug": "civic-home-loans",
+  "apyBps": 720,
+  "docs": [
+    {
+      "label": "Loan pool tape",
+      "note": "Illustrative material, not a legal instrument. Summarizes reference loan seasoning, geography, and weighted coupon assumptions."
+    },
+    {
+      "label": "Servicer report",
+      "note": "Illustrative material, not a legal instrument. Describes illustrative delinquency monitoring and payment remittance controls."
+    },
+    {
+      "label": "Risk disclosure",
+      "note": "Illustrative material, not a legal instrument. Lists prepayment, default, and servicing risks for reference review."
+    }
+  ]
+}

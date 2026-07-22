@@ -5,7 +5,7 @@ describe("issuer metadata loader", () => {
   test("lists the current issuers with derived asset ids", () => {
     const issuers = listIssuers();
 
-    expect(issuers).toHaveLength(12);
+    expect(issuers).toHaveLength(16);
     expect(issuers.map((issuer) => issuer.slug)).toEqual([
       "us-treasury-desk",
       "meridian-credit",
@@ -19,6 +19,10 @@ describe("issuer metadata loader", () => {
       "germany-treasury-desk",
       "japan-treasury-desk",
       "apex-corporate-desk",
+      "northstar-liquidity",
+      "civic-home-loans",
+      "ironvale-equipment-trust",
+      "tempo-royalty-vault",
     ]);
   });
 
@@ -60,6 +64,22 @@ describe("issuer metadata loader", () => {
     expect(loadIssuerBySlug("japan-treasury-desk")?.assetIds).toEqual(["jp-jgb-5y"]);
     expect(loadIssuerBySlug("apex-corporate-desk")?.assetIds).toEqual([
       "apex-industrials-2029",
+    ]);
+    expect(loadIssuerBySlug("northstar-liquidity")?.assetIds).toEqual([
+      "usdc-treasury-mmf-a",
+      "sgd-liquidity-note-2026",
+    ]);
+    expect(loadIssuerBySlug("civic-home-loans")?.assetIds).toEqual([
+      "prime-mortgage-pool-2026-08",
+      "sunbelt-rental-mortgage-b",
+    ]);
+    expect(loadIssuerBySlug("ironvale-equipment-trust")?.assetIds).toEqual([
+      "gpu-lease-2027",
+      "railcar-lease-pool-2028",
+    ]);
+    expect(loadIssuerBySlug("tempo-royalty-vault")?.assetIds).toEqual([
+      "indie-catalog-royalty-a",
+      "streaming-royalty-basket-2026",
     ]);
   });
 });

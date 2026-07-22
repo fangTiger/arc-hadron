@@ -1,20 +1,25 @@
 import { createPublicClient, http, type Abi, type Address } from "viem";
-import { ARC_CHAIN_ID, ARC_RPC_URL, arcTestnet, DEPLOY_BLOCK, FIRST_ACTIVE_TOKEN_ID } from "@/lib/chain";
+import { ARC_CHAIN_ID, ARC_RPC_URL, arcTestnet, FIRST_ACTIVE_TOKEN_ID } from "@/lib/chain";
 import {
   HADRON_ASSETS_ABI,
   HADRON_ASSETS_ADDRESS,
   HADRON_MARKET_ABI,
   HADRON_MARKET_ADDRESS,
-  HADRON_YIELD_ADDRESS,
 } from "@/lib/contracts";
-import { fetchLogsInBlockRange } from "@/lib/eventLogs";
 import { mapBidResults } from "@/lib/bids";
 import { mapListingResults } from "@/lib/listing";
 import { joinAssetsWithOfferings, type ChainAsset, type ChainOffering } from "@/lib/mappers";
 import { metaBySlug } from "@/lib/metadata";
-import { parseMarketLogs, type TradeEvent, type TradeEventType } from "@/lib/events";
+import { type TradeEvent, type TradeEventType } from "@/lib/events";
+import {
+  getEventIndexStatus,
+  loadEventIndexStatus,
+  loadIndexedMarketEvents,
+  type EventIndexLog,
+  type EventIndexStatus,
+} from "@/lib/eventIndex";
 
-type MarketLog = Parameters<typeof parseMarketLogs>[0][number];
+type MarketLog = EventIndexLog;
 
 export interface PublicQueryClient {
   getBlock(input: { blockNumber: bigint }): Promise<{ timestamp: bigint | number }>;
@@ -218,6 +223,22 @@ function serializeTrade(event: TradeEvent) {
   };
 }
 
+function serializeBlock(value: bigint | null): string | null {
+  return value === null ? null : value.toString();
+}
+
+function serializeEventIndexStatus(status: EventIndexStatus) {
+  return {
+    cachedEvents: status.cachedEvents,
+    chainId: status.chainId,
+    indexedBlock: serializeBlock(status.indexedBlock),
+    lagBlocks: serializeBlock(status.lagBlocks),
+    lastError: status.lastError,
+    lastIndexedAt: status.lastIndexedAt,
+    latestBlock: serializeBlock(status.latestBlock),
+  };
+}
+
 async function readCount(client: PublicQueryClient, contract: {
   address: Address;
   abi: Abi;
@@ -417,29 +438,10 @@ export async function loadTradesPayload({
   type,
 }: LoadOptions & TradeQueryFilter = {}) {
   const queryClient = activeClient(client);
-  const latestBlock = await queryClient.getBlockNumber();
-
-  if (latestBlock < BigInt(DEPLOY_BLOCK)) {
-    return {
-      data: [],
-      meta: {
-        chainId: ARC_CHAIN_ID,
-        latestBlock: latestBlock.toString(),
-      },
-    };
-  }
-
-  const logs = await fetchLogsInBlockRange<MarketLog>({
-    fromBlock: BigInt(DEPLOY_BLOCK),
-    getLogs: async (chunk) =>
-      queryClient.getLogs({
-        address: [HADRON_ASSETS_ADDRESS, HADRON_MARKET_ADDRESS, HADRON_YIELD_ADDRESS],
-        fromBlock: chunk.from,
-        toBlock: chunk.to,
-      }),
-    toBlock: latestBlock,
-  });
-  const events = parseMarketLogs(logs)
+  const indexedEvents = await loadIndexedMarketEvents({ client: queryClient });
+  const status = getEventIndexStatus();
+  const latestBlock = status.latestBlock;
+  const events = indexedEvents
     .filter((event) => event.tokenId >= FIRST_ACTIVE_TOKEN_ID)
     .filter((event) => (tokenId === undefined ? true : event.tokenId === tokenId))
     .filter((event) => (type === undefined ? true : event.type === type))
@@ -456,8 +458,20 @@ export async function loadTradesPayload({
       .map(serializeTrade),
     meta: {
       chainId: ARC_CHAIN_ID,
-      latestBlock: latestBlock.toString(),
+      latestBlock: latestBlock?.toString() ?? null,
       limit,
+    },
+  };
+}
+
+export async function loadStatusPayload({ client }: LoadOptions = {}) {
+  const queryClient = activeClient(client);
+  const status = await loadEventIndexStatus({ client: queryClient });
+
+  return {
+    data: serializeEventIndexStatus(status),
+    meta: {
+      chainId: ARC_CHAIN_ID,
     },
   };
 }

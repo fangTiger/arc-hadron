@@ -1,5 +1,9 @@
 # primary-market Specification
 
+## Purpose
+
+定义 HadronMarket 一级发行、一级购买、协议费分账、关闭发行和发行可读接口，覆盖资产首次上架与购买路径。
+
 ## Requirements
 
 ### Requirement: 创建一级发行

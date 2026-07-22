@@ -1,5 +1,9 @@
 # asset-registry Specification
 
+## Purpose
+
+定义 HadronAssets ERC-1155 资产登记、份额铸造与资产档案可读接口，作为前端资产枚举和市场交易的基础能力。
+
 ## Requirements
 
 ### Requirement: 资产登记与份额铸造

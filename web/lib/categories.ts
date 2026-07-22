@@ -8,11 +8,15 @@ export type DisplayCategory =
   | "treasuries"
   | "sovereign-bonds"
   | "corporate-bonds"
+  | "money-market-funds"
   | "private-credit"
+  | "mortgages"
   | "real-estate"
+  | "equipment-finance"
   | "commodities"
   | "carbon"
   | "infrastructure"
+  | "music-royalties"
   | "art-collectibles"
   | "invoice-financing";
 
@@ -22,11 +26,15 @@ export const DISPLAY_CATEGORIES: { label: string; value: DisplayCategory }[] = [
   { label: "TREASURIES", value: "treasuries" },
   { label: "SOVEREIGN BONDS", value: "sovereign-bonds" },
   { label: "CORPORATE BONDS", value: "corporate-bonds" },
+  { label: "MONEY MARKET FUNDS", value: "money-market-funds" },
   { label: "PRIVATE CREDIT", value: "private-credit" },
+  { label: "MORTGAGES", value: "mortgages" },
   { label: "REAL ESTATE", value: "real-estate" },
+  { label: "EQUIPMENT FINANCE", value: "equipment-finance" },
   { label: "COMMODITIES", value: "commodities" },
   { label: "CARBON", value: "carbon" },
   { label: "INFRASTRUCTURE", value: "infrastructure" },
+  { label: "MUSIC ROYALTIES", value: "music-royalties" },
   { label: "ART & COLLECTIBLES", value: "art-collectibles" },
   { label: "INVOICE FINANCING", value: "invoice-financing" },
 ];
@@ -52,15 +60,30 @@ const categoryDisplays: Record<DisplayCategory, CategoryDisplay> = {
     gradient: "radial-gradient(circle at 20% 20%, #f59e0b 0%, #475569 46%, #0b1018 100%)",
     tickerClassName: "border-amber-300/45 bg-amber-300/10 text-amber-200",
   },
+  "money-market-funds": {
+    label: "MONEY MARKET FUNDS",
+    gradient: "radial-gradient(circle at 20% 20%, #99f6e4 0%, #0f766e 44%, #061311 100%)",
+    tickerClassName: "border-teal-200/45 bg-teal-200/10 text-teal-100",
+  },
   "private-credit": {
     label: "PRIVATE CREDIT",
     gradient: "radial-gradient(circle at 20% 20%, #7dd3fc 0%, #24516a 44%, #07111a 100%)",
     tickerClassName: "border-sky-300/45 bg-sky-300/10 text-sky-200",
   },
+  mortgages: {
+    label: "MORTGAGES",
+    gradient: "radial-gradient(circle at 20% 20%, #fda4af 0%, #7f1d1d 44%, #16070a 100%)",
+    tickerClassName: "border-rose-200/45 bg-rose-200/10 text-rose-100",
+  },
   "real-estate": {
     label: "REAL ESTATE",
     gradient: "radial-gradient(circle at 20% 20%, #4b647d 0%, #1d2733 46%, #080b10 100%)",
     tickerClassName: "border-slate-300/35 bg-slate-300/10 text-slate-200",
+  },
+  "equipment-finance": {
+    label: "EQUIPMENT FINANCE",
+    gradient: "radial-gradient(circle at 20% 20%, #fb923c 0%, #334155 46%, #0b1018 100%)",
+    tickerClassName: "border-orange-200/45 bg-orange-200/10 text-orange-100",
   },
   commodities: {
     label: "COMMODITIES",
@@ -76,6 +99,11 @@ const categoryDisplays: Record<DisplayCategory, CategoryDisplay> = {
     label: "INFRASTRUCTURE",
     gradient: "radial-gradient(circle at 20% 20%, #8bd3ff 0%, #23526b 43%, #07111a 100%)",
     tickerClassName: "border-cyan-200/45 bg-cyan-200/10 text-cyan-100",
+  },
+  "music-royalties": {
+    label: "MUSIC ROYALTIES",
+    gradient: "radial-gradient(circle at 20% 20%, #c084fc 0%, #7e22ce 44%, #11071a 100%)",
+    tickerClassName: "border-violet-200/45 bg-violet-200/10 text-violet-100",
   },
   "art-collectibles": {
     label: "ART & COLLECTIBLES",

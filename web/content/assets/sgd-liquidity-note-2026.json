@@ -1,0 +1,22 @@
+{
+  "slug": "sgd-liquidity-note-2026",
+  "displayName": "SGD Liquidity Note 2026",
+  "ticker": "SGD-LIQ",
+  "description": "A reference liquidity note asset referencing short-tenor cash instruments and overnight cash management in Singapore dollars. Disclosures focus on duration, settlement timing, and FX exposure assumptions.",
+  "issuerSlug": "northstar-liquidity",
+  "apyBps": 360,
+  "docs": [
+    {
+      "label": "Liquidity note summary",
+      "note": "Illustrative material, not a legal instrument. Summarizes tenor, eligible instruments, and cash-management assumptions."
+    },
+    {
+      "label": "FX memo",
+      "note": "Illustrative material, not a legal instrument. Describes reference currency exposure and settlement conventions."
+    },
+    {
+      "label": "Risk disclosure",
+      "note": "Illustrative material, not a legal instrument. Lists duration, FX, and liquidity risks for reference review."
+    }
+  ]
+}

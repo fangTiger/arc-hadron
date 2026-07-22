@@ -1,0 +1,22 @@
+{
+  "slug": "railcar-lease-pool-2028",
+  "displayName": "Railcar Lease Pool 2028",
+  "ticker": "RAIL-28",
+  "description": "A reference equipment-finance asset referencing diversified freight railcar leases with staggered contract maturities. Disclosures focus on lease coverage, maintenance reserves, and remarketing assumptions.",
+  "issuerSlug": "ironvale-equipment-trust",
+  "apyBps": 760,
+  "docs": [
+    {
+      "label": "Fleet schedule",
+      "note": "Illustrative material, not a legal instrument. Summarizes reference railcar types, lease tenors, and customer mix assumptions."
+    },
+    {
+      "label": "Maintenance report",
+      "note": "Illustrative material, not a legal instrument. Describes illustrative inspection cadence and reserve coverage assumptions."
+    },
+    {
+      "label": "Risk disclosure",
+      "note": "Illustrative material, not a legal instrument. Lists utilization, maintenance, and remarketing risks for reference review."
+    }
+  ]
+}

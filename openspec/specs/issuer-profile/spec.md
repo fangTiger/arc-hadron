@@ -1,6 +1,10 @@
 # issuer-profile Specification
 
-## ADDED Requirements
+## Purpose
+
+定义 Hadron Web 的 issuer 结构化元数据、issuer profile 页面与 issuer 级 KPI 派生规则，使资产目录从单条资产扩展为可浏览的发行人/资产族视角。
+
+## Requirements
 
 ### Requirement: Issuer 元数据登记与索引
 
@@ -11,8 +15,8 @@
 - **THEN** `npm run build` 与 `npm test` 失败并输出明确报错（fail-fast）
 
 #### Scenario: 反向聚合正确
-- **WHEN** 三个资产 JSON 的 `issuerSlug` 均为 `harbor-real-estate`
-- **THEN** `loadIssuerBySlug('harbor-real-estate').assetIds` 长度为 3
+- **WHEN** 两个资产 JSON 的 `issuerSlug` 均为 `northstar-liquidity`
+- **THEN** `loadIssuerBySlug('northstar-liquidity').assetIds` 长度为 2
 
 ### Requirement: Issuer 元数据 stub 语气与占位域名
 

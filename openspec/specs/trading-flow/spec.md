@@ -1,5 +1,9 @@
 # trading-flow Specification
 
+## Purpose
+
+定义 Hadron Web 的钱包连接、网络守卫、授权引导、交易状态反馈和份额输入粒度，保证交易路径可验证且可恢复。
+
 ## Requirements
 
 ### Requirement: 钱包连接与网络守卫

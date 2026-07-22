@@ -1,5 +1,9 @@
 # yield-distribution Specification
 
+## Purpose
+
+定义 HadronYield 的收益入金、领取、转账结算、排除账户和前端呈现要求，确保收益分配与交易口径隔离。
+
 ## Requirements
 
 ### Requirement: 收益入金

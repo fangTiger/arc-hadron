@@ -1,0 +1,33 @@
+{
+  "slug": "civic-home-loans",
+  "displayName": "Civic Home Loans Trust",
+  "shortName": "CIVIC",
+  "jurisdiction": "Austin, US",
+  "establishedYear": 2011,
+  "focus": "Residential mortgages and rental housing credit",
+  "description": "Reference issuer profile for diversified mortgage pools and rental-backed loan exposures. This metadata is illustrative and not a legal entity record.",
+  "docs": [
+    {
+      "label": "Entity registration",
+      "note": "Illustrative material, not a legal instrument. Placeholder for entity registration filing."
+    },
+    {
+      "label": "Audit letter",
+      "note": "Illustrative material, not a legal instrument. Placeholder for annual audit summary."
+    },
+    {
+      "label": "Identifier registry",
+      "note": "Illustrative material, not a legal instrument. Placeholder for identifier reference."
+    }
+  ],
+  "externalLinks": [
+    {
+      "label": "Website",
+      "href": "https://demo.hadron.local/civic-home-loans"
+    },
+    {
+      "label": "Disclosures",
+      "href": "https://demo.hadron.local/civic-home-loans/disclosures"
+    }
+  ]
+}

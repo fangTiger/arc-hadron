@@ -8,6 +8,7 @@ export const SNAPSHOT_SCHEMA_VERSION = "hadron-ai-snapshot-v1";
 
 const ORDER_BOOK_LIMIT = 10;
 const RECENT_TRADES_LIMIT = 20;
+const MARKET_SNAPSHOT_ASSET_LIMIT = 20;
 // 价格序列只保留最新点位：路由侧形状校验上限 500、请求体上限 32KB，留出余量。
 const PRICE_SERIES_LIMIT = 300;
 const TRADE_TYPES = new Set<TradeEvent["type"]>(["primary-sale", "purchased", "bid-filled"]);
@@ -242,6 +243,49 @@ function buildAssetCore(
   };
 }
 
+function compareBigintDesc(a: bigint, b: bigint): number {
+  if (a === b) {
+    return 0;
+  }
+
+  return a > b ? -1 : 1;
+}
+
+function compareMarketAssetsDesc(
+  a: AssetView,
+  b: AssetView,
+  events: readonly TradeEvent[],
+  nowMs: number,
+): number {
+  const aVolume = compute24h(events, a.tokenId, fallbackPrice(a), nowMs).volume;
+  const bVolume = compute24h(events, b.tokenId, fallbackPrice(b), nowMs).volume;
+  const volumeOrder = compareBigintDesc(aVolume, bVolume);
+
+  if (volumeOrder !== 0) {
+    return volumeOrder;
+  }
+
+  const aMarketCap = a.totalShares * latestUnitPrice(a, events);
+  const bMarketCap = b.totalShares * latestUnitPrice(b, events);
+  const marketCapOrder = compareBigintDesc(aMarketCap, bMarketCap);
+
+  if (marketCapOrder !== 0) {
+    return marketCapOrder;
+  }
+
+  return a.meta.displayName.localeCompare(b.meta.displayName);
+}
+
+function selectMarketSnapshotAssets(
+  assets: readonly AssetView[],
+  events: readonly TradeEvent[],
+  nowMs: number,
+): AssetView[] {
+  return [...assets]
+    .sort((a, b) => compareMarketAssetsDesc(a, b, events, nowMs))
+    .slice(0, MARKET_SNAPSHOT_ASSET_LIMIT);
+}
+
 export function buildAssetSnapshot({
   asset,
   events,
@@ -269,6 +313,7 @@ export function buildMarketSnapshot({
   nowMs,
 }: SnapshotMarketInput): MarketSnapshot {
   const tokenIds = new Set(assets.map((asset) => asset.tokenId));
+  const snapshotAssets = selectMarketSnapshotAssets(assets, events, nowMs);
   const total24hVolume = assets.reduce((sum, asset) => {
     return sum + compute24h(events, asset.tokenId, fallbackPrice(asset), nowMs).volume;
   }, 0n);
@@ -280,7 +325,7 @@ export function buildMarketSnapshot({
       assetCount: assets.length,
       total24hVolume: usdcText(total24hVolume),
     },
-    assets: assets.map((asset) => ({
+    assets: snapshotAssets.map((asset) => ({
       ...buildAssetCore(asset, events, nowMs),
       orderBook: buildOrderBook(listings, asset.tokenId),
     })),

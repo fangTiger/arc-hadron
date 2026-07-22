@@ -220,8 +220,8 @@ describe("AI snapshot builders", () => {
     expect(marketSnapshot.recentTrades).toEqual([]);
   });
 
-  test("keeps a 14-asset worst-case market snapshot under the 24 KiB route budget", () => {
-    const assets = Array.from({ length: 14 }, (_, index) =>
+  test("keeps an expanded 26-asset market snapshot within the route guard budget", () => {
+    const assets = Array.from({ length: 26 }, (_, index) =>
       assetView({
         category: index % 2 === 0 ? "treasuries" : "credit",
         meta: {
@@ -266,6 +266,18 @@ describe("AI snapshot builders", () => {
         type: index % 2 === 0 ? "primary-sale" : "purchased",
       }),
     );
+    events.push(
+      tradeEvent({
+        blockNumber: 11_000n,
+        logIndex: 61,
+        pricePerShare: 10n * USDC / 100n,
+        timestamp: Date.UTC(2026, 6, 3, 22),
+        tokenId: 26n,
+        totalPaid: 999n * USDC,
+        txHash: hash(999),
+        type: "purchased",
+      }),
+    );
 
     const snapshot = buildMarketSnapshot({
       assets,
@@ -275,7 +287,9 @@ describe("AI snapshot builders", () => {
     });
     const byteLength = new TextEncoder().encode(JSON.stringify(snapshot)).length;
 
-    expect(snapshot.assets).toHaveLength(14);
+    expect(snapshot.summary.assetCount).toBe(26);
+    expect(snapshot.assets).toHaveLength(20);
+    expect(snapshot.assets.map((asset) => asset.tokenId)).toContain("26");
     expect(snapshot.assets.every((asset) => asset.orderBook.length <= 10)).toBe(true);
     expect(snapshot.recentTrades).toHaveLength(20);
     expect(byteLength).toBeLessThanOrEqual(24_576);

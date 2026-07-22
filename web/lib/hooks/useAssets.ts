@@ -38,6 +38,10 @@ interface QueryErrorState {
   isError: boolean;
 }
 
+interface AssetReadErrorOptions {
+  hasUsableAssets?: boolean;
+}
+
 export function readContractCount(value: unknown): number {
   if (value === undefined || value === null) {
     return 0;
@@ -54,7 +58,14 @@ export function readContractCount(value: unknown): number {
   return Number(value);
 }
 
-export function assetReadErrorZh(queries: QueryErrorState[]): string | undefined {
+export function assetReadErrorZh(
+  queries: QueryErrorState[],
+  options: AssetReadErrorOptions = {},
+): string | undefined {
+  if (options.hasUsableAssets) {
+    return undefined;
+  }
+
   return queries.some((query) => query.isError) ? ASSETS_READ_ERROR_ZH : undefined;
 }
 
@@ -92,6 +103,56 @@ function normalizeOffering(id: bigint, raw: unknown): ChainOffering {
     remaining: offering.remaining ?? offering[2],
     active: offering.active ?? offering[3],
   };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function readResultValue(raw: unknown): unknown | undefined {
+  if (!isRecord(raw) || !("status" in raw)) {
+    return raw;
+  }
+
+  if (raw.status === "success") {
+    return raw.result;
+  }
+
+  if (raw.status === "failure") {
+    return undefined;
+  }
+
+  return raw;
+}
+
+export function normalizeAssetsFromReadResults(
+  tokenIds: readonly bigint[],
+  rawAssets: readonly unknown[] | undefined,
+): ChainAsset[] {
+  return (rawAssets ?? []).flatMap((rawAsset, index) => {
+    const tokenId = tokenIds[index];
+    const value = readResultValue(rawAsset);
+
+    if (tokenId === undefined || value === undefined || value === null) {
+      return [];
+    }
+
+    return [normalizeAsset(tokenId, value)];
+  });
+}
+
+export function normalizeOfferingsFromReadResults(
+  rawOfferings: readonly unknown[] | undefined,
+): ChainOffering[] {
+  return (rawOfferings ?? []).flatMap((rawOffering, index) => {
+    const value = readResultValue(rawOffering);
+
+    if (value === undefined || value === null) {
+      return [];
+    }
+
+    return [normalizeOffering(BigInt(index + 1), value)];
+  });
 }
 
 export function useAssets(): { assets: AssetView[]; errorZh?: string; isLoading: boolean } {
@@ -140,7 +201,7 @@ export function useAssets(): { assets: AssetView[]; errorZh?: string; isLoading:
   );
 
   const assetsQuery = useReadContracts({
-    allowFailure: false,
+    allowFailure: true,
     contracts: assetContracts,
     query: {
       enabled: assetContracts.length > 0,
@@ -149,7 +210,7 @@ export function useAssets(): { assets: AssetView[]; errorZh?: string; isLoading:
   });
 
   const offeringsQuery = useReadContracts({
-    allowFailure: false,
+    allowFailure: true,
     contracts: offeringContracts,
     query: {
       enabled: offeringCount > 0,
@@ -158,12 +219,8 @@ export function useAssets(): { assets: AssetView[]; errorZh?: string; isLoading:
   });
 
   const assets = useMemo(() => {
-    const chainAssets = (assetsQuery.data ?? []).map((asset, index) =>
-      normalizeAsset(activeTokenIds[index], asset),
-    );
-    const offerings = (offeringsQuery.data ?? []).map((offering, index) =>
-      normalizeOffering(BigInt(index + 1), offering),
-    );
+    const chainAssets = normalizeAssetsFromReadResults(activeTokenIds, assetsQuery.data);
+    const offerings = normalizeOfferingsFromReadResults(offeringsQuery.data);
 
     return joinAssetsWithOfferings(chainAssets, offerings, metaBySlug);
   }, [activeTokenIds, assetsQuery.data, offeringsQuery.data]);
@@ -172,7 +229,7 @@ export function useAssets(): { assets: AssetView[]; errorZh?: string; isLoading:
     offeringCountQuery,
     assetsQuery,
     offeringsQuery,
-  ]);
+  ], { hasUsableAssets: assets.length > 0 });
 
   return {
     assets,

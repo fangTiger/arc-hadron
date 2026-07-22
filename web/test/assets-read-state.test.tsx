@@ -8,6 +8,8 @@ import {
   ASSETS_READ_ERROR_ZH,
   activeTokenIdsForCount,
   assetReadErrorZh,
+  normalizeAssetsFromReadResults,
+  normalizeOfferingsFromReadResults,
   readContractCount,
 } from "../lib/hooks/useAssets";
 import type { TradeEvent } from "../lib/events";
@@ -182,6 +184,75 @@ describe("on-chain asset read state", () => {
   test("returns an English RPC error when any query fails instead of silently returning an empty list", () => {
     expect(assetReadErrorZh([{ isError: false }, { isError: true }])).toBe(ASSETS_READ_ERROR_ZH);
     expect(assetReadErrorZh([{ isError: false }])).toBeUndefined();
+  });
+
+  test("keeps usable market data visible when a later RPC refresh has a transient error", () => {
+    expect(
+      assetReadErrorZh([{ isError: false }, { isError: true }], { hasUsableAssets: true }),
+    ).toBeUndefined();
+    expect(
+      assetReadErrorZh([{ isError: false }, { isError: true }], { hasUsableAssets: false }),
+    ).toBe(ASSETS_READ_ERROR_ZH);
+  });
+
+  test("normalizes partial multicall results and skips only failed asset reads", () => {
+    const rawAssets = [
+      {
+        status: "success",
+        result: [
+          "US T-BILL 2026-Q3",
+          "treasuries",
+          10_000n,
+          "hadron://assets/t-bill-2026-q3",
+        ],
+      },
+      {
+        status: "failure",
+        error: new Error("Arc RPC timeout"),
+      },
+      [
+        "PRIVATE CREDIT NOTE",
+        "credit",
+        20_000n,
+        "hadron://assets/private-credit-note",
+      ],
+    ] as const;
+    const rawOfferings = [
+      {
+        status: "success",
+        result: [1n, 1n * USDC / 100n, 5_000n, true],
+      },
+      {
+        status: "failure",
+        error: new Error("Arc RPC timeout"),
+      },
+    ] as const;
+
+    expect(normalizeAssetsFromReadResults([1n, 2n, 3n], rawAssets)).toMatchObject([
+      {
+        category: "treasuries",
+        metadataURI: "hadron://assets/t-bill-2026-q3",
+        name: "US T-BILL 2026-Q3",
+        tokenId: 1n,
+        totalShares: 10_000n,
+      },
+      {
+        category: "credit",
+        metadataURI: "hadron://assets/private-credit-note",
+        name: "PRIVATE CREDIT NOTE",
+        tokenId: 3n,
+        totalShares: 20_000n,
+      },
+    ]);
+    expect(normalizeOfferingsFromReadResults(rawOfferings)).toMatchObject([
+      {
+        active: true,
+        id: 1n,
+        pricePerShare: 1n * USDC / 100n,
+        remaining: 5_000n,
+        tokenId: 1n,
+      },
+    ]);
   });
 
   test("renders the market list error state when RPC reads fail", () => {

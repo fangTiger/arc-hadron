@@ -15,8 +15,11 @@ import {
   type ChainOffering,
 } from "@/lib/mappers";
 import { metaBySlug } from "@/lib/metadata";
+import { applyStaticAssetFallback } from "@/lib/staticAssetCatalog";
 import { POLL_COLD_MS } from "./pollingConstants";
 import { visibleRefetch } from "./visibilityAware";
+
+export { applyStaticAssetFallback } from "@/lib/staticAssetCatalog";
 
 export const ASSETS_READ_ERROR_ZH = "Failed to load market data from Arc RPC.";
 
@@ -219,11 +222,27 @@ export function useAssets(): { assets: AssetView[]; errorZh?: string; isLoading:
   });
 
   const assets = useMemo(() => {
-    const chainAssets = normalizeAssetsFromReadResults(activeTokenIds, assetsQuery.data);
+    const hasReadError =
+      assetCountQuery.isError ||
+      offeringCountQuery.isError ||
+      assetsQuery.isError ||
+      offeringsQuery.isError;
+    const chainAssets = applyStaticAssetFallback(
+      normalizeAssetsFromReadResults(activeTokenIds, assetsQuery.data),
+      hasReadError,
+    );
     const offerings = normalizeOfferingsFromReadResults(offeringsQuery.data);
 
     return joinAssetsWithOfferings(chainAssets, offerings, metaBySlug);
-  }, [activeTokenIds, assetsQuery.data, offeringsQuery.data]);
+  }, [
+    activeTokenIds,
+    assetCountQuery.isError,
+    assetsQuery.data,
+    assetsQuery.isError,
+    offeringCountQuery.isError,
+    offeringsQuery.data,
+    offeringsQuery.isError,
+  ]);
   const errorZh = assetReadErrorZh([
     assetCountQuery,
     offeringCountQuery,

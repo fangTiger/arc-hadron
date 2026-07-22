@@ -7,6 +7,7 @@ import { StatsBarView } from "../components/market/StatsBar";
 import {
   ASSETS_READ_ERROR_ZH,
   activeTokenIdsForCount,
+  applyStaticAssetFallback,
   assetReadErrorZh,
   normalizeAssetsFromReadResults,
   normalizeOfferingsFromReadResults,
@@ -253,6 +254,31 @@ describe("on-chain asset read state", () => {
         tokenId: 1n,
       },
     ]);
+  });
+
+  test("uses the static catalog when all market asset reads fail", () => {
+    const fallbackAssets = applyStaticAssetFallback([], true);
+    const chainAsset = {
+      category: "treasuries",
+      metadataURI: "hadron://assets/t-bill-2026-q3",
+      name: "US T-BILL 2026-Q3",
+      tokenId: 1n,
+      totalShares: 10_000n,
+    };
+
+    expect(fallbackAssets).toHaveLength(26);
+    expect(fallbackAssets[0]).toMatchObject({
+      category: "treasuries",
+      metadataURI: "hadron://assets/t-bill-2026-q3",
+      tokenId: 1n,
+    });
+    expect(fallbackAssets.at(-1)).toMatchObject({
+      category: "music-royalties",
+      metadataURI: "hadron://assets/streaming-royalty-basket-2026",
+      tokenId: 26n,
+    });
+    expect(applyStaticAssetFallback([chainAsset], true)).toEqual([chainAsset]);
+    expect(applyStaticAssetFallback([], false)).toEqual([]);
   });
 
   test("renders the market list error state when RPC reads fail", () => {

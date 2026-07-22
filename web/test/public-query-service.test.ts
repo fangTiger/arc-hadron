@@ -178,6 +178,71 @@ describe("public query service", () => {
     ]);
   });
 
+  test("falls back to the static asset catalog when all Arc RPC asset detail reads fail", async () => {
+    const partialClient = fakeClient();
+    const baseReadContract = partialClient.readContract;
+
+    partialClient.readContract = async (input) => {
+      if (input.functionName === "assetCount") {
+        return 26n;
+      }
+
+      if (input.functionName === "offeringCount") {
+        throw new Error("Arc RPC timeout");
+      }
+
+      if (input.functionName === "getAsset") {
+        throw new Error("Arc RPC timeout");
+      }
+
+      return baseReadContract(input);
+    };
+
+    const payload = await loadAssetsPayload({ client: partialClient });
+
+    expect(payload.data).toHaveLength(26);
+    expect(payload.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          category: "treasuries",
+          meta: expect.objectContaining({ ticker: "TBILL" }),
+          offering: null,
+          tokenId: "1",
+        }),
+        expect.objectContaining({
+          category: "music-royalties",
+          meta: expect.objectContaining({ ticker: "STREAM" }),
+          offering: null,
+          tokenId: "26",
+        }),
+      ]),
+    );
+  });
+
+  test("falls back to the static asset catalog when the Arc RPC asset count read fails", async () => {
+    const partialClient = fakeClient();
+    const baseReadContract = partialClient.readContract;
+
+    partialClient.readContract = async (input) => {
+      if (input.functionName === "assetCount") {
+        throw new Error("Arc RPC timeout");
+      }
+
+      return baseReadContract(input);
+    };
+
+    const payload = await loadAssetsPayload({ client: partialClient });
+
+    expect(payload.data).toHaveLength(26);
+    expect(payload.data[0]).toEqual(
+      expect.objectContaining({
+        category: "treasuries",
+        offering: null,
+        tokenId: "1",
+      }),
+    );
+  });
+
   test("filters listings by tokenId and keeps active listings sorted by price", async () => {
     const payload = await loadListingsPayload({ client: fakeClient(), tokenId: 1n });
 

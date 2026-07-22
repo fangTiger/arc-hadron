@@ -10,6 +10,7 @@ import { mapBidResults } from "@/lib/bids";
 import { mapListingResults } from "@/lib/listing";
 import { joinAssetsWithOfferings, type ChainAsset, type ChainOffering } from "@/lib/mappers";
 import { metaBySlug } from "@/lib/metadata";
+import { applyStaticAssetFallback, staticAssetCatalog } from "@/lib/staticAssetCatalog";
 import { type TradeEvent, type TradeEventType } from "@/lib/events";
 import {
   getEventIndexStatus,
@@ -260,6 +261,17 @@ async function readOptionalCount(
   }
 }
 
+async function tryReadCount(
+  client: PublicQueryClient,
+  contract: { address: Address; abi: Abi; functionName: string },
+): Promise<number | null> {
+  try {
+    return await readCount(client, contract);
+  } catch {
+    return null;
+  }
+}
+
 async function readMany(
   client: PublicQueryClient,
   contract: { address: Address; abi: Abi; functionName: string },
@@ -296,7 +308,7 @@ async function readManyFulfilled(
 export async function loadAssetsPayload({ client }: LoadOptions = {}) {
   const queryClient = activeClient(client);
   const [assetCount, offeringCount] = await Promise.all([
-    readCount(queryClient, {
+    tryReadCount(queryClient, {
       address: HADRON_ASSETS_ADDRESS,
       abi: HADRON_ASSETS_ABI,
       functionName: "assetCount",
@@ -307,6 +319,20 @@ export async function loadAssetsPayload({ client }: LoadOptions = {}) {
       functionName: "offeringCount",
     }),
   ]);
+
+  if (assetCount === null) {
+    return {
+      data: joinAssetsWithOfferings(staticAssetCatalog(), [], metaBySlug).map(serializeAsset),
+      meta: {
+        chainId: ARC_CHAIN_ID,
+        contracts: {
+          assets: HADRON_ASSETS_ADDRESS,
+          market: HADRON_MARKET_ADDRESS,
+        },
+      },
+    };
+  }
+
   const tokenIds = activeTokenIdsFor(assetCount);
   const offeringIds = idsForCount(offeringCount);
   const [assetReads, offeringReads] = await Promise.all([
@@ -330,11 +356,10 @@ export async function loadAssetsPayload({ client }: LoadOptions = {}) {
     ),
   ]);
 
-  if (tokenIds.length > 0 && assetReads.length === 0) {
-    throw new Error("All asset detail reads failed.");
-  }
-
-  const assets = assetReads.map(({ id, value }) => normalizeAsset(id, value));
+  const assets = applyStaticAssetFallback(
+    assetReads.map(({ id, value }) => normalizeAsset(id, value)),
+    tokenIds.length > 0 && assetReads.length === 0,
+  );
   const offerings = offeringReads.map(({ id, value }) => normalizeOffering(id, value));
 
   return {

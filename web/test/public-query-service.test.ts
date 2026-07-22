@@ -103,6 +103,58 @@ describe("public query service", () => {
     ]);
   });
 
+  test("keeps fulfilled assets when one Arc RPC detail read fails", async () => {
+    const partialClient = fakeClient();
+    const baseReadContract = partialClient.readContract;
+
+    partialClient.readContract = async (input) => {
+      const id = input.args?.[0];
+
+      if (input.functionName === "assetCount") {
+        return 3n;
+      }
+
+      if (input.functionName === "offeringCount") {
+        return 2n;
+      }
+
+      if (input.functionName === "getAsset") {
+        if (id === 2n) {
+          throw new Error("Arc RPC timeout");
+        }
+
+        if (id === 3n) {
+          return [
+            "GOLD OUNCE 4",
+            "commodities",
+            20_000n,
+            "hadron://assets/gold-ounce-4",
+          ];
+        }
+      }
+
+      if (input.functionName === "getOffering" && id === 2n) {
+        throw new Error("Arc RPC timeout");
+      }
+
+      return baseReadContract(input);
+    };
+
+    const payload = await loadAssetsPayload({ client: partialClient });
+
+    expect(payload.data).toEqual([
+      expect.objectContaining({
+        offering: expect.objectContaining({ id: "1" }),
+        tokenId: "1",
+      }),
+      expect.objectContaining({
+        offering: null,
+        tokenId: "3",
+        totalShares: "20000",
+      }),
+    ]);
+  });
+
   test("filters listings by tokenId and keeps active listings sorted by price", async () => {
     const payload = await loadListingsPayload({ client: fakeClient(), tokenId: 1n });
 

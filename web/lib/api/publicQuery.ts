@@ -264,6 +264,24 @@ async function readMany(
   );
 }
 
+async function readManyFulfilled(
+  client: PublicQueryClient,
+  contract: { address: Address; abi: Abi; functionName: string },
+  ids: readonly bigint[],
+): Promise<Array<{ id: bigint; value: unknown }>> {
+  const results = await Promise.allSettled(
+    ids.map(async (id) => ({
+      id,
+      value: await client.readContract({
+        ...contract,
+        args: [id],
+      }),
+    })),
+  );
+
+  return results.flatMap((result) => (result.status === "fulfilled" ? [result.value] : []));
+}
+
 export async function loadAssetsPayload({ client }: LoadOptions = {}) {
   const queryClient = activeClient(client);
   const [assetCount, offeringCount] = await Promise.all([
@@ -280,8 +298,8 @@ export async function loadAssetsPayload({ client }: LoadOptions = {}) {
   ]);
   const tokenIds = activeTokenIdsFor(assetCount);
   const offeringIds = idsForCount(offeringCount);
-  const [rawAssets, rawOfferings] = await Promise.all([
-    readMany(
+  const [assetReads, offeringReads] = await Promise.all([
+    readManyFulfilled(
       queryClient,
       {
         address: HADRON_ASSETS_ADDRESS,
@@ -290,7 +308,7 @@ export async function loadAssetsPayload({ client }: LoadOptions = {}) {
       },
       tokenIds,
     ),
-    readMany(
+    readManyFulfilled(
       queryClient,
       {
         address: HADRON_MARKET_ADDRESS,
@@ -300,10 +318,13 @@ export async function loadAssetsPayload({ client }: LoadOptions = {}) {
       offeringIds,
     ),
   ]);
-  const assets = rawAssets.map((asset, index) => normalizeAsset(tokenIds[index], asset));
-  const offerings = rawOfferings.map((offering, index) =>
-    normalizeOffering(offeringIds[index], offering),
-  );
+
+  if (tokenIds.length > 0 && assetReads.length === 0) {
+    throw new Error("All asset detail reads failed.");
+  }
+
+  const assets = assetReads.map(({ id, value }) => normalizeAsset(id, value));
+  const offerings = offeringReads.map(({ id, value }) => normalizeOffering(id, value));
 
   return {
     data: joinAssetsWithOfferings(assets, offerings, metaBySlug).map(serializeAsset),

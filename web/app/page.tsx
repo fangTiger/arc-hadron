@@ -2,12 +2,12 @@
 
 import { Suspense } from "react";
 import { HomeView } from "./HomeView";
-import { useAssets } from "@/lib/hooks/useAssets";
 import { useAllListings } from "@/lib/hooks/useListings";
 import { useMarketEvents } from "@/lib/hooks/useMarketEvents";
+import { useMarketSnapshot } from "@/lib/hooks/useMarketSnapshot";
 
 export default function Home() {
-  const { assets, errorZh, isLoading: isAssetsLoading } = useAssets();
+  const { assets, errorZh, isLoading: isAssetsLoading } = useMarketSnapshot();
   const {
     events,
     error: eventsError,

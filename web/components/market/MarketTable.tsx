@@ -264,8 +264,15 @@ export function MarketTableView({
   );
 
   return (
-    <section className="overflow-hidden border border-border bg-panel/80">
-      <div className="overflow-x-auto">
+    <section className="min-w-0 overflow-hidden border border-border bg-panel/80">
+      <div
+        className="flex items-center justify-between border-b border-border/80 bg-bg/45 px-4 py-2 font-mono text-[9px] uppercase tracking-[0.14em] text-muted sm:hidden"
+        data-scroll-hint
+      >
+        <span>Market directory</span>
+        <span className="text-neon-dim">Swipe for columns →</span>
+      </div>
+      <div className="hadron-scroll-frame" data-scroll-frame tabIndex={0}>
         <table className="min-w-[980px] w-full border-collapse">
           <thead className="border-b border-border bg-bg/70">
             <tr>

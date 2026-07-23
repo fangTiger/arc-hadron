@@ -18,7 +18,7 @@ export function IssuerAssetsTable({
   nowMs: number;
 }) {
   return (
-    <section className="space-y-3">
+    <section className="min-w-0 space-y-3" data-issuer-assets>
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-mono text-[11px] uppercase tracking-[0.2em] text-text">Assets</h2>
         <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">

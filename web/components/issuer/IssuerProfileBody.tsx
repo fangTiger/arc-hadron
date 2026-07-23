@@ -37,7 +37,7 @@ export function IssuerProfileBody({ issuer }: { issuer: Issuer }) {
   );
 
   return (
-    <div className="space-y-5">
+    <div className="min-w-0 space-y-5">
       <IssuerKpiBar
         kpis={{
           ...kpis,
@@ -46,15 +46,20 @@ export function IssuerProfileBody({ issuer }: { issuer: Issuer }) {
         }}
       />
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(320px,2fr)]">
-        <IssuerAssetsTable
-          assets={issuerAssets}
-          errorText={errorZh}
-          events={events}
-          isLoading={isAssetsLoading}
-          nowMs={nowMs}
-        />
-        <aside className="space-y-5">
+      <div
+        className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(320px,2fr)]"
+        data-issuer-profile-grid
+      >
+        <div className="min-w-0">
+          <IssuerAssetsTable
+            assets={issuerAssets}
+            errorText={errorZh}
+            events={events}
+            isLoading={isAssetsLoading}
+            nowMs={nowMs}
+          />
+        </div>
+        <aside className="min-w-0 space-y-5">
           <IssuerDocsCard docs={issuer.docs} />
           <IssuerExternalLinksCard links={issuer.externalLinks} />
           <IssuerActivityListView

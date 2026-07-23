@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
 import { useAccount, useConnect } from "wagmi";
 import {
@@ -23,7 +22,6 @@ import { useBuyListing } from "@/lib/hooks/useBuyListing";
 import { useBuyPrimary } from "@/lib/hooks/useBuyPrimary";
 import { useCancelBid } from "@/lib/hooks/useCancelBid";
 import { useCancelListing } from "@/lib/hooks/useCancelListing";
-import { applyTxInvalidation } from "@/lib/hooks/applyTxInvalidation";
 import { useAllBids } from "@/lib/hooks/useBids";
 import { useAssets } from "@/lib/hooks/useAssets";
 import { useAllListings } from "@/lib/hooks/useListings";
@@ -404,7 +402,6 @@ export function AssistantDock() {
   const { connect, connectors } = useConnect();
   const { isCorrectChain, switchToArc } = useNetworkGuard();
   const { pushError, pushSuccess } = useToast();
-  const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const { assets } = useAssets({ enabled: isOpen });
   const { listings } = useAllListings({ enabled: isOpen });
@@ -435,34 +432,30 @@ export function AssistantDock() {
   useEffect(() => {
     if (buyPrimary.status === "success" && buyPrimary.txHash) {
       pushSuccess({ message: "Purchase successful", txHash: buyPrimary.txHash });
-      applyTxInvalidation(queryClient, "buy");
     } else if (buyPrimary.status === "error" && buyPrimary.errorText) {
       pushError(buyPrimary.errorText);
     }
-  }, [buyPrimary.errorText, buyPrimary.status, buyPrimary.txHash, pushError, pushSuccess, queryClient]);
+  }, [buyPrimary.errorText, buyPrimary.status, buyPrimary.txHash, pushError, pushSuccess]);
 
   useEffect(() => {
     if (buyListing.status === "success" && buyListing.txHash) {
       pushSuccess({ message: "Purchase successful", txHash: buyListing.txHash });
-      applyTxInvalidation(queryClient, "buy");
     } else if (buyListing.status === "error" && buyListing.errorText) {
       pushError(buyListing.errorText);
     }
-  }, [buyListing.errorText, buyListing.status, buyListing.txHash, pushError, pushSuccess, queryClient]);
+  }, [buyListing.errorText, buyListing.status, buyListing.txHash, pushError, pushSuccess]);
 
   useEffect(() => {
     if (listForSale.status === "success" && listForSale.txHash) {
       pushSuccess({ message: "Listing created", txHash: listForSale.txHash });
-      applyTxInvalidation(queryClient, "sell");
     } else if (listForSale.status === "error" && listForSale.errorText) {
       pushError(listForSale.errorText);
     }
-  }, [listForSale.errorText, listForSale.status, listForSale.txHash, pushError, pushSuccess, queryClient]);
+  }, [listForSale.errorText, listForSale.status, listForSale.txHash, pushError, pushSuccess]);
 
   useEffect(() => {
     if (cancelListing.status === "success" && cancelListing.txHash) {
       pushSuccess({ message: "Order cancelled", txHash: cancelListing.txHash });
-      applyTxInvalidation(queryClient, "cancel");
     } else if (cancelListing.status === "error" && cancelListing.errorText) {
       pushError(cancelListing.errorText);
     }
@@ -472,26 +465,23 @@ export function AssistantDock() {
     cancelListing.txHash,
     pushError,
     pushSuccess,
-    queryClient,
   ]);
 
   useEffect(() => {
     if (cancelBid.status === "success" && cancelBid.txHash) {
       pushSuccess({ message: "Order cancelled", txHash: cancelBid.txHash });
-      applyTxInvalidation(queryClient, "cancel");
     } else if (cancelBid.status === "error" && cancelBid.errorText) {
       pushError(cancelBid.errorText);
     }
-  }, [cancelBid.errorText, cancelBid.status, cancelBid.txHash, pushError, pushSuccess, queryClient]);
+  }, [cancelBid.errorText, cancelBid.status, cancelBid.txHash, pushError, pushSuccess]);
 
   useEffect(() => {
     if (claimYield.status === "success" && claimYield.txHash) {
       pushSuccess({ message: "Yield claimed", txHash: claimYield.txHash });
-      applyTxInvalidation(queryClient, "claim");
     } else if (claimYield.status === "error" && claimYield.errorText) {
       pushError(claimYield.errorText);
     }
-  }, [claimYield.errorText, claimYield.status, claimYield.txHash, pushError, pushSuccess, queryClient]);
+  }, [claimYield.errorText, claimYield.status, claimYield.txHash, pushError, pushSuccess]);
 
   function connectWallet() {
     if (!injectedConnector) {

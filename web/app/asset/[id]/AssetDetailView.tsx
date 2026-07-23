@@ -31,15 +31,15 @@ const ORDER_HIGHLIGHT_MS = 1_200;
 
 function AssetDetailSkeleton() {
   return (
-    <main className="mx-auto w-full max-w-[1480px] px-4 py-10 sm:px-6 lg:px-8">
+    <main className="hadron-shell py-6 sm:py-10" data-asset-skeleton>
       <div className="space-y-6">
-        <Skeleton className="h-[220px]" />
+        <Skeleton className="h-[160px] sm:h-[220px]" />
         <section className="grid gap-5 xl:grid-cols-[minmax(360px,1.15fr)_minmax(360px,1fr)_minmax(320px,0.72fr)] xl:items-start">
-          <Skeleton className="h-[360px]" />
-          <Skeleton className="h-[520px]" tone="soft" />
+          <Skeleton className="h-[280px] sm:h-[360px]" />
+          <Skeleton className="h-[320px] sm:h-[420px] xl:h-[520px]" tone="soft" />
           <aside className="space-y-4 xl:sticky xl:top-24">
-            <Skeleton className="h-[220px]" tone="soft" />
-            <Skeleton className="h-[420px]" tone="soft" />
+            <Skeleton className="h-[180px] sm:h-[220px]" tone="soft" />
+            <Skeleton className="h-[300px] sm:h-[420px]" tone="soft" />
             <p className="sr-only">REMAINING SHARES</p>
           </aside>
         </section>
@@ -50,7 +50,7 @@ function AssetDetailSkeleton() {
 
 function EmptyAssetState() {
   return (
-    <main className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-3xl items-center px-4 py-16 text-center sm:px-6">
+    <main className="hadron-shell flex min-h-[calc(100vh-4rem)] max-w-3xl items-center py-16 text-center">
       <section className="w-full border border-border bg-panel p-8">
         <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-down">ASSET NOT FOUND</p>
         <h1 className="mt-4 text-2xl font-semibold text-text">Asset not found</h1>
@@ -67,7 +67,7 @@ function EmptyAssetState() {
 
 function AssetReadErrorState({ message }: { message: string }) {
   return (
-    <main className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-3xl items-center px-4 py-16 text-center sm:px-6">
+    <main className="hadron-shell flex min-h-[calc(100vh-4rem)] max-w-3xl items-center py-16 text-center">
       <section className="w-full border border-down/70 bg-down/10 p-8">
         <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-down">CHAIN READ FAILED</p>
         <h1 className="mt-4 text-2xl font-semibold text-text">Failed to load asset</h1>
@@ -414,7 +414,7 @@ export function AssetDetailView({
   }
 
   return (
-    <main className="mx-auto w-full max-w-[1480px] px-4 py-8 sm:px-6 lg:px-8">
+    <main className="hadron-shell py-6 sm:py-8">
       <div className="space-y-6">
         <AssetPriceHeader asset={asset} events={events} nowMs={nowMs} />
 

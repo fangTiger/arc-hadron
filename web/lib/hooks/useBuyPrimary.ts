@@ -4,6 +4,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { HADRON_MARKET_ABI, HADRON_MARKET_ADDRESS } from "@/lib/contracts";
 import { mapWagmiError } from "@/lib/purchase";
+import { useTxSuccessInvalidation } from "@/lib/hooks/useTxSuccessInvalidation";
 
 export type BuyPrimaryStatus = "idle" | "signing" | "pending" | "success" | "error";
 type LocalBuyPrimaryStatus = Exclude<BuyPrimaryStatus, "success">;
@@ -79,6 +80,7 @@ export function useBuyPrimary(): UseBuyPrimaryResult {
   );
   const status = derivedState.status;
   const errorText = derivedState.errorText;
+  useTxSuccessInvalidation({ intent: "buy", status, txHash });
 
   const reset = useCallback(() => {
     setLocalState({ status: "idle" });

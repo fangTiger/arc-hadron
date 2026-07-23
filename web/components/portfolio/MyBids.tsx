@@ -71,7 +71,7 @@ export function MyBidsView({
   const isBusy = status === "signing" || status === "pending";
 
   return (
-    <section className="mt-8 border border-border bg-panel/80">
+    <section className="mt-6 min-w-0 border border-border bg-panel/80 sm:mt-8">
       <div className="flex items-center justify-between gap-4 border-b border-border px-5 py-4">
         <div>
           <p className={labelClassName()}>MY BIDS</p>
@@ -83,12 +83,14 @@ export function MyBidsView({
       </div>
 
       {!isLoading && bids.length === 0 ? (
-        <div className="px-5 py-10 text-center">
+        <div className="px-5 py-9 text-center sm:py-11" data-portfolio-empty-state>
           <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">NO ACTIVE BIDS</p>
-          <p className="mt-3 text-sm text-text-dim">No active bids. Buy orders created from asset pages appear here.</p>
+          <p className="mx-auto mt-3 max-w-lg text-[15px] leading-7 text-text-dim sm:text-sm sm:leading-6">
+            No active bids. Buy orders created from asset pages appear here.
+          </p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="hadron-scroll-frame">
           <table className="w-full min-w-[820px] border-collapse">
             <thead>
               <tr>

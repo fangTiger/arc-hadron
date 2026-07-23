@@ -4,10 +4,10 @@ import { MyListings } from "@/components/portfolio/MyListings";
 
 export default function PortfolioPage() {
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-10 text-text sm:px-6 lg:px-8">
-      <section className="mb-8 border-b border-border pb-6">
+    <main className="hadron-shell py-7 text-text sm:py-10">
+      <section className="mb-6 border-b border-border pb-5 sm:mb-8 sm:pb-6">
         <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-dim">PORTFOLIO</p>
-        <h1 className="mt-4 text-3xl font-semibold text-text sm:text-4xl">My holdings</h1>
+        <h1 className="mt-3 text-3xl font-semibold text-text sm:mt-4 sm:text-4xl">My holdings</h1>
       </section>
 
       <HoldingsTable />

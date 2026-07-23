@@ -7,6 +7,7 @@ import {
   HADRON_YIELD_ADDRESS,
 } from "@/lib/contracts";
 import { deriveBuyPrimaryState, type BuyPrimaryStatus } from "@/lib/hooks/useBuyPrimary";
+import { useTxSuccessInvalidation } from "@/lib/hooks/useTxSuccessInvalidation";
 import { mapWagmiError } from "@/lib/purchase";
 import { POLL_WARM_MS } from "./pollingConstants";
 import { visibleRefetch } from "./visibilityAware";
@@ -192,6 +193,7 @@ export function useDepositYield(): UseDepositYieldResult {
 
 export function useClaimYield(): UseClaimYieldResult {
   const { errorText, reset, status, submit, txHash } = useYieldTransaction();
+  useTxSuccessInvalidation({ intent: "claim", status, txHash });
   const claim = useCallback(
     (tokenId: bigint) => {
       submit({

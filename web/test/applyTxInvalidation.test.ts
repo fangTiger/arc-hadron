@@ -6,6 +6,7 @@ import {
   HADRON_YIELD_ADDRESS,
 } from "../lib/contracts";
 import { applyTxInvalidation, type TxIntent } from "../lib/hooks/applyTxInvalidation";
+import { MARKET_ASSETS_QUERY_KEY } from "../lib/marketSnapshot";
 
 const QUERY_DEFINITIONS = [
   {
@@ -115,6 +116,16 @@ function queryClientFixture() {
 
     labelByHash.set(query.queryHash, definition.label);
   });
+  queryClient.setQueryData(MARKET_ASSETS_QUERY_KEY, []);
+  const marketSnapshot = queryClient.getQueryCache().find({
+    queryKey: MARKET_ASSETS_QUERY_KEY,
+  });
+
+  if (!marketSnapshot) {
+    throw new Error("Missing market assets snapshot query.");
+  }
+
+  labelByHash.set(marketSnapshot.queryHash, "market.assetsSnapshot");
 
   return { labelByHash, queryClient };
 }
@@ -142,6 +153,7 @@ describe("applyTxInvalidation", () => {
         "assets.balanceOf",
         "assets.getAsset",
         "assets.offeringCount",
+        "market.assetsSnapshot",
         "market.getListing",
         "market.listingCount",
         "market.listingsByToken",
@@ -155,6 +167,7 @@ describe("applyTxInvalidation", () => {
         "assets.balanceOf",
         "assets.getAsset",
         "assets.offeringCount",
+        "market.assetsSnapshot",
         "market.getListing",
         "market.listingCount",
         "market.listingsByToken",

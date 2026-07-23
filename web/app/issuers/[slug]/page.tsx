@@ -22,7 +22,7 @@ export default async function IssuerProfilePage({
   }
 
   return (
-    <main className="mx-auto w-full max-w-7xl space-y-5 px-4 pb-24 pt-6 text-text sm:px-6 lg:px-8">
+    <main className="hadron-shell space-y-5 pb-16 pt-5 text-text sm:pb-24 sm:pt-6">
       <IssuerHeader issuer={issuer} />
       <IssuerProfileBody issuer={issuer} />
     </main>

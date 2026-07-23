@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   loadAssetsPayload,
   loadListingsPayload,
@@ -103,51 +103,88 @@ describe("public query service", () => {
     ]);
   });
 
-  test("uses sequential multicalls for asset and offering details when the client supports them", async () => {
+  test("starts count reads and detail multicalls in two parallel rounds", async () => {
     const client = fakeClient() as PublicQueryClient & {
       multicall: (input: {
         contracts: ReadonlyArray<{ functionName: string }>;
       }) => Promise<readonly unknown[]>;
     };
-    const readContract = client.readContract;
+    const baseReadContract = client.readContract;
+    const countStarted: string[] = [];
     const detailOrder: string[] = [];
+    let resolveAssetCount!: (value: bigint) => void;
+    let resolveOfferingCount!: (value: bigint) => void;
+    let resolveAssetDetails!: (value: readonly unknown[]) => void;
+    let resolveOfferingDetails!: (value: readonly unknown[]) => void;
+    const assetCount = new Promise<bigint>((resolve) => {
+      resolveAssetCount = resolve;
+    });
+    const offeringCount = new Promise<bigint>((resolve) => {
+      resolveOfferingCount = resolve;
+    });
+    const assetDetails = new Promise<readonly unknown[]>((resolve) => {
+      resolveAssetDetails = resolve;
+    });
+    const offeringDetails = new Promise<readonly unknown[]>((resolve) => {
+      resolveOfferingDetails = resolve;
+    });
 
     client.readContract = async (input) => {
-      if (input.functionName === "getAsset" || input.functionName === "getOffering") {
-        throw new Error("Detail reads must use Multicall3.");
+      if (input.functionName === "assetCount") {
+        countStarted.push(input.functionName);
+        return assetCount;
       }
 
-      return readContract(input);
+      if (input.functionName === "offeringCount") {
+        countStarted.push(input.functionName);
+        return offeringCount;
+      }
+
+      return baseReadContract(input);
     };
     client.multicall = async ({ contracts }) => {
       const functionName = contracts[0]?.functionName;
       detailOrder.push(functionName ?? "unknown");
 
       if (functionName === "getAsset") {
-        return [
-          {
-            result: [
-              "US T-BILL 2026-Q3",
-              "treasuries",
-              10_000n,
-              "hadron://assets/t-bill-2026-q3",
-            ],
-            status: "success",
-          },
-        ];
+        return assetDetails;
       }
 
-      return [
-        {
-          result: [1n, 100n, 5_000n, true],
-          status: "success",
-        },
-      ];
+      return offeringDetails;
     };
 
-    const payload = await loadAssetsPayload({ client });
+    const payloadPromise = loadAssetsPayload({ client });
+    await vi.waitFor(() => {
+      expect(countStarted).toEqual(["assetCount", "offeringCount"]);
+    });
 
-    expect(detailOrder).toEqual(["getAsset", "getOffering"]);
+    resolveAssetCount(1n);
+    resolveOfferingCount(1n);
+
+    await vi.waitFor(() => {
+      expect(detailOrder).toEqual(["getAsset", "getOffering"]);
+    });
+
+    resolveAssetDetails([
+      {
+        result: [
+          "US T-BILL 2026-Q3",
+          "treasuries",
+          10_000n,
+          "hadron://assets/t-bill-2026-q3",
+        ],
+        status: "success",
+      },
+    ]);
+    resolveOfferingDetails([
+      {
+        result: [1n, 100n, 5_000n, true],
+        status: "success",
+      },
+    ]);
+
+    const payload = await payloadPromise;
+
     expect(payload.data[0]).toMatchObject({
       offering: {
         id: "1",

@@ -3,6 +3,7 @@ import {
   HADRON_MARKET_ADDRESS,
   HADRON_YIELD_ADDRESS,
 } from "@/lib/contracts";
+import { MARKET_ASSETS_QUERY_KEY } from "@/lib/marketSnapshot";
 import {
   matchesAll,
   matchesContract,
@@ -31,6 +32,9 @@ export const ASSETS_FUNCTIONS = matchesFunctionName([
 export const MARKET_CONTRACT = matchesContract(HADRON_MARKET_ADDRESS);
 export const ASSETS_CONTRACT = matchesContract(HADRON_ASSETS_ADDRESS);
 export const YIELD_CONTRACT = matchesContract(HADRON_YIELD_ADDRESS);
+export const MARKET_ASSETS_SNAPSHOT: QueryPredicate = (query) =>
+  query.queryKey.length === MARKET_ASSETS_QUERY_KEY.length &&
+  query.queryKey.every((value, index) => value === MARKET_ASSETS_QUERY_KEY[index]);
 
 export function listingsPredicates(): QueryPredicate[] {
   return [matchesAll(MARKET_CONTRACT, LISTING_FUNCTIONS)];
@@ -41,7 +45,10 @@ export function bidsPredicates(): QueryPredicate[] {
 }
 
 export function assetsPredicates(): QueryPredicate[] {
-  return [matchesAll(ASSETS_CONTRACT, ASSETS_FUNCTIONS)];
+  return [
+    matchesAll(ASSETS_CONTRACT, ASSETS_FUNCTIONS),
+    MARKET_ASSETS_SNAPSHOT,
+  ];
 }
 
 export function yieldPredicates(): QueryPredicate[] {

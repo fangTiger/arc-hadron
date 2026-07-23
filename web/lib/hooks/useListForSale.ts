@@ -13,6 +13,7 @@ import {
   HADRON_MARKET_ABI,
   HADRON_MARKET_ADDRESS,
 } from "@/lib/contracts";
+import { useTxSuccessInvalidation } from "@/lib/hooks/useTxSuccessInvalidation";
 import { mapWagmiError } from "@/lib/purchase";
 
 export type ListForSaleStatus =
@@ -162,6 +163,7 @@ export function useListForSale(): UseListForSaleResult {
   );
   const status = derivedState.status;
   const errorText = derivedState.errorText;
+  useTxSuccessInvalidation({ intent: "sell", status, txHash });
 
   const failWithError = useCallback((err: unknown) => {
     setLocalState((previous) => ({

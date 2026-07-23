@@ -19,6 +19,9 @@
   --category-gold: #7c5c1e;
   --category-real-estate: #1d2733;
   --category-carbon: #1e4d3a;
+  --hadron-shell-max: 1480px;
+  --hadron-shell-gutter: clamp(1rem, 2.4vw, 2rem);
+  --hadron-ticker-height: 2.5rem;
 }
 
 @theme inline {
@@ -51,14 +54,18 @@ html {
   min-height: 100%;
   background: var(--bg);
   color-scheme: dark;
+  overflow-x: clip;
 }
 
 body {
   min-height: 100vh;
   margin: 0;
-  background: var(--bg);
+  background:
+    radial-gradient(circle at 50% -20%, rgb(13 27 43 / 42%), transparent 34rem),
+    var(--bg);
   color: var(--text);
   font-family: var(--font-sans), system-ui, sans-serif;
+  overflow-x: clip;
   text-rendering: geometricprecision;
 }
 
@@ -85,6 +92,29 @@ a {
   background: var(--border-glow);
   border: 2px solid var(--bg);
   border-radius: 999px;
+}
+
+.hadron-shell {
+  width: min(
+    calc(100% - (var(--hadron-shell-gutter) * 2)),
+    var(--hadron-shell-max)
+  );
+  margin-inline: auto;
+}
+
+.hadron-scroll-frame {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+.hadron-ticker-safe {
+  padding-bottom: 1.5rem;
+}
+
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 1px solid var(--neon);
+  outline-offset: 3px;
 }
 
 @keyframes hadron-skeleton {
@@ -121,6 +151,12 @@ a {
 
 .hadron-page-transition {
   animation: hadron-page-fade 180ms ease-out;
+}
+
+@media (min-width: 64rem) {
+  .hadron-ticker-safe {
+    padding-bottom: calc(var(--hadron-ticker-height) + 2rem);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

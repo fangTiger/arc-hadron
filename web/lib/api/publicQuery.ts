@@ -339,11 +339,18 @@ async function readManyFulfilled(
 
 export async function loadAssetsPayload({ client }: LoadOptions = {}) {
   const queryClient = activeClient(client);
-  const assetCount = await tryReadCount(queryClient, {
-    address: HADRON_ASSETS_ADDRESS,
-    abi: HADRON_ASSETS_ABI,
-    functionName: "assetCount",
-  });
+  const [assetCount, offeringCount] = await Promise.all([
+    tryReadCount(queryClient, {
+      address: HADRON_ASSETS_ADDRESS,
+      abi: HADRON_ASSETS_ABI,
+      functionName: "assetCount",
+    }),
+    readOptionalCount(queryClient, {
+      address: HADRON_MARKET_ADDRESS,
+      abi: HADRON_MARKET_ABI,
+      functionName: "offeringCount",
+    }),
+  ]);
 
   if (assetCount === null) {
     return {
@@ -358,31 +365,28 @@ export async function loadAssetsPayload({ client }: LoadOptions = {}) {
     };
   }
 
-  const offeringCount = await readOptionalCount(queryClient, {
-    address: HADRON_MARKET_ADDRESS,
-    abi: HADRON_MARKET_ABI,
-    functionName: "offeringCount",
-  });
   const tokenIds = activeTokenIdsFor(assetCount);
   const offeringIds = idsForCount(offeringCount);
-  const assetReads = await readManyFulfilled(
-    queryClient,
-    {
-      address: HADRON_ASSETS_ADDRESS,
-      abi: HADRON_ASSETS_ABI,
-      functionName: "getAsset",
-    },
-    tokenIds,
-  );
-  const offeringReads = await readManyFulfilled(
-    queryClient,
-    {
-      address: HADRON_MARKET_ADDRESS,
-      abi: HADRON_MARKET_ABI,
-      functionName: "getOffering",
-    },
-    offeringIds,
-  );
+  const [assetReads, offeringReads] = await Promise.all([
+    readManyFulfilled(
+      queryClient,
+      {
+        address: HADRON_ASSETS_ADDRESS,
+        abi: HADRON_ASSETS_ABI,
+        functionName: "getAsset",
+      },
+      tokenIds,
+    ),
+    readManyFulfilled(
+      queryClient,
+      {
+        address: HADRON_MARKET_ADDRESS,
+        abi: HADRON_MARKET_ABI,
+        functionName: "getOffering",
+      },
+      offeringIds,
+    ),
+  ]);
 
   const assets = applyStaticAssetFallback(
     assetReads.map(({ id, value }) => normalizeAsset(id, value)),

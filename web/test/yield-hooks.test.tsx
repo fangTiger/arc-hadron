@@ -1,5 +1,6 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { HADRON_YIELD_ADDRESS } from "../lib/contracts";
 
@@ -142,6 +143,7 @@ async function mountHook<T>(useHook: () => T) {
   let current: T | null = null;
   const container = document.createElement("div");
   const root = createRoot(container);
+  const queryClient = new QueryClient();
 
   function HookHost() {
     current = useHook();
@@ -151,7 +153,11 @@ async function mountHook<T>(useHook: () => T) {
 
   async function render() {
     await act(async () => {
-      root.render(<HookHost />);
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <HookHost />
+        </QueryClientProvider>,
+      );
       await flushEffects();
     });
   }

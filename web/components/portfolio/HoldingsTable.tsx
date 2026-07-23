@@ -102,10 +102,13 @@ function LoadingRows() {
 
 function DisconnectedState({ connectAction }: { connectAction?: ReactNode }) {
   return (
-    <section className="border border-border bg-panel/80 p-8 text-center">
+    <section
+      className="border border-border bg-panel/80 px-5 py-8 sm:p-10 text-center"
+      data-portfolio-empty-state
+    >
       <p className={labelClassName()}>WALLET REQUIRED</p>
-      <h2 className="mt-4 text-2xl font-semibold text-text">Connect wallet to view holdings</h2>
-      <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-text-dim">
+      <h2 className="mt-4 text-xl font-semibold text-text sm:text-2xl">Connect wallet to view holdings</h2>
+      <p className="mx-auto mt-3 max-w-lg text-[15px] leading-7 text-text-dim sm:text-sm sm:leading-6">
         Holdings, cost basis, and share balances are read from Arc contracts. Connect to view the
         current address portfolio.
       </p>
@@ -116,10 +119,13 @@ function DisconnectedState({ connectAction }: { connectAction?: ReactNode }) {
 
 function EmptyState() {
   return (
-    <section className="border border-border bg-panel/80 p-8 text-center">
+    <section
+      className="border border-border bg-panel/80 px-5 py-8 sm:p-10 text-center"
+      data-portfolio-empty-state
+    >
       <p className={labelClassName()}>NO HOLDINGS</p>
-      <h2 className="mt-4 text-2xl font-semibold text-text">No holdings yet</h2>
-      <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-text-dim">
+      <h2 className="mt-4 text-xl font-semibold text-text sm:text-2xl">No holdings yet</h2>
+      <p className="mx-auto mt-3 max-w-lg text-[15px] leading-7 text-text-dim sm:text-sm sm:leading-6">
         After a primary purchase, shares, market value, and moving-average cost will appear here.
       </p>
       <Link className={glowButtonClassName({ className: "mt-7" })} href="/">
@@ -131,10 +137,15 @@ function EmptyState() {
 
 function ErrorState({ message }: { message: string }) {
   return (
-    <section className="border border-down/70 bg-down/10 p-8 text-center">
+    <section
+      className="border border-down/70 bg-down/10 px-5 py-8 sm:p-10 text-center"
+      data-portfolio-empty-state
+    >
       <p className={labelClassName()}>READ FAILED</p>
-      <h2 className="mt-4 text-2xl font-semibold text-text">Failed to load holdings</h2>
-      <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-text-dim">{message}</p>
+      <h2 className="mt-4 text-xl font-semibold text-text sm:text-2xl">Failed to load holdings</h2>
+      <p className="mx-auto mt-3 max-w-lg text-[15px] leading-7 text-text-dim sm:text-sm sm:leading-6">
+        {message}
+      </p>
     </section>
   );
 }
@@ -332,7 +343,7 @@ export function HoldingsTableView({
   }
 
   return (
-    <section className="border border-border bg-panel/80">
+    <section className="min-w-0 border border-border bg-panel/80">
       <div className="flex flex-col gap-2 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
         <p className={labelClassName()}>TOTAL PENDING YIELD</p>
         <p
@@ -342,7 +353,7 @@ export function HoldingsTableView({
           {pendingTotalText}
         </p>
       </div>
-      <div className="overflow-x-auto">
+      <div className="hadron-scroll-frame">
         <table className="w-full min-w-[1080px] border-collapse">
           <thead>
             <tr>

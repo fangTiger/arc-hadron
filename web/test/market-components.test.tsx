@@ -62,7 +62,8 @@ describe("market redesign components", () => {
       <StatsStripView
         assetCount={14}
         avgApyBps={720}
-        isLoading={false}
+        isAssetsLoading={false}
+        isEventsLoading={false}
         tradeCount={9}
         tvl={1_250_000n * USDC}
         volume24h={12_300n * USDC}
@@ -115,7 +116,8 @@ describe("market redesign components", () => {
             totalPaid: 999n * USDC,
           }),
         ]}
-        isLoading={false}
+        isAssetsLoading={false}
+        isEventsLoading={false}
         nowMs={Date.UTC(2026, 6, 2, 12)}
       />,
     );
@@ -123,6 +125,24 @@ describe("market redesign components", () => {
     expect(html).toContain("330.00 USDC");
     expect(html).not.toContain("999.00 USDC");
     expect(html).toContain("TRADES</span><span class=\"text-text \">1</span>");
+  });
+
+  test("shows asset metrics while event-derived metrics are still loading", () => {
+    const html = renderToStaticMarkup(
+      <StatsStrip
+        assets={[assetView()]}
+        events={[tradeEvent()]}
+        isAssetsLoading={false}
+        isEventsLoading
+        nowMs={Date.UTC(2026, 6, 2, 12)}
+      />,
+    );
+
+    expect(html).toContain("5.10%");
+    expect(html).toContain("ASSETS</span><span class=\"text-text \">1</span>");
+    expect(html).not.toContain("330.00 USDC");
+    expect(html).not.toContain("TRADES</span><span class=\"text-text \">1</span>");
+    expect(html.match(/aria-hidden="true"/g)).toHaveLength(3);
   });
 
   test("renders recent activity as English market tape sentences", () => {

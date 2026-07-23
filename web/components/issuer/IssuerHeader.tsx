@@ -42,7 +42,7 @@ export function IssuerHeader({ issuer }: { issuer: Issuer }) {
               Focus: {issuer.focus}
             </p>
             <p
-              className="mt-4 truncate text-sm leading-6 text-text-dim"
+              className="mt-4 text-sm leading-6 text-text-dim sm:truncate"
               title={issuer.description}
             >
               {issuer.description}

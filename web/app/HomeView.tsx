@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 import { MarketBrief } from "@/components/ai/MarketBrief";
 import { ActivityPanel } from "@/components/market/ActivityPanel";
 import { CategoryTabs, type MarketCategory } from "@/components/market/CategoryTabs";
@@ -19,6 +19,9 @@ import { eventsForAssets } from "@/lib/marketMetrics";
 import type { AssetView } from "@/lib/mappers";
 
 const VALID_CATEGORY_VALUES = new Set(CATEGORY_TAB_OPTIONS.map((option) => option.value));
+const subscribeToHydration = () => () => {};
+const getHydratedSnapshot = () => true;
+const getServerHydratedSnapshot = () => false;
 
 function categoryFromParam(value: string | null): MarketCategory {
   return value !== null && VALID_CATEGORY_VALUES.has(value as MarketCategory)
@@ -48,6 +51,11 @@ export function HomeView({
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const hasHydrated = useSyncExternalStore(
+    subscribeToHydration,
+    getHydratedSnapshot,
+    getServerHydratedSnapshot,
+  );
   const category = categoryFromParam(searchParams.get("category"));
   const query = searchParams.get("q") ?? "";
   const rawIssuerSlug = searchParams.get("issuer");
@@ -117,12 +125,13 @@ export function HomeView({
     ) : undefined;
 
   return (
-    <main className="mx-auto w-full max-w-[1440px] px-4 pb-24 pt-6 text-text sm:px-6 lg:px-8">
+    <main className="hadron-shell hadron-ticker-safe pt-5 text-text sm:pt-6">
       <div className="space-y-6">
         <StatsStrip
           assets={assets}
           events={events}
-          isLoading={isAssetsLoading || isEventsLoading}
+          isAssetsLoading={!hasHydrated || isAssetsLoading}
+          isEventsLoading={!hasHydrated || isEventsLoading}
           nowMs={nowMs}
         />
 
@@ -196,7 +205,7 @@ export function HomeView({
         ) : null}
 
         <section
-          className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start"
+          className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start"
           data-market-workbench
         >
           <div className="min-w-0 flex-1">
@@ -209,7 +218,7 @@ export function HomeView({
               nowMs={nowMs}
             />
           </div>
-          <div className="w-full space-y-5 xl:sticky xl:top-24 xl:shrink-0" data-market-side-rail>
+          <div className="min-w-0 w-full space-y-5 xl:sticky xl:top-24 xl:shrink-0" data-market-side-rail>
             <MarketBrief
               assets={assets}
               events={events}

@@ -33,7 +33,10 @@ export function LiveTicker({
   const repeated = [...tape, ...tape];
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bg/95 backdrop-blur">
+    <div
+      className="relative z-30 mt-6 border border-border bg-bg/95 backdrop-blur lg:fixed lg:inset-x-0 lg:bottom-0 lg:mt-0 lg:border-x-0 lg:border-b-0"
+      data-live-ticker
+    >
       <div className="flex h-10 items-center overflow-hidden font-mono text-[10px] uppercase tracking-[0.16em]">
         <div className="flex h-full shrink-0 items-center border-r border-border bg-neon/10 px-4 text-neon">
           LIVE

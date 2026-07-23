@@ -15,12 +15,14 @@ import type { AssetView } from "@/lib/mappers";
 export function StatsStrip({
   assets,
   events,
-  isLoading,
+  isAssetsLoading,
+  isEventsLoading,
   nowMs,
 }: {
   assets: AssetView[];
   events: TradeEvent[];
-  isLoading: boolean;
+  isAssetsLoading: boolean;
+  isEventsLoading: boolean;
   nowMs: number;
 }) {
   const scopedEvents = eventsForAssets(events, assets);
@@ -29,7 +31,8 @@ export function StatsStrip({
     <StatsStripView
       assetCount={assets.length}
       avgApyBps={averageApyBps(assets)}
-      isLoading={isLoading}
+      isAssetsLoading={isAssetsLoading}
+      isEventsLoading={isEventsLoading}
       tradeCount={scopedEvents.length}
       tvl={totalValueLocked(assets, scopedEvents)}
       volume24h={total24hVolume(scopedEvents, nowMs)}
@@ -40,24 +43,47 @@ export function StatsStrip({
 export function StatsStripView({
   assetCount,
   avgApyBps,
-  isLoading,
+  isAssetsLoading,
+  isEventsLoading,
   tradeCount,
   tvl,
   volume24h,
 }: {
   assetCount: number;
   avgApyBps: number | null;
-  isLoading: boolean;
+  isAssetsLoading: boolean;
+  isEventsLoading: boolean;
   tradeCount: number;
   tvl: bigint;
   volume24h: bigint;
 }) {
   const items = [
-    { label: "TVL", value: `${formatUsdc(tvl, { compact: true })} USDC` },
-    { label: "24H VOL", value: `${formatUsdc(volume24h, { compact: true })} USDC` },
-    { label: "AVG YIELD", value: formatApyBps(avgApyBps), tone: "text-gold" },
-    { label: "ASSETS", value: assetCount.toString() },
-    { label: "TRADES", value: tradeCount.toString() },
+    {
+      isLoading: isAssetsLoading || isEventsLoading,
+      label: "TVL",
+      value: `${formatUsdc(tvl, { compact: true })} USDC`,
+    },
+    {
+      isLoading: isEventsLoading,
+      label: "24H VOL",
+      value: `${formatUsdc(volume24h, { compact: true })} USDC`,
+    },
+    {
+      isLoading: isAssetsLoading,
+      label: "AVG YIELD",
+      tone: "text-gold",
+      value: formatApyBps(avgApyBps),
+    },
+    {
+      isLoading: isAssetsLoading,
+      label: "ASSETS",
+      value: assetCount.toString(),
+    },
+    {
+      isLoading: isEventsLoading,
+      label: "TRADES",
+      value: tradeCount.toString(),
+    },
   ];
 
   return (
@@ -65,7 +91,7 @@ export function StatsStripView({
       {items.map((item) => (
         <div className="inline-flex min-h-5 items-center gap-2" key={item.label}>
           <span>{item.label}</span>
-          {isLoading ? (
+          {item.isLoading ? (
             <Skeleton className="h-3 w-16" />
           ) : (
             <span className={["text-text", item.tone ?? ""].join(" ")}>{item.value}</span>

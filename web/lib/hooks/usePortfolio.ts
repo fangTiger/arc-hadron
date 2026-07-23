@@ -41,6 +41,10 @@ interface PortfolioBuyLog {
   };
 }
 
+interface PortfolioOptions {
+  enabled?: boolean;
+}
+
 export function portfolioBuyEventsFromLogs(logs: readonly PortfolioBuyLog[]): BuyEvent[] {
   return logs.flatMap((log) => {
     const { tokenId, amount, totalPaid } = log.args;
@@ -53,10 +57,12 @@ export function portfolioBuyEventsFromLogs(logs: readonly PortfolioBuyLog[]): Bu
   });
 }
 
-export function usePortfolio(): { errorZh?: string; holdings: Holding[]; isLoading: boolean } {
+export function usePortfolio(
+  { enabled = true }: PortfolioOptions = {},
+): { errorZh?: string; holdings: Holding[]; isLoading: boolean } {
   const { address, isConnected } = useAccount();
   const publicClient = usePublicClient();
-  const { assets, errorZh: assetsErrorZh, isLoading: isAssetsLoading } = useAssets();
+  const { assets, errorZh: assetsErrorZh, isLoading: isAssetsLoading } = useAssets({ enabled });
   const tokenIds = useMemo(() => assets.map((asset) => asset.tokenId), [assets]);
 
   const balancesQuery = useReadContract({
@@ -68,14 +74,14 @@ export function usePortfolio(): { errorZh?: string; holdings: Holding[]; isLoadi
         ? [Array(tokenIds.length).fill(address) as Address[], tokenIds]
         : undefined,
     query: {
-      enabled: Boolean(isConnected && address && tokenIds.length > 0),
+      enabled: Boolean(enabled && isConnected && address && tokenIds.length > 0),
       refetchInterval: 8000,
     },
   });
 
   const buyEventsQuery = useQuery({
     queryKey: ["portfolio-buy-events", address],
-    enabled: Boolean(isConnected && address && publicClient),
+    enabled: Boolean(enabled && isConnected && address && publicClient),
     staleTime: 30_000,
     queryFn: async (): Promise<BuyEvent[]> => {
       if (!address || !publicClient) {
@@ -125,6 +131,8 @@ export function usePortfolio(): { errorZh?: string; holdings: Holding[]; isLoadi
     errorZh,
     holdings,
     isLoading:
-      !errorZh && (isAssetsLoading || balancesQuery.isLoading || buyEventsQuery.isLoading),
+      enabled &&
+      !errorZh &&
+      (isAssetsLoading || balancesQuery.isLoading || buyEventsQuery.isLoading),
   };
 }

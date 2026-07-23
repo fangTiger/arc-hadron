@@ -12,6 +12,30 @@ const connectMock = vi.hoisted(() => vi.fn());
 const invalidateQueriesMock = vi.hoisted(() => vi.fn());
 const pushErrorMock = vi.hoisted(() => vi.fn());
 const pushSuccessMock = vi.hoisted(() => vi.fn());
+const useAllBidsMock = vi.hoisted(() =>
+  vi.fn(() => ({
+    bids: [],
+    isLoading: false,
+  })),
+);
+const useAllListingsMock = vi.hoisted(() =>
+  vi.fn(() => ({
+    listings: [],
+    isLoading: false,
+  })),
+);
+const useAssetsMock = vi.hoisted(() =>
+  vi.fn(() => ({
+    assets: [],
+    isLoading: false,
+  })),
+);
+const usePortfolioMock = vi.hoisted(() =>
+  vi.fn(() => ({
+    holdings: [],
+    isLoading: false,
+  })),
+);
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
@@ -49,31 +73,19 @@ vi.mock("@/lib/hooks/useNetworkGuard", () => ({
 }));
 
 vi.mock("@/lib/hooks/useAssets", () => ({
-  useAssets: () => ({
-    assets: [],
-    isLoading: false,
-  }),
+  useAssets: useAssetsMock,
 }));
 
 vi.mock("@/lib/hooks/useListings", () => ({
-  useAllListings: () => ({
-    listings: [],
-    isLoading: false,
-  }),
+  useAllListings: useAllListingsMock,
 }));
 
 vi.mock("@/lib/hooks/useBids", () => ({
-  useAllBids: () => ({
-    bids: [],
-    isLoading: false,
-  }),
+  useAllBids: useAllBidsMock,
 }));
 
 vi.mock("@/lib/hooks/usePortfolio", () => ({
-  usePortfolio: () => ({
-    holdings: [],
-    isLoading: false,
-  }),
+  usePortfolio: usePortfolioMock,
 }));
 
 vi.mock("@/lib/hooks/useBuyPrimary", () => ({
@@ -983,6 +995,29 @@ describe("AssistantPanelView", () => {
       }
 
       cleanupFetch();
+      cleanupDom();
+      vi.doUnmock("@/components/assistant/AssistantPanel");
+    }
+  });
+
+  test("keeps assistant market reads disabled while the dock is closed", async () => {
+    const cleanupDom = installDom();
+    let root: Root | null = null;
+
+    try {
+      const mounted = await mountDockWithPanelMock();
+      root = mounted.root;
+
+      expect(dockPanelProps?.isOpen).toBe(false);
+      expect(useAssetsMock).toHaveBeenLastCalledWith({ enabled: false });
+      expect(useAllListingsMock).toHaveBeenLastCalledWith({ enabled: false });
+      expect(useAllBidsMock).toHaveBeenLastCalledWith({ enabled: false });
+      expect(usePortfolioMock).toHaveBeenLastCalledWith({ enabled: false });
+    } finally {
+      if (root) {
+        await unmount(root);
+      }
+
       cleanupDom();
       vi.doUnmock("@/components/assistant/AssistantPanel");
     }

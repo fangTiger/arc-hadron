@@ -405,10 +405,11 @@ export function AssistantDock() {
   const { isCorrectChain, switchToArc } = useNetworkGuard();
   const { pushError, pushSuccess } = useToast();
   const queryClient = useQueryClient();
-  const { assets } = useAssets();
-  const { listings } = useAllListings();
-  const { bids } = useAllBids();
-  const { holdings } = usePortfolio();
+  const [isOpen, setIsOpen] = useState(false);
+  const { assets } = useAssets({ enabled: isOpen });
+  const { listings } = useAllListings({ enabled: isOpen });
+  const { bids } = useAllBids({ enabled: isOpen });
+  const { holdings } = usePortfolio({ enabled: isOpen });
   const tokenIds = useMemo(() => assets.map((asset) => asset.tokenId), [assets]);
   const { pending, pendingByTokenId, totalPending } = usePendingYield(tokenIds);
   const buyPrimary = useBuyPrimary();
@@ -418,7 +419,6 @@ export function AssistantDock() {
   const cancelBid = useCancelBid();
   const claimYield = useClaimYield();
   const defaultAsset = assistantDefaultAssetForPath(pathname, assets);
-  const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);

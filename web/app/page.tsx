@@ -14,7 +14,9 @@ export default function Home() {
     isLoading: isEventsLoading,
     nowMs,
   } = useMarketEvents();
-  const { listings: marketListings } = useAllListings();
+  const { listings: marketListings } = useAllListings({
+    enabled: assets.length > 0 && !isAssetsLoading,
+  });
 
   return (
     <Suspense

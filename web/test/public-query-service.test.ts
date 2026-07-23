@@ -103,6 +103,61 @@ describe("public query service", () => {
     ]);
   });
 
+  test("uses sequential multicalls for asset and offering details when the client supports them", async () => {
+    const client = fakeClient() as PublicQueryClient & {
+      multicall: (input: {
+        contracts: ReadonlyArray<{ functionName: string }>;
+      }) => Promise<readonly unknown[]>;
+    };
+    const readContract = client.readContract;
+    const detailOrder: string[] = [];
+
+    client.readContract = async (input) => {
+      if (input.functionName === "getAsset" || input.functionName === "getOffering") {
+        throw new Error("Detail reads must use Multicall3.");
+      }
+
+      return readContract(input);
+    };
+    client.multicall = async ({ contracts }) => {
+      const functionName = contracts[0]?.functionName;
+      detailOrder.push(functionName ?? "unknown");
+
+      if (functionName === "getAsset") {
+        return [
+          {
+            result: [
+              "US T-BILL 2026-Q3",
+              "treasuries",
+              10_000n,
+              "hadron://assets/t-bill-2026-q3",
+            ],
+            status: "success",
+          },
+        ];
+      }
+
+      return [
+        {
+          result: [1n, 100n, 5_000n, true],
+          status: "success",
+        },
+      ];
+    };
+
+    const payload = await loadAssetsPayload({ client });
+
+    expect(detailOrder).toEqual(["getAsset", "getOffering"]);
+    expect(payload.data[0]).toMatchObject({
+      offering: {
+        id: "1",
+        pricePerShare: "100",
+        remaining: "5000",
+      },
+      tokenId: "1",
+    });
+  });
+
   test("keeps fulfilled assets when one Arc RPC detail read fails", async () => {
     const partialClient = fakeClient();
     const baseReadContract = partialClient.readContract;

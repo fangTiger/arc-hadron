@@ -10,6 +10,10 @@ import { visibleRefetch } from "./visibilityAware";
 
 export type { ListingView };
 
+interface AllListingsOptions {
+  enabled?: boolean;
+}
+
 export function useListings(tokenId: bigint | null): { listings: ListingView[]; isLoading: boolean } {
   const { address } = useAccount();
   const listingIdsQuery = useReadContract({
@@ -57,13 +61,16 @@ export function useListings(tokenId: bigint | null): { listings: ListingView[]; 
   };
 }
 
-export function useAllListings(): { listings: ListingView[]; isLoading: boolean } {
+export function useAllListings(
+  { enabled = true }: AllListingsOptions = {},
+): { listings: ListingView[]; isLoading: boolean } {
   const { address } = useAccount();
   const listingCountQuery = useReadContract({
     address: HADRON_MARKET_ADDRESS,
     abi: HADRON_MARKET_ABI,
     functionName: "listingCount",
     query: {
+      enabled,
       refetchInterval: visibleRefetch(POLL_HOT_MS),
     },
   });
@@ -86,7 +93,7 @@ export function useAllListings(): { listings: ListingView[]; isLoading: boolean 
     allowFailure: false,
     contracts: listingContracts,
     query: {
-      enabled: listingContracts.length > 0,
+      enabled: enabled && listingContracts.length > 0,
       refetchInterval: visibleRefetch(POLL_HOT_MS),
     },
   });
@@ -102,7 +109,7 @@ export function useAllListings(): { listings: ListingView[]; isLoading: boolean 
 
   return {
     listings,
-    isLoading: listingCountQuery.isLoading || listingsQuery.isLoading,
+    isLoading: enabled && (listingCountQuery.isLoading || listingsQuery.isLoading),
   };
 }
 

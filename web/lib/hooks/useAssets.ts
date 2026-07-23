@@ -45,6 +45,23 @@ interface AssetReadErrorOptions {
   hasUsableAssets?: boolean;
 }
 
+interface AssetReadOptions {
+  enabled?: boolean;
+}
+
+interface AssetDetailsUnavailableInput {
+  expectedCount: number;
+  isError: boolean;
+  isLoading: boolean;
+  usableCount: number;
+}
+
+interface CanLoadOfferingDetailsInput {
+  assetsLoading: boolean;
+  offeringCount: number;
+  usableAssetCount: number;
+}
+
 export function readContractCount(value: unknown): number {
   if (value === undefined || value === null) {
     return 0;
@@ -70,6 +87,23 @@ export function assetReadErrorZh(
   }
 
   return queries.some((query) => query.isError) ? ASSETS_READ_ERROR_ZH : undefined;
+}
+
+export function assetDetailsUnavailable({
+  expectedCount,
+  isError,
+  isLoading,
+  usableCount,
+}: AssetDetailsUnavailableInput): boolean {
+  return expectedCount > 0 && !isLoading && (isError || usableCount === 0);
+}
+
+export function canLoadOfferingDetails({
+  assetsLoading,
+  offeringCount,
+  usableAssetCount,
+}: CanLoadOfferingDetailsInput): boolean {
+  return !assetsLoading && offeringCount > 0 && usableAssetCount > 0;
 }
 
 export function activeTokenIdsForCount(assetCount: number): bigint[] {
@@ -158,12 +192,15 @@ export function normalizeOfferingsFromReadResults(
   });
 }
 
-export function useAssets(): { assets: AssetView[]; errorZh?: string; isLoading: boolean } {
+export function useAssets(
+  { enabled = true }: AssetReadOptions = {},
+): { assets: AssetView[]; errorZh?: string; isLoading: boolean } {
   const assetCountQuery = useReadContract({
     address: HADRON_ASSETS_ADDRESS,
     abi: HADRON_ASSETS_ABI,
     functionName: "assetCount",
     query: {
+      enabled,
       refetchInterval: visibleRefetch(POLL_COLD_MS),
     },
   });
@@ -173,6 +210,7 @@ export function useAssets(): { assets: AssetView[]; errorZh?: string; isLoading:
     abi: HADRON_MARKET_ABI,
     functionName: "offeringCount",
     query: {
+      enabled,
       refetchInterval: visibleRefetch(POLL_COLD_MS),
     },
   });
@@ -204,41 +242,56 @@ export function useAssets(): { assets: AssetView[]; errorZh?: string; isLoading:
   );
 
   const assetsQuery = useReadContracts({
-    allowFailure: true,
+    allowFailure: false,
     contracts: assetContracts,
     query: {
-      enabled: assetContracts.length > 0,
+      enabled: enabled && assetContracts.length > 0,
       refetchInterval: visibleRefetch(POLL_COLD_MS),
     },
   });
 
+  const chainAssets = useMemo(
+    () => normalizeAssetsFromReadResults(activeTokenIds, assetsQuery.data),
+    [activeTokenIds, assetsQuery.data],
+  );
+
   const offeringsQuery = useReadContracts({
-    allowFailure: true,
+    allowFailure: false,
     contracts: offeringContracts,
     query: {
-      enabled: offeringCount > 0,
+      enabled:
+        enabled &&
+        canLoadOfferingDetails({
+          assetsLoading: assetsQuery.isLoading,
+          offeringCount,
+          usableAssetCount: chainAssets.length,
+        }),
       refetchInterval: visibleRefetch(POLL_COLD_MS),
     },
   });
 
   const assets = useMemo(() => {
+    const assetDetailsFailed = assetDetailsUnavailable({
+      expectedCount: activeTokenIds.length,
+      isError: assetsQuery.isError,
+      isLoading: assetsQuery.isLoading,
+      usableCount: chainAssets.length,
+    });
     const hasReadError =
       assetCountQuery.isError ||
       offeringCountQuery.isError ||
-      assetsQuery.isError ||
+      assetDetailsFailed ||
       offeringsQuery.isError;
-    const chainAssets = applyStaticAssetFallback(
-      normalizeAssetsFromReadResults(activeTokenIds, assetsQuery.data),
-      hasReadError,
-    );
+    const displayAssets = applyStaticAssetFallback(chainAssets, hasReadError);
     const offerings = normalizeOfferingsFromReadResults(offeringsQuery.data);
 
-    return joinAssetsWithOfferings(chainAssets, offerings, metaBySlug);
+    return joinAssetsWithOfferings(displayAssets, offerings, metaBySlug);
   }, [
     activeTokenIds,
     assetCountQuery.isError,
-    assetsQuery.data,
     assetsQuery.isError,
+    assetsQuery.isLoading,
+    chainAssets,
     offeringCountQuery.isError,
     offeringsQuery.data,
     offeringsQuery.isError,
@@ -254,6 +307,7 @@ export function useAssets(): { assets: AssetView[]; errorZh?: string; isLoading:
     assets,
     errorZh,
     isLoading:
+      enabled &&
       !errorZh &&
       (assetCountQuery.isLoading ||
         offeringCountQuery.isLoading ||

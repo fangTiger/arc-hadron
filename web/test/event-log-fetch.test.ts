@@ -62,6 +62,28 @@ function rawLog({
 }
 
 describe("fetchLogsInBlockRange", () => {
+  test("serializes default log chunk requests to respect the Arc RPC rate limit", async () => {
+    let activeRequests = 0;
+    let maxActiveRequests = 0;
+
+    await fetchLogsInBlockRange<TestLog>({
+      chunkSize: 10n,
+      fromBlock: 1n,
+      getLogs: async (chunk) => {
+        activeRequests += 1;
+        maxActiveRequests = Math.max(maxActiveRequests, activeRequests);
+        await Promise.resolve();
+        activeRequests -= 1;
+
+        return [{ blockNumber: chunk.from, id: chunk.from.toString() }];
+      },
+      retryCount: 0,
+      toBlock: 30n,
+    });
+
+    expect(maxActiveRequests).toBe(1);
+  });
+
   test("splits ranges over the RPC log limit into 9000-block chunks", async () => {
     const chunks: Array<{ from: bigint; to: bigint }> = [];
 

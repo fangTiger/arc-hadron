@@ -10,6 +10,10 @@ import { visibleRefetch } from "./visibilityAware";
 
 export type { BidView };
 
+interface AllBidsOptions {
+  enabled?: boolean;
+}
+
 export function useBids(tokenId: bigint | null): { bids: BidView[]; isLoading: boolean } {
   const { address } = useAccount();
   const bidIdsQuery = useReadContract({
@@ -57,13 +61,16 @@ export function useBids(tokenId: bigint | null): { bids: BidView[]; isLoading: b
   };
 }
 
-export function useAllBids(): { bids: BidView[]; isLoading: boolean } {
+export function useAllBids(
+  { enabled = true }: AllBidsOptions = {},
+): { bids: BidView[]; isLoading: boolean } {
   const { address } = useAccount();
   const bidCountQuery = useReadContract({
     address: HADRON_MARKET_ADDRESS,
     abi: HADRON_MARKET_ABI,
     functionName: "bidCount",
     query: {
+      enabled,
       refetchInterval: visibleRefetch(POLL_HOT_MS),
     },
   });
@@ -86,7 +93,7 @@ export function useAllBids(): { bids: BidView[]; isLoading: boolean } {
     allowFailure: false,
     contracts: bidContracts,
     query: {
-      enabled: bidContracts.length > 0,
+      enabled: enabled && bidContracts.length > 0,
       refetchInterval: visibleRefetch(POLL_HOT_MS),
     },
   });
@@ -102,7 +109,7 @@ export function useAllBids(): { bids: BidView[]; isLoading: boolean } {
 
   return {
     bids,
-    isLoading: bidCountQuery.isLoading || bidsQuery.isLoading,
+    isLoading: enabled && (bidCountQuery.isLoading || bidsQuery.isLoading),
   };
 }
 

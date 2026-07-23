@@ -30,12 +30,26 @@ export interface PublicQueryClient {
     fromBlock: bigint;
     toBlock: bigint;
   }): Promise<readonly MarketLog[]>;
+  multicall?(input: {
+    allowFailure: true;
+    contracts: ReadonlyArray<{
+      address: Address;
+      abi: Abi;
+      functionName: string;
+      args?: readonly unknown[];
+    }>;
+  }): Promise<readonly PublicMulticallResult[]>;
   readContract(input: {
     address: Address;
     abi: Abi;
     functionName: string;
     args?: readonly unknown[];
   }): Promise<unknown>;
+}
+
+interface PublicMulticallResult {
+  result?: unknown;
+  status: "success" | "failure";
 }
 
 export interface QueryFilter {
@@ -292,6 +306,24 @@ async function readManyFulfilled(
   contract: { address: Address; abi: Abi; functionName: string },
   ids: readonly bigint[],
 ): Promise<Array<{ id: bigint; value: unknown }>> {
+  if (client.multicall) {
+    const results = await client.multicall({
+      allowFailure: true,
+      contracts: ids.map((id) => ({
+        ...contract,
+        args: [id],
+      })),
+    });
+
+    return results.flatMap((result, index) => {
+      const id = ids[index];
+
+      return result.status === "success" && id !== undefined
+        ? [{ id, value: result.result }]
+        : [];
+    });
+  }
+
   const results = await Promise.allSettled(
     ids.map(async (id) => ({
       id,
@@ -307,18 +339,11 @@ async function readManyFulfilled(
 
 export async function loadAssetsPayload({ client }: LoadOptions = {}) {
   const queryClient = activeClient(client);
-  const [assetCount, offeringCount] = await Promise.all([
-    tryReadCount(queryClient, {
-      address: HADRON_ASSETS_ADDRESS,
-      abi: HADRON_ASSETS_ABI,
-      functionName: "assetCount",
-    }),
-    readOptionalCount(queryClient, {
-      address: HADRON_MARKET_ADDRESS,
-      abi: HADRON_MARKET_ABI,
-      functionName: "offeringCount",
-    }),
-  ]);
+  const assetCount = await tryReadCount(queryClient, {
+    address: HADRON_ASSETS_ADDRESS,
+    abi: HADRON_ASSETS_ABI,
+    functionName: "assetCount",
+  });
 
   if (assetCount === null) {
     return {
@@ -333,28 +358,31 @@ export async function loadAssetsPayload({ client }: LoadOptions = {}) {
     };
   }
 
+  const offeringCount = await readOptionalCount(queryClient, {
+    address: HADRON_MARKET_ADDRESS,
+    abi: HADRON_MARKET_ABI,
+    functionName: "offeringCount",
+  });
   const tokenIds = activeTokenIdsFor(assetCount);
   const offeringIds = idsForCount(offeringCount);
-  const [assetReads, offeringReads] = await Promise.all([
-    readManyFulfilled(
-      queryClient,
-      {
-        address: HADRON_ASSETS_ADDRESS,
-        abi: HADRON_ASSETS_ABI,
-        functionName: "getAsset",
-      },
-      tokenIds,
-    ),
-    readManyFulfilled(
-      queryClient,
-      {
-        address: HADRON_MARKET_ADDRESS,
-        abi: HADRON_MARKET_ABI,
-        functionName: "getOffering",
-      },
-      offeringIds,
-    ),
-  ]);
+  const assetReads = await readManyFulfilled(
+    queryClient,
+    {
+      address: HADRON_ASSETS_ADDRESS,
+      abi: HADRON_ASSETS_ABI,
+      functionName: "getAsset",
+    },
+    tokenIds,
+  );
+  const offeringReads = await readManyFulfilled(
+    queryClient,
+    {
+      address: HADRON_MARKET_ADDRESS,
+      abi: HADRON_MARKET_ABI,
+      functionName: "getOffering",
+    },
+    offeringIds,
+  );
 
   const assets = applyStaticAssetFallback(
     assetReads.map(({ id, value }) => normalizeAsset(id, value)),

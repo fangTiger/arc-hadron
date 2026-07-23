@@ -8,7 +8,9 @@ import {
   ASSETS_READ_ERROR_ZH,
   activeTokenIdsForCount,
   applyStaticAssetFallback,
+  assetDetailsUnavailable,
   assetReadErrorZh,
+  canLoadOfferingDetails,
   normalizeAssetsFromReadResults,
   normalizeOfferingsFromReadResults,
   readContractCount,
@@ -279,6 +281,57 @@ describe("on-chain asset read state", () => {
     });
     expect(applyStaticAssetFallback([chainAsset], true)).toEqual([chainAsset]);
     expect(applyStaticAssetFallback([], false)).toEqual([]);
+  });
+
+  test("treats fulfilled multicalls with no usable assets as a failed detail read", () => {
+    expect(
+      assetDetailsUnavailable({
+        expectedCount: 26,
+        isError: false,
+        isLoading: false,
+        usableCount: 0,
+      }),
+    ).toBe(true);
+    expect(
+      assetDetailsUnavailable({
+        expectedCount: 26,
+        isError: false,
+        isLoading: true,
+        usableCount: 0,
+      }),
+    ).toBe(false);
+    expect(
+      assetDetailsUnavailable({
+        expectedCount: 26,
+        isError: false,
+        isLoading: false,
+        usableCount: 26,
+      }),
+    ).toBe(false);
+  });
+
+  test("loads offering details only after asset details are usable", () => {
+    expect(
+      canLoadOfferingDetails({
+        assetsLoading: false,
+        offeringCount: 14,
+        usableAssetCount: 26,
+      }),
+    ).toBe(true);
+    expect(
+      canLoadOfferingDetails({
+        assetsLoading: true,
+        offeringCount: 14,
+        usableAssetCount: 0,
+      }),
+    ).toBe(false);
+    expect(
+      canLoadOfferingDetails({
+        assetsLoading: false,
+        offeringCount: 14,
+        usableAssetCount: 0,
+      }),
+    ).toBe(false);
   });
 
   test("renders the market list error state when RPC reads fail", () => {

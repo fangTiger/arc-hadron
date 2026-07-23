@@ -1,7 +1,7 @@
 import { planLogChunks, type LogChunk } from "@/lib/events";
 
 export const EVENT_LOG_CHUNK_SIZE = 9_000n;
-export const EVENT_LOG_CONCURRENCY = 6;
+export const EVENT_LOG_CONCURRENCY = 1;
 export const EVENT_LOG_RETRY_COUNT = 1;
 
 interface FetchLogsInChunksInput<TLog> {
